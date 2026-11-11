@@ -6,7 +6,7 @@ Building, 100 S. River Street, Downtown Aurora IL. Built with Django and Postgre
 It has three parts:
 
 - **Home page (`/`).** A copy of the original Wix site at desktop sizes: the same
-  text, photos, spacing, fixed top and bottom bars, and the slow-scrolling hero
+  text, photos, spacing, fixed top and bottom bars, and the stationary hero
   photo. On phones it uses a proper phone layout, which the original lacks.
 - **Booking page (`/book/`),** reached from the green **Book Your Date** button on
   the home page's photo. A month calendar showing each date as Available,
@@ -64,7 +64,7 @@ docker compose run --rm web ruff check .
 - **Browser tests** (Playwright, Chromium), covering:
   - the booking flow and the admin;
   - the home page matching the original's measured positions at 1440px;
-  - the fixed bars and the parallax;
+  - the fixed bars and stationary hero background;
   - the phone layout.
 
 ## How bookings work
@@ -92,7 +92,7 @@ docker compose run --rm web ruff check .
 config/       settings (all from environment variables), URLs
 bookings/     Booking model, calendar logic, request form, views, admin
 templates/    home page, booking pages, admin calendar
-static/       site.css, parallax.js, images
+static/       site.css, site.js, booking.js, images
 tests/        pytest tests; tests/e2e/ are the browser tests
 docs/         design specs
 ```
