@@ -148,26 +148,23 @@ class TestScrollEffects:
         assert footer["height"] == 80
         assert footer["y"] + footer["height"] == 900
 
-    def test_hero_photo_moves_at_a_fifth_of_scroll_speed(self, desktop: Page):
+    def test_hero_photo_stays_fixed_while_the_page_scrolls(self, desktop: Page):
         desktop.goto("/")
         photo = desktop.get_by_test_id("hero-photo")
         before = box(photo)["y"]
-        desktop.evaluate("window.scrollTo(0, 200)")
-        # 200px scrolled x 0.8 = the layer shifted down 160px.
-        desktop.wait_for_function(
-            "() => document.querySelector('[data-testid=hero-photo]').style.transform"
-            ".includes('160px')"
-        )
-        assert round(before - box(photo)["y"]) == 40
+        desktop.evaluate("window.scrollTo({top: 200, behavior: 'instant'})")
+        assert desktop.evaluate("window.scrollY") == 200
+        assert round(box(photo)["y"] - before) == 0
+        assert photo.evaluate("el => getComputedStyle(el).transform") == "none"
 
-    def test_hero_photo_still_with_reduced_motion(self, desktop: Page):
+    def test_hero_photo_is_fixed_with_reduced_motion(self, desktop: Page):
         desktop.emulate_media(reduced_motion="reduce")
         desktop.goto("/")
         photo = desktop.get_by_test_id("hero-photo")
         before = box(photo)["y"]
         desktop.evaluate("window.scrollTo(0, 200)")
-        desktop.wait_for_timeout(100)
-        assert round(before - box(photo)["y"]) == 200
+        assert desktop.evaluate("window.scrollY") == 200
+        assert round(box(photo)["y"] - before) == 0
 
 
 class TestPhoneLayout:

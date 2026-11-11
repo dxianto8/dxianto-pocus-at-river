@@ -5,7 +5,7 @@
 
 {% block content %}
   <div class="hero" data-testid="hero">
-    <div class="hero__photo" data-testid="hero-photo" data-parallax="0.8">
+    <div class="hero__photo" data-testid="hero-photo">
       <img src="{% static 'images/hero.jpg' %}" width="640" height="427" fetchpriority="high"
            alt="A styled reception table with roses, glassware, a slate plate and a dessert topped with nuts and pomegranate">
     </div>
@@ -53,8 +53,4 @@
     <h2 id="contact-heading" class="section-heading">Get in Touch</h2>
     <p class="cta"><a class="button button--email" href="mailto:events@pocusatriver.com?subject=Event%20Inquiry">Email Us</a></p>
   </section>
-{% endblock %}
-
-{% block scripts %}
-  <script src="{% static 'js/parallax.js' %}" defer></script>
 {% endblock %}
