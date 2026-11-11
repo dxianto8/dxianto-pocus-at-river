@@ -26,7 +26,7 @@
         <a href="{% url 'home' %}" {% if current == 'home' %}aria-current="page"{% endif %}>Home</a>
         <a href="{% url 'venue' %}" {% if current == 'venue' %}aria-current="page"{% endif %}>Venue &amp; location</a>
         <a href="{% url 'walkthrough' %}" {% if current == 'walkthrough' or current == 'walkthrough_requested' %}aria-current="page"{% endif %}>Walk-throughs</a>
-        <a class="nav-book" href="{% url 'bookings:book' %}" {% if request.resolver_match.namespace == 'bookings' %}aria-current="page"{% endif %}>Event bookings <span aria-hidden="true">↗︎</span></a>
+        <a class="nav-book" href="{% url 'bookings:book' %}" {% if request.resolver_match.namespace == 'bookings' %}aria-current="page"{% endif %}>Event bookings <span aria-hidden="true">→</span></a>
       </nav>
       {% endwith %}
     </div>
@@ -39,7 +39,7 @@
   <footer class="site-footer">
     <div class="footer-inner">
       <div><a class="footer-brand" href="{% url 'home' %}">Pocus at River</a><p>Historic character. New memories.</p></div>
-      <div><p>100 S. River Street<br>Aurora, Illinois</p><a href="{% url 'venue' %}">Plan your visit <span aria-hidden="true">↗︎</span></a></div>
+      <div><p>100 S. River Street<br>Aurora, Illinois</p><a href="{% url 'venue' %}">Plan your visit <span aria-hidden="true">→</span></a></div>
       <div><a href="mailto:events@pocusatriver.com">events@pocusatriver.com</a>
         <ul class="topbar__social">
           <li><a href="https://www.instagram.com/pocusatriver" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><img src="{% static 'images/instagram.png' %}" alt="" width="32" height="32"></a></li>

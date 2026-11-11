@@ -12,7 +12,7 @@
     <span class="hero__note">A PLACE TO GATHER. A MOMENT TO REMEMBER.</span>
   </div>
 
-  <div class="venue-strip" aria-label="Venue at a glance"><span>Historic Pocus Motors Building</span><span>Downtown Aurora, Illinois</span><a href="{% url 'walkthrough' %}">Visits by appointment <span aria-hidden="true">↗︎</span></a></div>
+  <div class="venue-strip" aria-label="Venue at a glance"><span>Historic Pocus Motors Building</span><span>Downtown Aurora, Illinois</span><a href="{% url 'walkthrough' %}">Visits by appointment <span aria-hidden="true">→</span></a></div>
 
   <section class="editorial section-wrap" aria-labelledby="about-heading">
     <div><p class="eyebrow">Something old. Something entirely yours.</p><h2 id="about-heading" class="display-heading">Host Your Event at the Historic Pocus Motors Building</h2></div>
@@ -22,9 +22,9 @@
   <section class="gallery-section section-wrap" aria-labelledby="gallery-heading">
     <div class="section-top"><div><p class="eyebrow">Picture the possibilities</p><h2 id="gallery-heading" class="display-heading">A little atmosphere goes a long way.</h2></div><p class="muted">Select a photo for a closer look.</p></div>
     <ul class="gallery" data-testid="gallery">
-      <li><a href="{% static 'images/hero.jpg' %}" data-gallery data-caption="The details that make a table feel special."><img src="{% static 'images/hero.jpg' %}" width="640" height="427" loading="lazy" alt="Roses and glassware on a styled reception table"><span>Thoughtful details <b aria-hidden="true">↗︎</b></span></a></li>
-      <li><a href="{% static 'images/gallery-dance.jpg' %}" data-gallery data-caption="Make room for a night on the dance floor."><img src="{% static 'images/gallery-dance.jpg' %}" width="640" height="427" loading="lazy" alt="Wedding guests celebrating together on the dance floor"><span>Unforgettable celebrations <b aria-hidden="true">↗︎</b></span></a></li>
-      <li><a href="{% static 'images/gallery-hall.jpg' %}" data-gallery data-caption="A candlelit gathering in an industrial setting."><img src="{% static 'images/gallery-hall.jpg' %}" width="1600" height="1067" loading="lazy" alt="A candlelit banquet table with black chairs and exposed ductwork"><span>Room to gather <b aria-hidden="true">↗︎</b></span></a></li>
+      <li><a href="{% static 'images/hero.jpg' %}" data-gallery data-caption="The details that make a table feel special."><img src="{% static 'images/hero.jpg' %}" width="640" height="427" loading="lazy" alt="Roses and glassware on a styled reception table"><span>Thoughtful details <b aria-hidden="true">→</b></span></a></li>
+      <li><a href="{% static 'images/gallery-dance.jpg' %}" data-gallery data-caption="Make room for a night on the dance floor."><img src="{% static 'images/gallery-dance.jpg' %}" width="640" height="427" loading="lazy" alt="Wedding guests celebrating together on the dance floor"><span>Unforgettable celebrations <b aria-hidden="true">→</b></span></a></li>
+      <li><a href="{% static 'images/gallery-hall.jpg' %}" data-gallery data-caption="A candlelit gathering in an industrial setting."><img src="{% static 'images/gallery-hall.jpg' %}" width="1600" height="1067" loading="lazy" alt="A candlelit banquet table with black chairs and exposed ductwork"><span>Room to gather <b aria-hidden="true">→</b></span></a></li>
     </ul>
   </section>
 
@@ -45,7 +45,7 @@
           <div class="testimonials__slides" aria-live="polite" aria-atomic="true">
             {% for testimonial in testimonials %}
               <figure class="testimonial" data-testimonial role="group" aria-label="{{ forloop.counter }} of {{ testimonials|length }}">
-                <blockquote>“{{ testimonial.quote }}”</blockquote><figcaption>{{ testimonial.attribution }}{% if testimonial.event_label %}<span>{{ testimonial.event_label }}</span>{% endif %}{% if testimonial.source_url %}<a href="{{ testimonial.source_url }}" target="_blank" rel="noopener noreferrer">Read original review ↗︎</a>{% endif %}</figcaption>
+                <blockquote>“{{ testimonial.quote }}”</blockquote><figcaption>{{ testimonial.attribution }}{% if testimonial.event_label %}<span>{{ testimonial.event_label }}</span>{% endif %}{% if testimonial.source_url %}<a href="{{ testimonial.source_url }}" target="_blank" rel="noopener noreferrer">Read original review →</a>{% endif %}</figcaption>
               </figure>
             {% endfor %}
           </div>

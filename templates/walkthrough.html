@@ -14,7 +14,7 @@
           {% elif field.name == 'contact_consent' %}<div class="field field--checkbox{% if field.errors %} field--invalid{% endif %}"><label for="{{ field.id_for_label }}">{{ field }} <span>{{ field.label }} *</span></label>{{ field.errors }}</div>
           {% else %}<div class="field{% if field.errors %} field--invalid{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}{{ field.errors }}</div>{% endif %}
         {% endfor %}
-        <p class="form__actions"><button class="button button--book" type="submit">Request a Walk-through <span aria-hidden="true">↗︎</span></button></p>
+        <p class="form__actions"><button class="button button--book" type="submit">Request a Walk-through <span aria-hidden="true">→</span></button></p>
         <p class="form-fineprint">This sends a request, not an appointment confirmation. Questions? <a href="mailto:events@pocusatriver.com">Email the venue team</a>.</p>
       </form>
     </div>
