@@ -22,6 +22,11 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+html.home-page { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html.home-page { scroll-behavior: auto; }
+}
+
 body {
   margin: 0;
   background: #fff;
