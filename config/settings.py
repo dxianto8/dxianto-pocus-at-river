@@ -30,7 +30,12 @@ if not SECRET_KEY:
         raise ImproperlyConfigured("Set DJANGO_SECRET_KEY (or DJANGO_DEBUG=true for local work).")
     SECRET_KEY = "local-development-only-not-secret"
 
+# Vercel sets VERCEL=1 during builds and at runtime.
+ON_VERCEL = bool(os.environ.get("VERCEL"))
+
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
+if ON_VERCEL:
+    ALLOWED_HOSTS.append(".vercel.app")  # production and preview deployment addresses
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 
@@ -78,13 +83,25 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-# Database: Postgres, from DATABASE_URL (Neon, Render, or the docker-compose service).
+# Database: Postgres, from DATABASE_URL (Neon on Vercel, or the docker-compose service).
+#
+# On Vercel, Neon's DATABASE_URL goes through its connection pooler (PgBouncer in transaction
+# mode), and function instances can be paused between requests, so each request opens a fresh,
+# short-lived connection. Elsewhere connections are kept open for 10 minutes.
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if not DATABASE_URL:
     raise ImproperlyConfigured("Set DATABASE_URL, e.g. postgres://pocus:pocus@localhost:5432/pocus")
+CONN_MAX_AGE = int(os.environ.get("DJANGO_CONN_MAX_AGE", "0" if ON_VERCEL else "600"))
 DATABASES = {
-    "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600, conn_health_checks=True)
+    "default": {
+        **dj_database_url.parse(
+            DATABASE_URL, conn_max_age=CONN_MAX_AGE, conn_health_checks=CONN_MAX_AGE > 0
+        ),
+        # Transaction-mode poolers can't keep a server-side cursor open across queries.
+        # (Django already turns off psycopg's prepared statements for the same reason.)
+        "DISABLE_SERVER_SIDE_CURSORS": True,
+    }
 }
 
 

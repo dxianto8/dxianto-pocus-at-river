@@ -146,11 +146,29 @@ tests/           pytest unit and view tests; tests/e2e/ browser tests
 
 ## 8. Deployment (for the user)
 
-1. Create a Postgres database: Neon, or Render's own Postgres.
-2. Create a Render web service from the repo, using the Dockerfile. Set
-   `DATABASE_URL`, `DJANGO_SECRET_KEY` (a long random string),
-   `DJANGO_ALLOWED_HOSTS` and `DJANGO_DEBUG=false`.
-3. Run `python manage.py migrate` and `python manage.py createsuperuser` once.
+Changed to **Vercel + Neon** on 2026-11-11, at the user's request. Vercel now runs Django
+directly, and Neon is added from the project's Storage tab.
+
+1. Import the repo into Vercel. Vercel detects Django from `manage.py` and
+   installs the dependencies from `pyproject.toml`. Python is pinned to 3.13 in
+   `.python-version`.
+2. Add Neon from the Storage tab. This sets `DATABASE_URL` (pooled) and
+   `DATABASE_URL_UNPOOLED` (direct).
+3. Set `DJANGO_SECRET_KEY`. When a custom domain is added, also set
+   `DJANGO_ALLOWED_HOSTS` and `DJANGO_CSRF_TRUSTED_ORIGINS`.
+4. Each build runs `scripts/vercel_build.py`, which applies migrations over the
+   direct connection. Vercel runs `collectstatic` itself and serves the static
+   files from its CDN.
+
+At runtime on Vercel (`VERCEL=1`):
+
+- `*.vercel.app` hosts are allowed.
+- `CONN_MAX_AGE` is 0, so each request opens a fresh, short-lived connection
+  through the pooler.
+- `DISABLE_SERVER_SIDE_CURSORS` is on, because Neon's pooler runs in
+  transaction mode.
+
+The Dockerfile remains usable on container hosts.
 
 ## 9. Out of scope
 

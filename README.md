@@ -52,11 +52,12 @@ docker compose run --rm web pytest
 docker compose run --rm web ruff check .
 ```
 
-`pytest` runs 78 tests:
+`pytest` runs 84 tests:
 
 - **Calendar rules:** past dates, the 24-month limit, and which states visitors see.
 - **Form checks** and the spam trap.
 - **Double-booking protection.**
+- **Vercel deploy settings** and the migration build step.
 - **Admin actions:** confirm, decline, cancel, block and unblock.
 - **Browser tests** (Playwright, Chromium), covering:
   - the booking flow and the admin;
@@ -94,42 +95,65 @@ tests/        pytest tests; tests/e2e/ are the browser tests
 docs/         design specs
 ```
 
-## Deploy (Render + Neon)
+## Deploy on Vercel (with Neon Postgres)
 
-Vercel doesn't host Django well. [Render](https://render.com/) runs the
-included `Dockerfile` as-is.
+Vercel runs Django directly. It finds `manage.py`, installs the dependencies listed in
+`pyproject.toml`, and serves the CSS and images from its CDN. The database is Neon
+(hosted PostgreSQL), added from Vercel's **Storage** tab.
 
-1. **Database.** Create a Postgres database, either on [Neon](https://neon.tech/)
-   (free tier) or in Render. Copy its connection string (`postgres://...`).
-2. **Web service.** In Render, choose New → Web Service, connect this GitHub
-   repo, and pick the **Docker** runtime.
-3. **Environment variables.** Add these:
+1. **Import the project.** In Vercel, choose **Add New → Project** and import
+   `dxianto8/dxianto-pocus-at-river`. Vercel detects Django.
+   The first deployment fails because there's no database yet. That's expected.
+2. **Add the database.** Open the project's **Storage** tab and choose
+   **Create Database → Neon**.
+   - **Region:** AWS US East (N. Virginia), the same area where Vercel runs the site by default.
+   - **Environments:** connect it to all of them.
+   - **Preview branching:** turn it on if offered. Each preview deployment then
+     gets its own copy of the database.
 
-   | Variable                     | Value |
-   | ---------------------------- | ----- |
-   | `DATABASE_URL`               | the connection string from step 1 |
-   | `DJANGO_SECRET_KEY`          | a long random string (see below) |
-   | `DJANGO_ALLOWED_HOSTS`       | your domains, e.g. `pocusatriver.com,www.pocusatriver.com,your-app.onrender.com` |
-   | `DJANGO_CSRF_TRUSTED_ORIGINS`| the same with `https://`, e.g. `https://pocusatriver.com,https://www.pocusatriver.com` |
-
-   To generate a secret key:
+   This fills in `DATABASE_URL` and `DATABASE_URL_UNPOOLED` for you.
+3. **Add the secret key.** Under **Settings → Environment Variables**, add
+   `DJANGO_SECRET_KEY` for all environments. Generate a value with:
 
    ```bash
    python3 -c "import secrets; print(secrets.token_urlsafe(50))"
    ```
 
-4. **Deploy.** The container applies database migrations every time it starts.
-5. **Admin login.** Once it's live, create your login in the live database from
-   your Mac. Put your connection string between the quotes:
+4. **Deploy again.** Go to **Deployments**, open the menu on the latest one and
+   choose **Redeploy**. Every deployment applies any new database migrations
+   before it goes live (`scripts/vercel_build.py`).
+5. **Create your admin login.** Copy `DATABASE_URL` from **Settings → Environment
+   Variables** (click the eye icon to show it). Then on your Mac, from this
+   folder, put it between the quotes:
 
    ```bash
    docker compose run --rm -e DATABASE_URL='postgres://...' web python manage.py createsuperuser
    ```
 
-   If your Render plan includes the **Shell** tab, you can run
-   `python manage.py createsuperuser` there instead.
+   Sign in at `https://<your-project>.vercel.app/admin/`.
 
-All settings are listed in `.env.example`.
+### Using your own domain
+
+When you're ready to move `pocusatriver.com` off Wix:
+
+1. Add the domain under **Settings → Domains** and follow Vercel's DNS steps.
+2. Add these environment variables, then redeploy:
+
+   | Variable                      | Value |
+   | ----------------------------- | ----- |
+   | `DJANGO_ALLOWED_HOSTS`        | `pocusatriver.com,www.pocusatriver.com` |
+   | `DJANGO_CSRF_TRUSTED_ORIGINS` | `https://pocusatriver.com,https://www.pocusatriver.com` |
+
+`*.vercel.app` addresses are always allowed, so you don't need to list them.
+
+### How it runs on Vercel
+
+- **Connections.** The site connects through Neon's connection pooler and opens a
+  fresh database connection for each request, which suits Vercel's short-lived
+  functions. Migrations use Neon's direct connection instead.
+- **Settings.** Every setting is listed in `.env.example`.
+- **Other hosts.** The `Dockerfile` still works on hosts that run containers
+  (Render, Railway, Fly.io). Set the same environment variables there.
 
 ## Notes
 

@@ -1,0 +1,14 @@
+# Not needed to build or run the site on Vercel.
+.venv
+.env
+.env.*
+docs
+tests
+staticfiles
+test-results
+__pycache__
+.pytest_cache
+.ruff_cache
+Dockerfile
+docker-compose.yml
+.dockerignore
