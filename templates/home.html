@@ -1,15 +1,82 @@
-{% extends "base.html" %}{% load static %}
+{% extends "base.html" %}
+{% load static %}
 {% block main_class %}home{% endblock %}
 {% block content %}
 <section class="hero" aria-labelledby="hero-heading" data-testid="hero">
   <img class="hero-image" data-testid="hero-photo" src="{% static 'images/event-hall.jpg' %}" alt="An aisle of black ceremony chairs leading to a floral installation at Society 57" width="2500" height="1667" fetchpriority="high">
   <div class="hero-shade"></div>
-  <div class="hero-content wrap"><p class="eyebrow">HISTORIC AURORA. EXTRAORDINARY OCCASIONS.</p><h1 id="hero-heading">{{ venue.hero_heading }}</h1><p>Weddings, company gatherings, and the moments that bring everyone together. Make room for yours at Pocus at River.</p><div class="actions"><a class="button button--white" href="{% url 'bookings:book' %}">Start planning <span aria-hidden="true">→</span></a><a class="hero-secondary" href="{% url 'gallery' %}">Explore the space</a></div></div>
-  <div class="hero-bottom wrap"><span>{{ venue.address|upper }}</span><a href="#intro">A closer look <span aria-hidden="true">↓</span></a></div>
+  <div class="hero-content wrap">
+    <p class="eyebrow">Weddings &amp; events in historic Aurora</p>
+    <h1 id="hero-heading">{{ venue.hero_heading }}</h1>
+    <p>For the people you love, the work you share, and the occasions that bring you back together.</p>
+    <div class="actions">
+      <a class="button button--white" href="{% url 'bookings:book' %}">Start planning <span aria-hidden="true">→</span></a>
+      <a class="hero-secondary" href="{% url 'gallery' %}">A look inside</a>
+    </div>
+  </div>
+  <div class="hero-bottom wrap">
+    <span>{{ venue.address|upper }}</span>
+    <a href="#intro">Discover the setting <span aria-hidden="true">↓</span></a>
+  </div>
 </section>
-<div class="venue-strip"><div class="wrap"><span>Historic Pocus Motors Building</span><span>Downtown Aurora, Illinois</span><a href="mailto:{{ venue.contact_email }}?subject=Walk-through%20Inquiry">Visits by appointment →</a></div></div>
-<section class="wrap section split-intro" id="intro" aria-labelledby="intro-heading"><div><p class="eyebrow">THE SETTING MAKES A DIFFERENCE</p><h2 id="intro-heading">Bring your people.<br>Make it an occasion.</h2></div><div class="body-copy"><p>Some spaces are a backdrop. This one is part of the story. Inside the Historic Pocus Motors Building, architectural character and a downtown setting give your event a sense of place from the moment guests arrive.</p><p>Make it a wedding with everyone you love, a company gathering with a different energy, or a private celebration worth clearing the calendar for. Bring the idea. Let's work through the possibilities.</p><a class="text-link" href="{% url 'venue' %}">Get to know the venue →</a></div></section>
-<section class="occasion-section" aria-labelledby="occasion-heading"><div class="wrap section-heading-row"><div><p class="eyebrow">ONE ADDRESS. MANY POSSIBILITIES.</p><h2 id="occasion-heading">What's your occasion?</h2></div><a class="text-link" href="{% url 'packages' %}">View packages &amp; pricing →</a></div><div class="occasion-grid"><a class="occasion" href="{% url 'weddings' %}"><img src="{% static 'images/wedding-couple.jpg' %}" alt="A wedding couple laughing together against a white brick wall" width="1667" height="1667" loading="lazy"><div><span>01 / WEDDINGS</span><h3>A day that feels like you.</h3><p>Ceremonies, receptions, and everything you're looking forward to.</p><b aria-hidden="true">→</b></div></a><a class="occasion" href="{% url 'corporate' %}"><img src="{% static 'images/meeting-room.jpg' %}" alt="A private lounge with a glass overhead door and comfortable chairs" width="1365" height="1365" loading="lazy"><div><span>02 / CORPORATE</span><h3>Take it out of the office.</h3><p>Meet, connect, celebrate, and make the next conversation count.</p><b aria-hidden="true">→</b></div></a><a class="occasion" href="{% url 'packages' %}"><img src="{% static 'images/celebration.jpg' %}" alt="A styled celebration table with candles, flowers, and black chairs" width="1667" height="1667" loading="lazy"><div><span>03 / PRIVATE EVENTS</span><h3>Give the moment its space.</h3><p>Milestones, reunions, and good reasons to get everyone together.</p><b aria-hidden="true">→</b></div></a></div></section>
-<section class="wrap section planning" aria-labelledby="planning-heading"><div><p class="eyebrow">FROM FIRST IDEA TO YOUR EVENT DATE</p><h2 id="planning-heading">A clearer way<br>to make plans.</h2><p>One account. Your event details. A status you can check whenever you need to.</p><a class="text-link" href="{% url 'accounts:signup' %}">Create your planning account →</a></div><ol class="process-list"><li><span>01</span><div><h3>Find your starting point</h3><p>Explore the space and packages, then bring your dates, guest list, and ideas.</p></div></li><li><span>02</span><div><h3>Make your request</h3><p>Create an account, choose an available date, and tell us about your event.</p></div></li><li><span>03</span><div><h3>Stay in the loop</h3><p>Track your request in My events. The team reviews the details before confirming your booking.</p></div></li></ol></section>
-{% include "includes/cta.html" %}
+
+<section class="wrap venue-intro" id="intro" aria-labelledby="intro-heading">
+  <div class="venue-intro__copy" data-reveal>
+    <p class="eyebrow">The Historic Pocus Motors Building</p>
+    <h2 id="intro-heading">A little history.<br>A very personal occasion.</h2>
+    <div class="body-copy">
+      <p>White brick, dark steel, and a place in the heart of downtown Aurora. The building brings its character. You bring the people who make it yours.</p>
+      <p>Imagine your guests arriving, a table set for the evening, the conversations that carry on long after dinner. Then come walk the space and see how your plans could take shape.</p>
+    </div>
+    <div class="intro-links">
+      <a class="text-link" href="{% url 'venue' %}">Meet the venue <span aria-hidden="true">→</span></a>
+      <a class="quiet-link" href="mailto:{{ venue.contact_email }}?subject=Walk-through%20Inquiry">Arrange a walk-through</a>
+    </div>
+  </div>
+  <figure class="venue-intro__photo" data-reveal data-reveal-delay="100">
+    <span class="photo-index" aria-hidden="true">AURORA / ILLINOIS</span>
+    <img src="{% static 'images/celebration.jpg' %}" alt="A celebration table with flowers, candles, and black chairs at Society 57" width="1667" height="1667" loading="lazy">
+    <figcaption>A setting for your own kind of gathering. <span>Society 57</span></figcaption>
+  </figure>
+</section>
+
+<section class="wrap event-stories" aria-labelledby="occasion-heading">
+  <div class="stories-heading" data-reveal>
+    <div>
+      <p class="eyebrow">A reason to gather</p>
+      <h2 id="occasion-heading">Every occasion<br>has its own rhythm.</h2>
+    </div>
+    <a class="text-link" href="{% url 'packages' %}">Packages &amp; pricing <span aria-hidden="true">→</span></a>
+  </div>
+  <div class="story-grid">
+    <a class="event-story event-story--wedding" href="{% url 'weddings' %}" data-reveal>
+      <div class="story-photo"><img src="{% static 'images/wedding-couple.jpg' %}" alt="A wedding couple sharing a laugh against a white brick wall" width="1667" height="1667" loading="lazy"><span class="story-arrow" aria-hidden="true">→</span></div>
+      <div class="story-copy"><span class="story-number">01 / Weddings</span><h3>All your favorite people.<br>One unforgettable day.</h3><p>From the first arrival to the last song, make room for a celebration that feels like you.</p></div>
+    </a>
+    <a class="event-story event-story--corporate" href="{% url 'corporate' %}" data-reveal data-reveal-delay="100">
+      <div class="story-photo"><img src="{% static 'images/meeting-room.jpg' %}" alt="A lounge with comfortable chairs and a glass overhead door at Society 57" width="1365" height="1365" loading="lazy"><span class="story-arrow" aria-hidden="true">→</span></div>
+      <div class="story-copy"><span class="story-number">02 / Corporate gatherings</span><h3>Good things happen<br>away from the desk.</h3><p>Bring a team together, welcome your clients, or mark the work you've done.</p></div>
+    </a>
+    <a class="event-story event-story--private" href="{% url 'packages' %}" data-reveal>
+      <div class="story-photo"><img src="{% static 'images/event-hall.jpg' %}" alt="An intimate ceremony setup with black chairs and a floral arrangement at Society 57" width="2500" height="1667" loading="lazy"><span class="story-arrow" aria-hidden="true">→</span></div>
+      <div class="story-copy"><span class="story-number">03 / Private celebrations</span><h3>Some moments call<br>for everyone.</h3><p>A birthday, an anniversary, a reunion. A good reason to make an evening of it.</p></div>
+    </a>
+  </div>
+</section>
+
+<section class="wrap planning planning--editorial" aria-labelledby="planning-heading">
+  <div data-reveal>
+    <p class="eyebrow">From an idea to a date in the diary</p>
+    <h2 id="planning-heading">Your plans deserve<br>more than an inbox.</h2>
+  </div>
+  <div class="body-copy" data-reveal data-reveal-delay="100">
+    <p>Choose an available date and tell us what you're imagining. Your account keeps the details together, with a booking status you can return to whenever you need it.</p>
+    <p>We'll review your request and work through the arrangements with you. A request is the beginning of the conversation; the venue team confirms the final plan.</p>
+    {% if user.is_authenticated %}
+      <a class="text-link" href="{% url 'accounts:dashboard' %}">Open My events <span aria-hidden="true">→</span></a>
+    {% else %}
+      <a class="text-link" href="{% url 'accounts:signup' %}">Create your planning account <span aria-hidden="true">→</span></a>
+    {% endif %}
+  </div>
+</section>
 {% endblock %}

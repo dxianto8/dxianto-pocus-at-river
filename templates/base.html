@@ -6,6 +6,7 @@
   <title>{% block title %}Pocus at River | Weddings &amp; Events in Aurora{% endblock %}</title>
   <meta name="description" content="{% block description %}A historic Aurora setting for weddings, company gatherings, and private celebrations. Explore the space, compare packages, and plan your event with Pocus at River.{% endblock %}">
   <link rel="icon" href="{% static 'images/badge.png' %}" type="image/png">
+  <link rel="preload" href="{% static 'fonts/libre-caslon-display.ttf' %}" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="{% static 'css/site.css' %}">
   <script src="{% static 'js/site.js' %}" defer></script>
 </head>
@@ -13,7 +14,7 @@
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <div class="header-inner">
-      <a class="wordmark" href="{% url 'home' %}" aria-label="Pocus at River home"><span class="brand-symbol" aria-hidden="true"><i></i><i></i><i></i></span><span>POCUS AT RIVER<small>WEDDINGS &amp; EVENTS · AURORA, IL</small></span></a>
+      <a class="wordmark" href="{% url 'home' %}" aria-label="Pocus at River home"><span class="brand-symbol" aria-hidden="true"><i></i><i></i><i></i></span><span>Pocus at River<small>WEDDINGS &amp; EVENTS · AURORA, IL</small></span></a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu <span aria-hidden="true">☰</span></button>
       {% with current=request.resolver_match.url_name %}
       <nav class="site-nav" id="site-nav" aria-label="Main navigation">
@@ -30,6 +31,6 @@
   </header>
   {% if messages %}<div class="messages wrap" role="status">{% for message in messages %}<p>{{ message }}</p>{% endfor %}</div>{% endif %}
   <main id="main" class="{% block main_class %}{% endblock %}">{% block content %}{% endblock %}</main>
-  <footer class="site-footer"><div class="wrap footer-grid"><div><a class="footer-wordmark" href="{% url 'home' %}">POCUS AT RIVER</a><p>A historic setting.<br>A new reason to gather.</p></div><div><h2>Find us</h2><p>{{ venue.address }}</p><a href="{% url 'venue' %}">Directions &amp; venue information →</a></div><div><h2>Start a conversation</h2><a href="mailto:{{ venue.contact_email }}">{{ venue.contact_email }}</a>{% if venue.phone %}<p>{{ venue.phone }}</p>{% endif %}<div class="social-links"><a href="https://www.instagram.com/pocusatriver" target="_blank" rel="noopener noreferrer">Instagram →</a><a href="https://www.facebook.com/pocusatriver" target="_blank" rel="noopener noreferrer">Facebook →</a></div></div></div><div class="wrap footer-bottom"><span>© {% now "Y" %} {{ venue.name }}</span><a href="{% url 'gallery' %}#photo-credits">Photography credits</a></div></footer>
+  <footer class="site-footer"><div class="wrap footer-grid"><div><a class="footer-wordmark" href="{% url 'home' %}">Pocus at River</a><p>A historic setting.<br>A new reason to gather.</p></div><div><h2>Find us</h2><p>{{ venue.address }}</p><a href="{% url 'venue' %}">Directions &amp; venue information →</a></div><div><h2>Start a conversation</h2><a href="mailto:{{ venue.contact_email }}">{{ venue.contact_email }}</a>{% if venue.phone %}<p>{{ venue.phone }}</p>{% endif %}<div class="social-links"><a href="https://www.instagram.com/pocusatriver" target="_blank" rel="noopener noreferrer">Instagram →</a><a href="https://www.facebook.com/pocusatriver" target="_blank" rel="noopener noreferrer">Facebook →</a></div></div></div><div class="wrap footer-bottom"><span>© {% now "Y" %} {{ venue.name }}</span><a href="{% url 'gallery' %}#photo-credits">Photography credits</a></div></footer>
   {% block scripts %}{% endblock %}
 </body></html>

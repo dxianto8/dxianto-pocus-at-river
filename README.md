@@ -5,7 +5,8 @@ Building, 100 S. River Street, Downtown Aurora IL. Built with Django and Postgre
 
 The `dev` redesign includes a full-width photographic homepage, Weddings,
 Corporate, Gallery, Venue, and Packages & Pricing pages, plus customer accounts.
-It uses sans-serif type and white, charcoal, and deep teal surfaces.
+It pairs upright Libre Caslon Display headings with sans-serif navigation and
+body copy, white surfaces, and restrained dark accents.
 
 - **Booking requires an account.** Both GET and POST requests to `/book/` require
   login. Signup preserves the selected date/package destination. Booking ownership,
@@ -222,8 +223,12 @@ When you're ready to move `pocusatriver.com` off Wix:
 
 ## Notes
 
-- **Typography.** The dev redesign uses a system sans-serif stack. It loads no
-  third-party fonts and uses no italic serif headings.
+- **Typography.** Upright Libre Caslon Display is self-hosted under the SIL Open
+  Font License (`static/fonts/OFL.txt`). Body copy and controls use system sans-serif
+  fonts. No external font service is contacted at runtime.
+- **Motion.** JavaScript adds staggered hero entrances, one-time scroll reveals,
+  and gallery/menu transitions. Reduced-motion preferences disable these effects;
+  content remains visible without JavaScript. The hero background stays fixed.
 - **Photography.** Full-width imagery comes from the owner-authorized Society 57
   assets and a separately verified CC0 wedding detail photograph. See
   `docs/image-sources.md` for the individual asset URLs, credits, and permissions.
