@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Book Your Date | Pocus At River{% endblock %}
 {% block description %}See which dates are free and request your event date at Pocus at River, Downtown Aurora IL.{% endblock %}
@@ -73,7 +74,7 @@
 
     <div class="request" id="request">
       {% if form %}
-        <h2 class="request__title">Request {{ selected|date:"l, F j, Y" }}</h2>
+        <h2 class="request__title" tabindex="-1">Request {{ selected|date:"l, F j, Y" }}</h2>
         <form class="form" method="post" action="{% url 'bookings:book' %}?month={{ month.first|date:'Y-m' }}#request">
           {% csrf_token %}
           {{ form.event_date }}
@@ -103,4 +104,8 @@
       {% endif %}
     </div>
   </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'js/booking.js' %}" defer></script>
 {% endblock %}

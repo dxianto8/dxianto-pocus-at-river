@@ -61,6 +61,14 @@
 
   On submit the request is saved as `pending` and the date immediately shows
   "On hold".
+- **Picking a date** (added 2026-11-11). `static/js/booking.js` fetches the
+  page for that date and swaps in the calendar and request form without a page
+  load:
+  - The page scrolls smoothly to the form, and the form fades and rises into place.
+  - Focus moves to the form's heading.
+  - Back reloads the page.
+  - With reduced motion, it jumps instead of sliding.
+  - Without JavaScript, or if the fetch fails, the date links work as normal page loads.
 - **Double bookings.** A partial unique index on `event_date` covers rows whose
   status is `pending`, `confirmed` or `blocked`. If two people submit at once,
   one of them gets a "that date was just taken" message.

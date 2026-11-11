@@ -243,6 +243,18 @@ img { display: block; max-width: 100%; height: auto; }
 
 .request { max-width: 648px; margin: 56px auto 0; padding: 0 24px; scroll-margin-top: 96px; }
 .request__title { font: italic 400 20px/1.3 var(--font-serif); letter-spacing: .06em; color: var(--forest); text-align: center; }
+.request__title:focus { outline: none; }
+.request__title:focus-visible { outline: 2px solid var(--forest); outline-offset: 6px; }
+
+/* After a date is picked, the form fades and rises into place while the page slides to it. */
+.request--entering { animation: request-enter .45s ease-out both; }
+@keyframes request-enter {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .request--entering { animation: none; }
+}
 .request__hint { margin-top: 12px; text-align: center; color: var(--stone); }
 
 .form { margin-top: 28px; display: grid; gap: 20px; }
