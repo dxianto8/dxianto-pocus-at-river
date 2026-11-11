@@ -3,42 +3,52 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}HOME | Pocus At River{% endblock %}</title>
-  <meta name="description" content="{% block description %}Weddings and events in the Historic Pocus Motors Building, 100 S. River Street, Downtown Aurora IL.{% endblock %}">
+  <title>{% block title %}Pocus At River | Weddings &amp; Events in Aurora{% endblock %}</title>
+  <meta name="description" content="{% block description %}Explore Pocus at River in the Historic Pocus Motors Building, 100 S. River Street, Downtown Aurora IL. Plan a visit or request your event date.{% endblock %}">
   <link rel="icon" href="{% static 'images/badge.png' %}" type="image/png">
-  {% comment %}
-    Free stand-ins for the paid fonts Wix licenses for the original:
-    Bodoni Moda italic for Didot italic, Mulish Light for Avenir 35 Light. Raleway is the same font.
-  {% endcomment %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital@1&family=Mulish:wght@300;500&family=Raleway:wght@400;500&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital@1&family=Mulish:wght@300;500&family=Raleway:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="{% static 'css/site.css' %}">
+  <script src="{% static 'js/site.js' %}" defer></script>
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to content</a>
   <header class="topbar">
     <div class="topbar__inner">
-      <a class="topbar__label" href="{% url 'home' %}">EXPLORE POCUS AT RIVER</a>
-      <ul class="topbar__social">
-        <li>
-          <a href="https://www.instagram.com/pocusatriver" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-            <img src="{% static 'images/instagram.png' %}" alt="" width="39" height="39">
-          </a>
-        </li>
-        <li>
-          <a href="https://www.facebook.com/pocusatriver" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-            <img src="{% static 'images/facebook.png' %}" alt="" width="39" height="39">
-          </a>
-        </li>
-      </ul>
+      <a class="topbar__label" href="{% url 'home' %}" aria-label="Pocus at River home">
+        <img src="{% static 'images/badge.png' %}" alt="" width="42" height="42">
+        <span>POCUS AT RIVER<small>WEDDINGS &amp; EVENTS · AURORA, IL</small></span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu <span aria-hidden="true">☰</span></button>
+      {% with current=request.resolver_match.url_name %}
+      <nav class="site-nav" id="site-nav" aria-label="Main navigation">
+        <a href="{% url 'home' %}" {% if current == 'home' %}aria-current="page"{% endif %}>Home</a>
+        <a href="{% url 'venue' %}" {% if current == 'venue' %}aria-current="page"{% endif %}>Venue &amp; location</a>
+        <a href="{% url 'walkthrough' %}" {% if current == 'walkthrough' or current == 'walkthrough_requested' %}aria-current="page"{% endif %}>Walk-throughs</a>
+        <a class="nav-book" href="{% url 'bookings:book' %}" {% if request.resolver_match.namespace == 'bookings' %}aria-current="page"{% endif %}>Event bookings <span aria-hidden="true">↗︎</span></a>
+      </nav>
+      {% endwith %}
     </div>
   </header>
 
-  <main class="{% block main_class %}{% endblock %}">
+  <main id="main" class="{% block main_class %}{% endblock %}">
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="site-footer">© 2026 by Pocus at River</footer>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div><a class="footer-brand" href="{% url 'home' %}">Pocus at River</a><p>Historic character. New memories.</p></div>
+      <div><p>100 S. River Street<br>Aurora, Illinois</p><a href="{% url 'venue' %}">Plan your visit <span aria-hidden="true">↗︎</span></a></div>
+      <div><a href="mailto:events@pocusatriver.com">events@pocusatriver.com</a>
+        <ul class="topbar__social">
+          <li><a href="https://www.instagram.com/pocusatriver" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><img src="{% static 'images/instagram.png' %}" alt="" width="32" height="32"></a></li>
+          <li><a href="https://www.facebook.com/pocusatriver" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><img src="{% static 'images/facebook.png' %}" alt="" width="32" height="32"></a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="copyright">© {% now "Y" %} by Pocus at River</p>
+  </footer>
   {% block scripts %}{% endblock %}
 </body>
 </html>

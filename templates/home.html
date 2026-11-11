@@ -1,54 +1,70 @@
 {% extends "base.html" %}
 {% load static %}
-
 {% block main_class %}home{% endblock %}
-
 {% block content %}
   <div class="hero" data-testid="hero">
     <div class="hero__photo" data-testid="hero-photo" data-parallax="0.8">
-      <img src="{% static 'images/hero.jpg' %}" width="640" height="427" fetchpriority="high"
-           alt="A styled reception table with roses, glassware, a slate plate and a dessert topped with nuts and pomegranate">
+      <img src="{% static 'images/hero.jpg' %}" width="640" height="427" fetchpriority="high" alt="A reception table styled with roses, glassware and an elegant place setting">
     </div>
-    <h1 class="hero__badge">
-      <img src="{% static 'images/badge.png' %}" width="245" height="245" alt="Pocus at River, weddings &amp; events">
-    </h1>
+    <h1 class="hero__badge"><img src="{% static 'images/badge.png' %}" width="245" height="245" alt="Pocus at River, weddings &amp; events"></h1>
     <p class="hero__address">100 S. River Street, Downtown Aurora IL</p>
-    <p class="hero__cta"><a class="button button--book" href="{% url 'bookings:book' %}">Book Your Date</a></p>
+    <div class="hero__cta"><a class="button button--book" href="{% url 'bookings:book' %}">Book Your Date</a><a class="hero__visit" href="{% url 'walkthrough' %}">Come see it for yourself <span aria-hidden="true">→</span></a></div>
+    <span class="hero__note">A PLACE TO GATHER. A MOMENT TO REMEMBER.</span>
   </div>
 
-  <section class="about" aria-labelledby="about-heading">
-    <div class="divider" aria-hidden="true"></div>
-    <h2 id="about-heading" class="section-heading section-heading--forest">Host Your Event at the Historic Pocus Motors Building</h2>
-    <div class="prose">
-      <p>Say "I do" in one of downtown Aurora's most distinctive event spaces. Pocus at River sits inside the Historic Pocus Motors Building, where soaring windows, exposed brick, and original architectural details give your wedding day a backdrop you won't find in a typical ballroom. From an intimate ceremony or a reception for two hundred guests, the layout flexes to fit your vision without losing the character that makes it worth booking.</p>
-      <p>Downtown Aurora puts riverfront views, and walkable restaurants right outside the door, so out-of-town family can grab dinner the night before and coffee the morning after without needing a car. Reserve your date early, weekend slots at Pocus at River go fast during peak wedding season.</p>
-    </div>
+  <div class="venue-strip" aria-label="Venue at a glance"><span>Historic Pocus Motors Building</span><span>Downtown Aurora, Illinois</span><a href="{% url 'walkthrough' %}">Visits by appointment <span aria-hidden="true">↗︎</span></a></div>
+
+  <section class="editorial section-wrap" aria-labelledby="about-heading">
+    <div><p class="eyebrow">Something old. Something entirely yours.</p><h2 id="about-heading" class="display-heading">Host Your Event at the Historic Pocus Motors Building</h2></div>
+    <div class="body-copy"><p>Exposed brick, soaring windows, and a setting with a story. Pocus at River brings people together in the heart of downtown Aurora for weddings, company gatherings, and life's celebrations.</p><p>Start with a walk-through. Explore the space, talk through your guest list, and imagine how your day could unfold.</p><a class="text-link" href="{% url 'venue' %}">Get to know the venue <span aria-hidden="true">→</span></a></div>
   </section>
 
-  <section class="gallery-section" aria-labelledby="gallery-heading">
-    <div class="divider" aria-hidden="true"></div>
-    <h2 id="gallery-heading" class="section-heading">Tell Us About Your Event</h2>
+  <section class="gallery-section section-wrap" aria-labelledby="gallery-heading">
+    <div class="section-top"><div><p class="eyebrow">Picture the possibilities</p><h2 id="gallery-heading" class="display-heading">A little atmosphere goes a long way.</h2></div><p class="muted">Select a photo for a closer look.</p></div>
     <ul class="gallery" data-testid="gallery">
-      <li><img src="{% static 'images/hero.jpg' %}" width="640" height="427" loading="lazy"
-               alt="A styled reception table with roses, glassware, a slate plate and a dessert topped with nuts and pomegranate"></li>
-      <li><img src="{% static 'images/gallery-dance.jpg' %}" width="640" height="427" loading="lazy"
-               alt="Wedding guests dancing and cheering on a packed dance floor"></li>
-      <li><img src="{% static 'images/gallery-hall.jpg' %}" width="1600" height="1067" loading="lazy"
-               alt="A long candlelit banquet table in the venue's industrial hall, with black chairs and exposed ductwork"></li>
+      <li><a href="{% static 'images/hero.jpg' %}" data-gallery data-caption="The details that make a table feel special."><img src="{% static 'images/hero.jpg' %}" width="640" height="427" loading="lazy" alt="Roses and glassware on a styled reception table"><span>Thoughtful details <b aria-hidden="true">↗︎</b></span></a></li>
+      <li><a href="{% static 'images/gallery-dance.jpg' %}" data-gallery data-caption="Make room for a night on the dance floor."><img src="{% static 'images/gallery-dance.jpg' %}" width="640" height="427" loading="lazy" alt="Wedding guests celebrating together on the dance floor"><span>Unforgettable celebrations <b aria-hidden="true">↗︎</b></span></a></li>
+      <li><a href="{% static 'images/gallery-hall.jpg' %}" data-gallery data-caption="A candlelit gathering in an industrial setting."><img src="{% static 'images/gallery-hall.jpg' %}" width="1600" height="1067" loading="lazy" alt="A candlelit banquet table with black chairs and exposed ductwork"><span>Room to gather <b aria-hidden="true">↗︎</b></span></a></li>
     </ul>
-    <div class="prose">
-      <p>Looking for a corporate event space in downtown Aurora that doesn't feel like every other hotel ballroom? Pocus at River, set inside the Historic Pocus Motors Building, pairs industrial-chic architecture with a floor plan ideal for client dinners, product launches, team celebrations, and holiday parties.</p>
-      <p>The downtown Aurora location makes logistics easy with parking, nearby hotels for traveling guests, and restaurants within walking distance for an after-party. If you're hosting fifty coworkers for a holiday gathering or a few hundred for a company milestone, Pocus at River can be reserved for the date you need. December weekends book up quickly, so it's worth locking in your date now.</p>
+  </section>
+
+  <section class="occasions section-wrap" aria-labelledby="occasion-heading">
+    <p class="eyebrow">Make it your occasion</p><h2 id="occasion-heading" class="display-heading">Good company. A beautiful setting.</h2>
+    <div class="card-grid">
+      <a class="occasion-card" href="{% url 'bookings:book' %}"><span class="card-number">01 / WEDDINGS</span><h3>Your next chapter</h3><p>Bring your people together for a ceremony, a reception, and the moments in between.</p><span class="text-link">Explore event dates <span aria-hidden="true">→</span></span></a>
+      <a class="occasion-card" href="{% url 'bookings:book' %}"><span class="card-number">02 / CORPORATE EVENTS</span><h3>A change of scene</h3><p>Plan a client dinner, team celebration, or company milestone in a space with character.</p><span class="text-link">Plan your gathering <span aria-hidden="true">→</span></span></a>
+      <a class="occasion-card" href="{% url 'walkthrough' %}"><span class="card-number">03 / CELEBRATIONS</span><h3>Just because it matters</h3><p>Birthdays, anniversaries, and reunions. Come take a look and tell us what you have in mind.</p><span class="text-link">Start with a visit <span aria-hidden="true">→</span></span></a>
     </div>
   </section>
 
-  <section class="contact" aria-labelledby="contact-heading">
-    <div class="divider" aria-hidden="true"></div>
-    <h2 id="contact-heading" class="section-heading">Get in Touch</h2>
-    <p class="cta"><a class="button button--email" href="mailto:events@pocusatriver.com?subject=Event%20Inquiry">Email Us</a></p>
+  <section class="stories" aria-labelledby="stories-heading">
+    <div class="section-wrap">
+      <p class="eyebrow">From our community</p><h2 id="stories-heading" class="display-heading">Stories worth sharing.</h2>
+      {% if testimonials %}
+        <div class="testimonials" data-testimonials aria-roledescription="carousel" aria-label="Guest testimonials">
+          <div class="testimonials__slides" aria-live="polite" aria-atomic="true">
+            {% for testimonial in testimonials %}
+              <figure class="testimonial" data-testimonial role="group" aria-label="{{ forloop.counter }} of {{ testimonials|length }}">
+                <blockquote>“{{ testimonial.quote }}”</blockquote><figcaption>{{ testimonial.attribution }}{% if testimonial.event_label %}<span>{{ testimonial.event_label }}</span>{% endif %}{% if testimonial.source_url %}<a href="{{ testimonial.source_url }}" target="_blank" rel="noopener noreferrer">Read original review ↗︎</a>{% endif %}</figcaption>
+              </figure>
+            {% endfor %}
+          </div>
+          <div class="slider-controls" data-testimonial-controls hidden><button type="button" data-review-prev aria-label="Previous testimonial">←</button><span data-review-count></span><button type="button" data-review-next aria-label="Next testimonial">→</button></div>
+        </div>
+      {% else %}
+        <div class="story-invitation"><p>Hosted an event here? We'd love to hear about the moments that made it yours.</p><a class="text-link" href="mailto:events@pocusatriver.com?subject=Share%20our%20event%20story">Share your story <span aria-hidden="true">→</span></a></div>
+      {% endif %}
+    </div>
   </section>
-{% endblock %}
 
-{% block scripts %}
-  <script src="{% static 'js/parallax.js' %}" defer></script>
+  <section class="faq-section section-wrap" aria-labelledby="faq-heading">
+    <div><p class="eyebrow">Before you make plans</p><h2 id="faq-heading" class="display-heading">A few helpful answers.</h2><a class="text-link" href="{% url 'walkthrough' %}">Ask us in person <span aria-hidden="true">→</span></a></div>
+    {% include "includes/faq.html" %}
+  </section>
+  {% include "includes/visit_cta.html" %}
+
+  <dialog class="lightbox" aria-labelledby="lightbox-caption">
+    <div class="lightbox__inner"><button class="lightbox__close" type="button" data-gallery-close aria-label="Close photo">Close ×</button><img data-gallery-image alt=""><p id="lightbox-caption" aria-live="polite"></p><div class="slider-controls"><button type="button" data-gallery-prev aria-label="Previous photo">←</button><span data-gallery-count></span><button type="button" data-gallery-next aria-label="Next photo">→</button></div></div>
+  </dialog>
 {% endblock %}
+{% block scripts %}<script src="{% static 'js/parallax.js' %}" defer></script>{% endblock %}

@@ -10,10 +10,31 @@ from django.utils.http import urlencode
 from django.views.decorators.http import require_GET, require_http_methods
 
 from .calendar import DayState, Month, add_months, build_month, parse_month
-from .forms import BookingRequestForm
-from .models import Booking
+from .forms import BookingRequestForm, WalkthroughRequestForm
+from .models import Booking, Testimonial
 
 TAKEN_MESSAGE = "Sorry, that date was just taken by another request. Please choose another date."
+
+
+@require_GET
+def home(request: HttpRequest) -> HttpResponse:
+    return render(
+        request,
+        "home.html",
+        {
+            "testimonials": Testimonial.objects.filter(is_published=True, permission_granted=True),
+        },
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def walkthrough(request: HttpRequest) -> HttpResponse:
+    form = WalkthroughRequestForm(request.POST if request.method == "POST" else None)
+    if request.method == "POST" and form.is_valid():
+        if not form.is_spam:
+            form.save()
+        return redirect("walkthrough_requested")
+    return render(request, "walkthrough.html", {"form": form})
 
 
 def safe_parse_date(value: str | None) -> date | None:

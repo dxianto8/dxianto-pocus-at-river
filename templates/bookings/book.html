@@ -6,11 +6,12 @@
 
 {% block content %}
   <section class="booking" aria-labelledby="booking-heading">
-    <div class="divider" aria-hidden="true"></div>
+    <p class="eyebrow">Event bookings · Aurora, Illinois</p>
     <h1 id="booking-heading" class="section-heading section-heading--forest">Book Your Date</h1>
     <div class="prose">
-      <p>Choose a free date to request it. We hold the date for you while we review your request, then reply by email to confirm. Questions first? <a href="mailto:events@pocusatriver.com?subject=Event%20Inquiry">Email us</a>.</p>
+      <p>Choose an available date and tell us about your event. Your request holds the date while the venue team reviews it; a booking is confirmed only after the team contacts you. No payment is taken here.</p>
     </div>
+    <ol class="booking-steps" aria-label="Booking steps"><li><b>01</b> Choose a date</li><li><b>02</b> Share your plans</li><li><b>03</b> Hear from the team</li></ol>
 
     <div class="calendar">
       <div class="calendar__nav">
@@ -103,6 +104,7 @@
         <p class="request__hint">Pick an available date above to start your request.</p>
       {% endif %}
     </div>
+    <div class="booking-help"><p>Want to see the space first? <a href="{% url 'walkthrough' %}">Request a walk-through</a>.</p><p>Questions about pricing, layouts, or vendors? <a href="mailto:events@pocusatriver.com?subject=Event%20Inquiry">Email the venue team</a>.</p></div>
   </section>
 {% endblock %}
 

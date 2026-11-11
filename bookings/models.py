@@ -101,3 +101,62 @@ class Booking(models.Model):
         }
         if missing:
             raise ValidationError(missing)
+
+
+class WalkthroughRequest(models.Model):
+    """A preferred visit time, never a hold on the event calendar."""
+
+    class TimeWindow(models.TextChoices):
+        FLEXIBLE = "flexible", "I'm flexible"
+        MORNING = "morning", "Morning"
+        AFTERNOON = "afternoon", "Afternoon"
+        EVENING = "evening", "Evening"
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "New request"
+        CONTACTED = "contacted", "Contacted"
+        CONFIRMED = "confirmed", "Visit confirmed"
+        CANCELLED = "cancelled", "Cancelled"
+
+    name = models.CharField(max_length=120)
+    email = models.EmailField()
+    phone = models.CharField(max_length=40, blank=True)
+    preferred_date = models.DateField()
+    preferred_time = models.CharField(max_length=12, choices=TimeWindow)
+    event_type = models.CharField(max_length=10, choices=Booking.EventType, blank=True)
+    message = models.TextField(blank=True, max_length=2000)
+    status = models.CharField(max_length=12, choices=Status, default=Status.PENDING)
+    contact_consent_at = models.DateTimeField(editable=False)
+    admin_note = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.name} — {self.preferred_date:%b %d, %Y}"
+
+
+class Testimonial(models.Model):
+    quote = models.TextField(max_length=800, help_text="Use the guest's approved words.")
+    attribution = models.CharField(max_length=120, help_text="Public name approved by the guest.")
+    event_label = models.CharField(max_length=120, blank=True)
+    source_url = models.URLField(blank=True, help_text="Optional link to the original review.")
+    permission_granted = models.BooleanField(
+        default=False, help_text="The guest has given permission to publish this quote and name."
+    )
+    is_published = models.BooleanField(default=False)
+    display_order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["display_order", "pk"]
+
+    def __str__(self):
+        return self.attribution
+
+    def clean(self):
+        super().clean()
+        if self.is_published and not self.permission_granted:
+            raise ValidationError(
+                {"permission_granted": "Get the guest's permission before publishing."}
+            )

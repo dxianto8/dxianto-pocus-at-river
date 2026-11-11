@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Request a Walk-through | Pocus At River{% endblock %}
+{% block description %}Request a visit to Pocus at River in downtown Aurora. Share your preferred date, meet the space, and talk through your event plans.{% endblock %}
+{% block content %}
+  <section class="page-intro section-wrap"><p class="eyebrow">Come picture your day</p><h1 class="display-heading">See the space.<br>Feel the possibilities.</h1><p>Request a walk-through of Pocus at River. Tell us when you'd like to visit, and the team will contact you to arrange a time.</p></section>
+  <section class="tour-layout section-wrap" aria-labelledby="tour-form-heading">
+
+    <div class="tour-form-panel"><p class="eyebrow">By appointment</p><h2 id="tour-form-heading" class="display-heading">Request your walk-through</h2><p>Required fields are marked *. Your details are used to coordinate this request.</p>
+      <form class="form" method="post" action="{% url 'walkthrough' %}" data-walkthrough-form>
+        {% csrf_token %}
+        {% if form.errors %}<div class="notice" role="alert">Please check the fields below. Your request hasn't been sent yet. {{ form.non_field_errors }}</div>{% endif %}
+        {% for field in form %}
+          {% if field.name == 'website' %}<div class="visually-hidden" aria-hidden="true">{{ field.label_tag }}{{ field }}</div>
+          {% elif field.name == 'contact_consent' %}<div class="field field--checkbox{% if field.errors %} field--invalid{% endif %}"><label for="{{ field.id_for_label }}">{{ field }} <span>{{ field.label }} *</span></label>{{ field.errors }}</div>
+          {% else %}<div class="field{% if field.errors %} field--invalid{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}{{ field.errors }}</div>{% endif %}
+        {% endfor %}
+        <p class="form__actions"><button class="button button--book" type="submit">Request a Walk-through <span aria-hidden="true">↗︎</span></button></p>
+        <p class="form-fineprint">This sends a request, not an appointment confirmation. Questions? <a href="mailto:events@pocusatriver.com">Email the venue team</a>.</p>
+      </form>
+    </div>
+    <aside class="tour-notes"><p class="eyebrow">Your first look</p><h2 class="display-heading">A little planning.<br>A lot of possibility.</h2><ol class="visit-steps"><li><h3>Share a preferred time</h3><p>Choose a date and time window that work for you.</p></li><li><h3>Let's arrange your visit</h3><p>The team will review your request and contact you. Your time isn't confirmed until you hear from us.</p></li><li><h3>Bring your ideas</h3><p>Talk through your guest list, layout, vendors, and questions about the space.</p></li></ol><p class="tour-note">A walk-through request does not reserve an event date. Ready to pick a date? <a href="{% url 'bookings:book' %}">View event availability →</a></p><p class="tour-note">100 S. River Street, Aurora, IL<br><a href="{% url 'venue' %}">Directions &amp; arrival information →</a></p></aside>
+  </section>
+{% endblock %}
