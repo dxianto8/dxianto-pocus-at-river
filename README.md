@@ -52,12 +52,12 @@ docker compose run --rm web pytest
 docker compose run --rm web ruff check .
 ```
 
-`pytest` runs 84 tests:
+`pytest` runs 94 tests:
 
 - **Calendar rules:** past dates, the 24-month limit, and which states visitors see.
 - **Form checks** and the spam trap.
 - **Double-booking protection.**
-- **Vercel deploy settings** and the migration build step.
+- **Vercel deploy settings,** the migration build step, and creating the first admin login.
 - **Admin actions:** confirm, decline, cancel, block and unblock.
 - **Browser tests** (Playwright, Chromium), covering:
   - the booking flow and the admin;
@@ -112,25 +112,40 @@ Vercel runs Django directly. It finds `manage.py`, installs the dependencies lis
      gets its own copy of the database.
 
    This fills in `DATABASE_URL` and `DATABASE_URL_UNPOOLED` for you.
-3. **Add the secret key.** Under **Settings → Environment Variables**, add
-   `DJANGO_SECRET_KEY` for all environments. Generate a value with:
+3. **Add your settings.** Under **Settings → Environment Variables**, add these
+   four, each for all environments:
+
+   | Variable                    | Value |
+   | --------------------------- | ----- |
+   | `DJANGO_SECRET_KEY`         | a long random string (see below) |
+   | `DJANGO_SUPERUSER_USERNAME` | the username you'll sign in to the admin with |
+   | `DJANGO_SUPERUSER_PASSWORD` | your admin password (at least 8 characters, not too common) |
+   | `DJANGO_SUPERUSER_EMAIL`    | your email address (optional) |
+
+   To generate the secret key, run this on your Mac and copy the line it prints:
 
    ```bash
    python3 -c "import secrets; print(secrets.token_urlsafe(50))"
    ```
 
+   If `python3` isn't installed, `openssl rand -base64 48` works too.
+
 4. **Deploy again.** Go to **Deployments**, open the menu on the latest one and
-   choose **Redeploy**. Every deployment applies any new database migrations
-   before it goes live (`scripts/vercel_build.py`).
-5. **Create your admin login.** Copy `DATABASE_URL` from **Settings → Environment
-   Variables** (click the eye icon to show it). Then on your Mac, from this
-   folder, put it between the quotes:
+   choose **Redeploy**. Every deployment runs `scripts/vercel_build.py` before it
+   goes live. It applies any new database migrations and, the first time,
+   creates your admin login from the settings above.
+5. **Sign in, then remove the password setting.** Sign in at
+   `https://<your-project>.vercel.app/admin/`. Once that works, delete
+   `DJANGO_SUPERUSER_PASSWORD` from the Environment Variables. The login keeps
+   working; the password is stored securely in the database. Later deploys never
+   change an existing login, so a password you change in the admin stays changed.
 
-   ```bash
-   docker compose run --rm -e DATABASE_URL='postgres://...' web python manage.py createsuperuser
-   ```
+   If a deploy fails with "DJANGO_SUPERUSER_PASSWORD isn't strong enough", the
+   build log says why. Choose a stronger password and redeploy.
 
-   Sign in at `https://<your-project>.vercel.app/admin/`.
+To add more people, sign in and use **Users → Add user**. Tick **Staff status**
+so they can sign in, and **Superuser status** if they should be able to do
+everything.
 
 ### Using your own domain
 

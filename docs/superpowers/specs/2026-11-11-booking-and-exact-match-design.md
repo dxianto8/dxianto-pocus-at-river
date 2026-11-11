@@ -156,9 +156,17 @@ directly, and Neon is added from the project's Storage tab.
    `DATABASE_URL_UNPOOLED` (direct).
 3. Set `DJANGO_SECRET_KEY`. When a custom domain is added, also set
    `DJANGO_ALLOWED_HOSTS` and `DJANGO_CSRF_TRUSTED_ORIGINS`.
-4. Each build runs `scripts/vercel_build.py`, which applies migrations over the
-   direct connection. Vercel runs `collectstatic` itself and serves the static
-   files from its CDN.
+4. Each build runs `scripts/vercel_build.py`. It applies migrations over the
+   direct connection, then runs `manage.py ensure_admin`, which creates the first
+   admin login from `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_PASSWORD` and
+   `DJANGO_SUPERUSER_EMAIL`:
+   - It only creates the login if that username doesn't exist; an existing login
+     is never changed.
+   - The password must pass Django's password rules, or the build fails.
+   - The password is never printed.
+
+   The user deletes the password setting after the first sign-in. Vercel runs
+   `collectstatic` itself and serves the static files from its CDN.
 
 At runtime on Vercel (`VERCEL=1`):
 
