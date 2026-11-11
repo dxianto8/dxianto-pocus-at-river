@@ -1,0 +1,28 @@
+[project]
+name = "pocus-at-river"
+version = "0.2.0"
+description = "Website and booking system for Pocus at River, Aurora IL"
+requires-python = ">=3.13"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+testpaths = ["tests"]
+addopts = "--browser chromium --tracing off"
+markers = ["e2e: browser tests (need Playwright's Chromium installed)"]
+# WhiteNoise warns that collected static files don't exist; in development they don't need to.
+filterwarnings = ["ignore:No directory at:UserWarning"]
+# "D:" only sets a value when it isn't already set, so docker-compose's values win.
+env = [
+  "D:DATABASE_URL=postgres://pocus:pocus@localhost:5432/pocus",
+  "D:DJANGO_DEBUG=true",
+  # Playwright's sync API runs an event loop in the test thread; Django's ORM is safe to use there.
+  "DJANGO_ALLOW_ASYNC_UNSAFE=true",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = ["bookings/migrations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "DJ", "SIM"]

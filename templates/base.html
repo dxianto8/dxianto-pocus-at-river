@@ -1,0 +1,44 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}HOME | Pocus At River{% endblock %}</title>
+  <meta name="description" content="{% block description %}Weddings and events in the Historic Pocus Motors Building, 100 S. River Street, Downtown Aurora IL.{% endblock %}">
+  <link rel="icon" href="{% static 'images/badge.png' %}" type="image/png">
+  {% comment %}
+    Free stand-ins for the paid fonts Wix licenses for the original:
+    Bodoni Moda italic for Didot italic, Mulish Light for Avenir 35 Light. Raleway is the same font.
+  {% endcomment %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital@1&family=Mulish:wght@300&family=Raleway:wght@400;500&display=swap">
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a class="topbar__label" href="{% url 'home' %}">EXPLORE POCUS AT RIVER</a>
+      <ul class="topbar__social">
+        <li>
+          <a href="https://www.instagram.com/pocusatriver" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <img src="{% static 'images/instagram.png' %}" alt="" width="39" height="39">
+          </a>
+        </li>
+        <li>
+          <a href="https://www.facebook.com/pocusatriver" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+            <img src="{% static 'images/facebook.png' %}" alt="" width="39" height="39">
+          </a>
+        </li>
+      </ul>
+    </div>
+  </header>
+
+  <main class="{% block main_class %}{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">© 2026 by Pocus at River</footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

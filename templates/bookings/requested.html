@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Request Received | Pocus At River{% endblock %}
+
+{% block content %}
+  <section class="booking" aria-labelledby="thanks-heading">
+    <div class="divider" aria-hidden="true"></div>
+    <h1 id="thanks-heading" class="section-heading section-heading--forest">Thank You</h1>
+    <div class="prose">
+      <p>We've received your request{% if day %} for <strong>{{ day|date:"l, F j, Y" }}</strong>{% endif %}. The date is on hold while we review it, and we'll be in touch by email soon.</p>
+      <p>Questions in the meantime? Email <a href="mailto:events@pocusatriver.com?subject=Event%20Inquiry">events@pocusatriver.com</a>.</p>
+    </div>
+    <p class="cta"><a class="button" href="{% url 'home' %}">Back to Home</a></p>
+  </section>
+{% endblock %}

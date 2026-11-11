@@ -1,0 +1,38 @@
+# Local development: `docker compose up`, then open http://localhost:8000
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: pocus
+      POSTGRES_USER: pocus
+      POSTGRES_PASSWORD: pocus
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pocus -d pocus"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  web:
+    build:
+      context: .
+      args:
+        DEV: "true"
+    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    environment:
+      DATABASE_URL: postgres://pocus:pocus@db:5432/pocus
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

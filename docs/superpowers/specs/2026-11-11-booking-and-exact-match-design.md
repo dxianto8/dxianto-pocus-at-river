@@ -1,10 +1,11 @@
 # Exact match + bookings: design
 
 - **Date:** 2026-11-11
-- **Status:** approved in chat, 2026-11-11
+- **Status:** approved in chat, 2026-11-11. Stack changed to Django + Postgres the
+  same day (§6, approved in chat). §4, §7 and §8 were updated to match.
 - **Supersedes:** the "fictional venue" content decisions in
-  `2026-11-11-venue-site-design.md` (§1, §2, §4, §10). That spec's architecture,
-  accessibility and phone-layout rules still apply.
+  `2026-11-11-venue-site-design.md` (§1, §2, §4, §10), and that spec's Next.js
+  architecture. Its accessibility and phone-layout rules still apply.
 
 ## 1. Decisions (from the user)
 
@@ -61,20 +62,20 @@
 - **Spam.** A hidden honeypot field. A submission that fills it is silently dropped.
 - "Today" is calculated in the venue's time zone (`America/Chicago`).
 
-## 4. Admin page: `/admin`
+## 4. Admin: Django's built-in admin at `/admin/`
 
-- **Login.** One shared password, from the `ADMIN_PASSWORD` environment
-  variable. A successful login sets a signed, HTTP-only session cookie (JWT
-  signed with `SESSION_SECRET`, valid for 7 days). `proxy.ts` sends anyone
-  without a valid cookie to `/admin/login`. Every admin server action checks
-  the session again.
-- **Requests list.** Pending requests come first. Each has Confirm and Decline
-  buttons. Declining frees the date.
-- **Calendar.** Shows every booking with its details. The admin can:
-  - edit a booking (date, details, status);
-  - add a booking by hand;
-  - block and unblock dates;
-  - cancel a booking.
+- **Login.** Django user accounts (staff users), created with
+  `manage.py createsuperuser`. This replaces the shared password from the
+  first version of this spec. Django handles sessions, password hashing and
+  CSRF.
+- **Bookings list.** Filter by status, browse by date, search by name or
+  email. Pending requests sort first. "Confirm" and "Decline" are bulk actions.
+  Declining frees the date.
+- **Edit form.** Change any booking's date, details, status or admin note, or
+  add a booking by hand.
+- **Calendar view** (a custom page inside the admin). A month grid showing every
+  booking, each linking to its edit form. Free dates have "Block" and "Add
+  booking" buttons, and blocked dates have "Unblock".
 
 ## 5. Data
 
@@ -99,34 +100,60 @@ Partial unique index: `event_date` where status is in
 
 ## 6. Tech
 
-- **Database access:** Drizzle ORM. When `DATABASE_URL` is set it connects to
-  Neon through `@neondatabase/serverless`. Otherwise it uses PGlite (Postgres
-  running inside Node, stored in `.data/`), so running locally and running the
-  tests need no database account. Migrations are created with `drizzle-kit`.
-- **Writes:** server actions. Input is validated with Zod.
-- **Calendar widget:** `react-day-picker`, restyled to match the site.
+- **Django 6.1** on Python 3.13, using Django's own tools: templates, forms,
+  ORM, migrations and admin. The site has no frontend framework.
+  - **Styling:** one plain CSS file.
+  - **JavaScript:** only `parallax.js`. The booking calendar is built on the
+    server and works without JavaScript.
+- **Database:** Postgres through `psycopg` 3. The connection comes from
+  `DATABASE_URL` via `dj-database-url`. The partial unique index is a
+  `UniqueConstraint` with a `condition`.
+- **Settings** come from environment variables: `DJANGO_SECRET_KEY`,
+  `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, `DATABASE_URL`. Time zone is
+  `America/Chicago`.
+- **Production:** Gunicorn, with WhiteNoise serving static files.
+- **Local development:** `docker compose up` starts Postgres 17 and Django.
+
+Layout:
+
+```
+config/          settings, urls, wsgi
+bookings/        model, forms, calendar builder, views, admin, migrations
+templates/       base, home, booking page, admin calendar
+static/          css/site.css, js/parallax.js, images/
+tests/           pytest unit and view tests; tests/e2e/ browser tests
+```
 
 ## 7. Testing
 
-- **Vitest** (unit tests): availability rules (which dates are past, too far
-  ahead or taken), form validation, and session token sign/verify.
-- **Playwright** (end to end):
-  - Request a date, then see it shown as On hold.
+- **pytest + pytest-django** (run against Postgres):
+  - Month-grid builder.
+  - Form rules: past dates, more than 24 months ahead, dates already taken,
+    honeypot.
+  - The unique constraint.
+  - The booking view, including a double booking that hits a race.
+  - Admin actions and the admin calendar's block and unblock.
+- **pytest-playwright** (browser tests against a live test server):
+  - Home-page content.
+  - Desktop positions matching the original.
+  - Sticky bars and parallax.
+  - Phone layout.
+  - Requesting a date, then seeing it shown as On hold.
   - The same date cannot be requested twice.
-  - `/admin` redirects to the login page without a session, and a wrong
-    password is rejected.
+  - Admin login is required.
   - Confirming, declining and blocking a date each change the public calendar.
-  - The existing home-page checks still pass.
+- **ruff** for linting and formatting.
 
 ## 8. Deployment (for the user)
 
-1. Create a free Neon project and copy its connection string.
-2. In Vercel, set `DATABASE_URL`, `ADMIN_PASSWORD` and `SESSION_SECRET` (a long
-   random string).
-3. Run the migrations once with `npm run db:migrate`.
+1. Create a Postgres database: Neon, or Render's own Postgres.
+2. Create a Render web service from the repo, using the Dockerfile. Set
+   `DATABASE_URL`, `DJANGO_SECRET_KEY` (a long random string),
+   `DJANGO_ALLOWED_HOSTS` and `DJANGO_DEBUG=false`.
+3. Run `python manage.py migrate` and `python manage.py createsuperuser` once.
 
 ## 9. Out of scope
 
 - Email notifications. This is the suggested next step, using a service such as Resend.
 - Payments and deposits.
-- More than one admin account.
+- Custom admin roles and permissions beyond Django's defaults.

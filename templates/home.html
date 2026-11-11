@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block main_class %}home{% endblock %}
+
+{% block content %}
+  <div class="hero" data-testid="hero">
+    <div class="hero__photo" data-testid="hero-photo" data-parallax="0.8">
+      <img src="{% static 'images/hero.jpg' %}" width="640" height="427" fetchpriority="high"
+           alt="A styled reception table with roses, glassware, a slate plate and a dessert topped with nuts and pomegranate">
+    </div>
+    <h1 class="hero__badge">
+      <img src="{% static 'images/badge.png' %}" width="245" height="245" alt="Pocus at River, weddings &amp; events">
+    </h1>
+    <p class="hero__address">100 S. River Street, Downtown Aurora IL</p>
+  </div>
+
+  <section class="about" aria-labelledby="about-heading">
+    <div class="divider" aria-hidden="true"></div>
+    <h2 id="about-heading" class="section-heading section-heading--forest">Host Your Event at the Historic Pocus Motors Building</h2>
+    <div class="prose">
+      <p>Say "I do" in one of downtown Aurora's most distinctive event spaces. Pocus at River sits inside the Historic Pocus Motors Building, where soaring windows, exposed brick, and original architectural details give your wedding day a backdrop you won't find in a typical ballroom. From an intimate ceremony or a reception for two hundred guests, the layout flexes to fit your vision without losing the character that makes it worth booking.</p>
+      <p>Downtown Aurora puts riverfront views, and walkable restaurants right outside the door, so out-of-town family can grab dinner the night before and coffee the morning after without needing a car. Reserve your date early, weekend slots at Pocus at River go fast during peak wedding season.</p>
+    </div>
+    <p class="cta"><a class="button button--enquire" href="{% url 'bookings:book' %}">Enquire About Your Event</a></p>
+  </section>
+
+  <section class="gallery-section" aria-labelledby="gallery-heading">
+    <div class="divider" aria-hidden="true"></div>
+    <h2 id="gallery-heading" class="section-heading">Tell Us About Your Event</h2>
+    <ul class="gallery" data-testid="gallery">
+      <li><img src="{% static 'images/hero.jpg' %}" width="640" height="427" loading="lazy"
+               alt="A styled reception table with roses, glassware, a slate plate and a dessert topped with nuts and pomegranate"></li>
+      <li><img src="{% static 'images/gallery-dance.jpg' %}" width="640" height="427" loading="lazy"
+               alt="Wedding guests dancing and cheering on a packed dance floor"></li>
+      <li><img src="{% static 'images/gallery-hall.jpg' %}" width="1600" height="1067" loading="lazy"
+               alt="A long candlelit banquet table in the venue's industrial hall, with black chairs and exposed ductwork"></li>
+    </ul>
+    <div class="prose">
+      <p>Looking for a corporate event space in downtown Aurora that doesn't feel like every other hotel ballroom? Pocus at River, set inside the Historic Pocus Motors Building, pairs industrial-chic architecture with a floor plan ideal for client dinners, product launches, team celebrations, and holiday parties.</p>
+      <p>The downtown Aurora location makes logistics easy with parking, nearby hotels for traveling guests, and restaurants within walking distance for an after-party. If you're hosting fifty coworkers for a holiday gathering or a few hundred for a company milestone, Pocus at River can be reserved for the date you need. December weekends book up quickly, so it's worth locking in your date now.</p>
+    </div>
+  </section>
+
+  <section class="contact" aria-labelledby="contact-heading">
+    <div class="divider" aria-hidden="true"></div>
+    <h2 id="contact-heading" class="section-heading">Get in Touch</h2>
+    <p class="cta"><a class="button button--email" href="mailto:events@pocusatriver.com?subject=Event%20Inquiry">Email Us</a></p>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'js/parallax.js' %}" defer></script>
+{% endblock %}

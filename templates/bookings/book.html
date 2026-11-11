@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Book Your Date | Pocus At River{% endblock %}
+{% block description %}See which dates are free and request your event date at Pocus at River, Downtown Aurora IL.{% endblock %}
+
+{% block content %}
+  <section class="booking" aria-labelledby="booking-heading">
+    <div class="divider" aria-hidden="true"></div>
+    <h1 id="booking-heading" class="section-heading section-heading--forest">Book Your Date</h1>
+    <div class="prose">
+      <p>Choose a free date to request it. We hold the date for you while we review your request, then reply by email to confirm. Questions first? <a href="mailto:events@pocusatriver.com?subject=Event%20Inquiry">Email us</a>.</p>
+    </div>
+
+    <div class="calendar">
+      <div class="calendar__nav">
+        {% if month.previous %}
+          <a href="?month={{ month.previous|date:'Y-m' }}" rel="prev">‹ {{ month.previous|date:"F" }}</a>
+        {% else %}<span></span>{% endif %}
+        <h2 class="calendar__title" id="calendar-title">{{ month.label }}</h2>
+        {% if month.next %}
+          <a href="?month={{ month.next|date:'Y-m' }}" rel="next">{{ month.next|date:"F" }} ›</a>
+        {% else %}<span></span>{% endif %}
+      </div>
+
+      <table class="calendar__grid" aria-labelledby="calendar-title" data-testid="calendar">
+        <thead>
+          <tr>
+            <th scope="col"><abbr title="Sunday">Sun</abbr></th>
+            <th scope="col"><abbr title="Monday">Mon</abbr></th>
+            <th scope="col"><abbr title="Tuesday">Tue</abbr></th>
+            <th scope="col"><abbr title="Wednesday">Wed</abbr></th>
+            <th scope="col"><abbr title="Thursday">Thu</abbr></th>
+            <th scope="col"><abbr title="Friday">Fri</abbr></th>
+            <th scope="col"><abbr title="Saturday">Sat</abbr></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for week in month.weeks %}
+            <tr>
+              {% for d in week %}
+                {% if d.in_month %}
+                  <td class="day day--{{ d.state }}{% if d.is_today %} day--today{% endif %}{% if d.date == selected %} day--selected{% endif %}"
+                      data-date="{{ d.date|date:'Y-m-d' }}" data-state="{{ d.state }}">
+                    {% if d.state == "available" %}
+                      <a class="day__inner" href="?month={{ month.first|date:'Y-m' }}&amp;date={{ d.date|date:'Y-m-d' }}#request"
+                         {% if d.date == selected %}aria-current="date"{% endif %}>
+                        <span class="day__number" aria-hidden="true">{{ d.date.day }}</span>
+                        <span class="visually-hidden">{{ d.date|date:"l, F j" }}, available</span>
+                      </a>
+                    {% else %}
+                      <span class="day__inner">
+                        <span class="day__number" aria-hidden="true">{{ d.date.day }}</span>
+                        <span class="visually-hidden">{{ d.date|date:"l, F j" }},</span>
+                        {% if d.state != "unavailable" %}<span class="day__state">{{ d.state.label }}</span>{% else %}<span class="visually-hidden">not bookable</span>{% endif %}
+                      </span>
+                    {% endif %}
+                  </td>
+                {% else %}
+                  <td aria-hidden="true"></td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <ul class="calendar__legend" aria-label="Key">
+        <li><span class="legend-swatch" aria-hidden="true"></span> Available</li>
+        <li><span class="legend-swatch legend-swatch--on_hold" aria-hidden="true"></span> On hold (request pending)</li>
+        <li><span class="legend-swatch legend-swatch--booked" aria-hidden="true"></span> Booked</li>
+      </ul>
+    </div>
+
+    <div class="request" id="request">
+      {% if form %}
+        <h2 class="request__title">Request {{ selected|date:"l, F j, Y" }}</h2>
+        <form class="form" method="post" action="{% url 'bookings:book' %}?month={{ month.first|date:'Y-m' }}#request">
+          {% csrf_token %}
+          {{ form.event_date }}
+          {% if form.non_field_errors or form.event_date.errors %}
+            <div class="notice" role="alert">
+              {% for error in form.non_field_errors %}{{ error }} {% endfor %}
+              {% for error in form.event_date.errors %}{{ error }} {% endfor %}
+            </div>
+          {% endif %}
+          {% for field in form.visible_fields %}
+            {% if field.name == "website" %}
+              <div class="visually-hidden" aria-hidden="true">{{ field.label_tag }} {{ field }}</div>
+            {% else %}
+              <div class="field{% if field.errors %} field--invalid{% endif %}">
+                {{ field.label_tag }}
+                {{ field }}
+                {{ field.errors }}
+              </div>
+            {% endif %}
+          {% endfor %}
+          <p class="form__actions"><button class="button" type="submit">Send Request</button></p>
+        </form>
+      {% elif selected %}
+        <p class="notice" role="status">Sorry, {{ selected|date:"l, F j, Y" }} isn't available. Please choose another date.</p>
+      {% else %}
+        <p class="request__hint">Pick an available date above to start your request.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}
