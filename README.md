@@ -8,7 +8,8 @@ It has three parts:
 - **Home page (`/`).** A copy of the original Wix site at desktop sizes: the same
   text, photos, spacing, fixed top and bottom bars, and the slow-scrolling hero
   photo. On phones it uses a proper phone layout, which the original lacks.
-- **Booking page (`/book/`).** A month calendar showing each date as Available,
+- **Booking page (`/book/`),** reached from the green **Book Your Date** button on
+  the home page's photo. A month calendar showing each date as Available,
   On hold or Booked. Visitors pick a free date and send a request.
 - **Admin (`/admin/`).** Django's admin. Staff can review requests, confirm or
   decline them, edit any booking, and use a calendar view to add bookings and
@@ -52,7 +53,7 @@ docker compose run --rm web pytest
 docker compose run --rm web ruff check .
 ```
 
-`pytest` runs 94 tests:
+`pytest` runs 97 tests:
 
 - **Calendar rules:** past dates, the 24-month limit, and which states visitors see.
 - **Form checks** and the spam trap.

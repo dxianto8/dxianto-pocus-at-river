@@ -33,9 +33,9 @@ def request_date(page: Page, day, name="Avery Jones", email="avery@example.com")
 
 
 class TestVisitor:
-    def test_enquire_button_leads_to_the_calendar(self, page: Page):
+    def test_book_your_date_button_leads_to_the_calendar(self, page: Page):
         page.goto("/")
-        page.get_by_role("link", name="Enquire About Your Event").click()
+        page.get_by_role("link", name="Book Your Date").click()
         expect(page.get_by_role("heading", level=1, name="Book Your Date")).to_be_visible()
         expect(page.get_by_test_id("calendar")).to_be_visible()
 

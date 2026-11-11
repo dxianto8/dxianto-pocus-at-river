@@ -59,11 +59,15 @@ class TestContent:
         expect(page.get_by_text("100 S. River Street, Downtown Aurora IL")).to_be_visible()
         expect(page.get_by_text("© 2026 by Pocus at River")).to_be_visible()
 
-    def test_enquire_goes_to_booking_page_and_email_us_opens_email(self, page: Page):
+    def test_book_your_date_button_on_the_hero_goes_to_the_booking_page(self, page: Page):
         page.goto("/")
-        expect(page.get_by_role("link", name="Enquire About Your Event")).to_have_attribute(
-            "href", "/book/"
-        )
+        button = page.get_by_test_id("hero").get_by_role("link", name="Book Your Date")
+        expect(button).to_be_visible()
+        expect(button).to_have_attribute("href", "/book/")
+
+    def test_enquire_button_is_replaced_and_email_us_remains(self, page: Page):
+        page.goto("/")
+        expect(page.get_by_role("link", name="Enquire About Your Event")).to_have_count(0)
         expect(page.get_by_role("link", name="Email Us")).to_have_attribute(
             "href", "mailto:events@pocusatriver.com?subject=Event%20Inquiry"
         )
@@ -102,26 +106,33 @@ class TestMatchesOriginalAt1440:
             529,
         )
 
-    def test_sections_gallery_and_buttons(self, desktop: Page):
+    def test_sections_and_gallery(self, desktop: Page):
+        """Same layout as the original, except everything after the first section sits 64px
+        higher: the original's Enquire button (40px tall, 24px gap) was removed on purpose."""
+        removed = 64
         desktop.goto("/")
         headings = [page_box(desktop, h) for h in desktop.get_by_role("heading", level=2).all()]
         near(headings[0]["y"], 1002)
-        near(headings[1]["y"], 1702, 8)
-        near(headings[2]["y"], 2568, 8)
+        near(headings[1]["y"], 1702 - removed, 8)
+        near(headings[2]["y"], 2568 - removed, 8)
 
         for i, photo in enumerate(gallery(desktop).all()):
             b = page_box(desktop, photo)
             near(b["x"], [138, 526, 914][i], 1)
-            near(b["y"], 1764, 8)
+            near(b["y"], 1764 - removed, 8)
             near(b["width"], 370, 1)
             near(b["height"], 256, 1)
 
-        enquire = page_box(desktop, desktop.get_by_role("link", name="Enquire About Your Event"))
-        near(enquire["width"], 247, 1)
-        near(enquire["height"], 40, 0)
-        near(enquire["y"], 1484, 8)
+        near(desktop.evaluate("document.documentElement.scrollHeight"), 2809 - removed, 12)
 
-        near(desktop.evaluate("document.documentElement.scrollHeight"), 2809, 12)
+    def test_book_button_is_large_centred_and_visible_without_scrolling(self, desktop: Page):
+        desktop.goto("/")
+        button = box(desktop.get_by_role("link", name="Book Your Date"))
+        near(button["x"] + button["width"] / 2, 720, 1)  # centred on the page
+        assert button["height"] >= 48  # larger than the 40px buttons elsewhere
+        assert button["y"] + button["height"] <= 900 - 80  # above the pinned © bar
+        address = box(desktop.get_by_text("100 S. River Street, Downtown Aurora IL"))
+        assert button["y"] > address["y"] + address["height"]  # under the address
 
 
 class TestScrollEffects:
@@ -166,3 +177,12 @@ class TestPhoneLayout:
         assert overflow <= 0
         lefts = {round(box(photo)["x"]) for photo in gallery(page).all()}
         assert len(lefts) == 1
+
+    def test_book_button_fits_inside_the_hero(self, page: Page):
+        page.set_viewport_size({"width": 390, "height": 844})
+        page.goto("/")
+        hero = box(page.get_by_test_id("hero"))
+        button = box(page.get_by_role("link", name="Book Your Date"))
+        assert button["x"] >= hero["x"]
+        assert button["x"] + button["width"] <= hero["x"] + hero["width"]
+        assert button["y"] + button["height"] <= hero["y"] + hero["height"]

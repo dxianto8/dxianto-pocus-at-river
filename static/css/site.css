@@ -94,6 +94,7 @@ img { display: block; max-width: 100%; height: auto; }
 .hero__photo img { width: 100%; height: 100%; max-width: none; object-fit: cover; }
 .hero__badge { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); }
 .hero__badge img { width: 160px; height: 160px; }
+.hero__cta { position: absolute; left: 0; right: 0; top: 392px; text-align: center; }
 .hero__address {
   position: absolute; left: 0; right: 0; top: 310px;
   padding: 0 24px;
@@ -109,6 +110,7 @@ img { display: block; max-width: 100%; height: auto; }
   .hero__badge { top: 156px; }
   .hero__badge img { width: 245px; height: 245px; }
   .hero__address { top: 450px; }
+  .hero__cta { top: 520px; }
 }
 
 @media (min-width: 75rem) {
@@ -153,8 +155,21 @@ img { display: block; max-width: 100%; height: auto; }
 }
 .button:hover { background: var(--forest); }
 /* The original's buttons have fixed widths with the label centred. */
-.button--enquire { width: 247px; padding: 0; }
 .button--email { width: 142px; padding: 0; }
+
+/* The main call to action, on the hero photo: forest green, larger than the other buttons,
+   with a light edge and shadow so it stands out against the dark photo. */
+.button--book {
+  height: 52px; padding: 0 40px;
+  background: var(--forest);
+  border: 1px solid rgba(232, 230, 230, .7);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+  font-size: 17px; font-weight: 500;
+  letter-spacing: .08em;
+  transition: background-color .15s, color .15s;
+}
+.button--book:hover { background: #fff; color: var(--forest); }
+.button--book:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
 
 /* Home page vertical rhythm (gaps measured at 1440px). */
 

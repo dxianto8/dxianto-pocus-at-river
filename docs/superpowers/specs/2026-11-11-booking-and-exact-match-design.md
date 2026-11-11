@@ -40,8 +40,13 @@
 
 ## 3. Booking page: `/book`
 
-- On the home page, "Enquire About Your Event" keeps its label but links to
-  `/book`. "Email Us" still opens an email to `events@pocusatriver.com`.
+- On the home page, a **"Book Your Date"** button on the hero photo, under the
+  address, links to `/book`. It is forest green and larger than the other
+  buttons (52px tall, 17px label), with a light edge and shadow so it stands out
+  against the photo. It replaced the original's "Enquire About Your Event"
+  button, at the user's request on 2026-11-11. Removing that button moves every
+  section below the first one up 64px compared with the original. "Email Us"
+  still opens an email to `events@pocusatriver.com`.
 - **Month calendar.** Each date shows as Available, On hold (a pending request)
   or Booked (confirmed, or blocked by the admin). Past dates, and dates more
   than 24 months ahead, cannot be picked. The public calendar returns only each
