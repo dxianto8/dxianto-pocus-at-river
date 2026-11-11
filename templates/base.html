@@ -14,23 +14,34 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital@1&family=Mulish:wght@300;500&family=Raleway:wght@400;500&display=swap">
   <link rel="stylesheet" href="{% static 'css/site.css' %}">
+  <script src="{% static 'js/site.js' %}" defer></script>
 </head>
 <body>
   <header class="topbar">
     <div class="topbar__inner">
-      <a class="topbar__label" href="{% url 'home' %}">EXPLORE POCUS AT RIVER</a>
-      <ul class="topbar__social">
-        <li>
-          <a href="https://www.instagram.com/pocusatriver" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-            <img src="{% static 'images/instagram.png' %}" alt="" width="39" height="39">
-          </a>
-        </li>
-        <li>
-          <a href="https://www.facebook.com/pocusatriver" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-            <img src="{% static 'images/facebook.png' %}" alt="" width="39" height="39">
-          </a>
-        </li>
-      </ul>
+      <a class="topbar__label" href="{% url 'home' %}" aria-label="Pocus at River home">
+        <img src="{% static 'images/badge.png' %}" alt="" width="42" height="42">
+        <span>POCUS AT RIVER<small>WEDDINGS &amp; EVENTS · AURORA, IL</small></span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu <span aria-hidden="true">☰</span></button>
+      <nav class="site-nav" id="site-nav" aria-label="Main navigation">
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'home' %}#about-heading">The venue</a>
+        <a href="{% url 'home' %}#gallery-heading">Gallery</a>
+        <a class="nav-book" href="{% url 'bookings:book' %}">Event bookings <span aria-hidden="true">→</span></a>
+        <ul class="topbar__social">
+          <li>
+            <a href="https://www.instagram.com/pocusatriver" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <img src="{% static 'images/instagram.png' %}" alt="" width="39" height="39">
+            </a>
+          </li>
+          <li>
+            <a href="https://www.facebook.com/pocusatriver" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <img src="{% static 'images/facebook.png' %}" alt="" width="39" height="39">
+            </a>
+          </li>
+        </ul>
+      </nav>
     </div>
   </header>
 

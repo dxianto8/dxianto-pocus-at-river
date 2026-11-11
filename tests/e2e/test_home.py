@@ -89,7 +89,7 @@ class TestContent:
 
 
 class TestMatchesOriginalAt1440:
-    """Measurements taken from the original site at 1440x900 on 2026-11-11."""
+    """The original content layout, with the info strip height accounted for."""
 
     def test_hero_badge_and_address(self, desktop: Page):
         desktop.goto("/")
@@ -107,23 +107,26 @@ class TestMatchesOriginalAt1440:
         )
 
     def test_sections_and_gallery(self, desktop: Page):
-        """Same layout as the original, except everything after the first section sits 64px
-        higher: the original's Enquire button (40px tall, 24px gap) was removed on purpose."""
-        removed = 64
+        """The original sections keep their layout below the added venue-info strip."""
         desktop.goto("/")
+        strip_height = box(desktop.locator(".venue-strip"))["height"]
         headings = [page_box(desktop, h) for h in desktop.get_by_role("heading", level=2).all()]
-        near(headings[0]["y"], 1002)
-        near(headings[1]["y"], 1702 - removed, 8)
-        near(headings[2]["y"], 2568 - removed, 8)
+        near(headings[0]["y"], 1002 + strip_height)
+        near(headings[1]["y"], 1638 + strip_height, 8)
+        near(headings[2]["y"], 2532 + strip_height, 8)
 
         for i, photo in enumerate(gallery(desktop).all()):
             b = page_box(desktop, photo)
             near(b["x"], [138, 526, 914][i], 1)
-            near(b["y"], 1764 - removed, 8)
+            near(b["y"], 1700 + strip_height, 8)
             near(b["width"], 370, 1)
             near(b["height"], 256, 1)
 
-        near(desktop.evaluate("document.documentElement.scrollHeight"), 2809 - removed, 12)
+        near(
+            desktop.evaluate("document.documentElement.scrollHeight"),
+            2773 + strip_height,
+            12,
+        )
 
     def test_book_button_is_large_centred_and_visible_without_scrolling(self, desktop: Page):
         desktop.goto("/")
