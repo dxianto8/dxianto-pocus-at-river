@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --color-forest: #263822;
+  --color-charcoal: #363636;
+  --color-stone: #605e5e;
+  --color-mist: #e8e6e6;
+  --color-cream: #f4f1ea;
+}
+
+/* Font variables are set on <html> by next/font in app/layout.tsx. */
+@theme inline {
+  --font-sans: var(--font-raleway), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-bodoni), ui-serif, Georgia, serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-forest);
+    outline-offset: 3px;
+  }
+}

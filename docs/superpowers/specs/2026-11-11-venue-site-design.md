@@ -61,7 +61,7 @@ Measured styles:
 | Forest   | `rgb(38, 56, 34)` / `#263822`          | Badge                                     |
 | Charcoal | `rgb(54, 54, 54)` / `#363636`          | Buttons, body text                        |
 | Stone    | `rgb(96, 94, 94)` / `#605E5E`          | Headings, secondary text                  |
-| Mist     | `rgb(232, 230, 230)` / `#E8E6E6`       | Divider lines                             |
+| Mist     | `rgb(232, 230, 230)` / `#E8E6E6`       | Footer border (divider lines use stone at 40% opacity, which matches the original better) |
 
 On phones the original has no phone layout. It shrinks the 980px desktop page
 to fit the screen, and the chat bubble covers the content.
@@ -209,7 +209,9 @@ and 390px, shared with the user for review. These are not compared automatically
     are made up."
   - The stack.
   - How to run it (`npm install`, `npm run dev`, `npm test`).
-  - Photo credits: each Unsplash photo with its photographer and link.
+  - Photo credits: each Unsplash photo with its source link. (Photographer names
+    couldn't be looked up: unsplash.com blocks automated requests from the build
+    session, while its image server does not. The Unsplash License doesn't require credit.)
 
 ## 11. Out of scope
 
