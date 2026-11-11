@@ -1,7 +1,7 @@
 # Venue site rebuild: design
 
 - **Date:** 2026-11-11
-- **Status:** draft, awaiting review
+- **Status:** approved. Content decisions (§1, §2, §4, §10) superseded by `2026-11-11-booking-and-exact-match-design.md`
 - **Repo:** `dxianto8/dxianto-pocus-at-river` (public)
 
 ## 1. Purpose
