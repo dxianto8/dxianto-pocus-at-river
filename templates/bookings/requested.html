@@ -3,15 +3,13 @@
 {% block title %}Request Received | Pocus At River{% endblock %}
 
 {% block content %}
-  <section class="confirmation section-wrap" aria-labelledby="thanks-heading">
-    <p class="eyebrow">Your celebration starts here</p>
-    <span class="confirmation-mark" aria-hidden="true">✓</span>
-    <h1 id="thanks-heading" class="display-heading">Thank You</h1>
-    <div class="body-copy">
-      <p>We've received your request{% if day %} for <strong>{{ day|date:"l, F j, Y" }}</strong>{% endif %}. The date is on hold while the venue team reviews it. Your booking is not yet confirmed.</p>
-      <p>The team will contact you about availability, event details, and next steps.</p>
+  <section class="booking" aria-labelledby="thanks-heading">
+    <div class="divider" aria-hidden="true"></div>
+    <h1 id="thanks-heading" class="section-heading section-heading--forest">Thank You</h1>
+    <div class="prose">
+      <p>We've received your request{% if day %} for <strong>{{ day|date:"l, F j, Y" }}</strong>{% endif %}. The date is on hold while we review it, and we'll be in touch by email soon.</p>
       <p>Questions in the meantime? Email <a href="mailto:events@pocusatriver.com?subject=Event%20Inquiry">events@pocusatriver.com</a>.</p>
     </div>
-    <div class="confirmation-actions"><a class="button" href="{% url 'home' %}">Back to Home</a><a class="text-link" href="{% url 'venue' %}">Explore the venue →</a></div>
+    <p class="cta"><a class="button" href="{% url 'home' %}">Back to Home</a></p>
   </section>
 {% endblock %}

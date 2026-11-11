@@ -1,133 +1,191 @@
 import re
 
 import pytest
-from playwright.sync_api import Page, expect
-
-from bookings.models import Testimonial as GuestTestimonial
-from bookings.models import WalkthroughRequest
+from playwright.sync_api import Locator, Page, expect
 
 
-def test_home_links_to_the_event_calendar_and_venue(page: Page):
-    page.goto("/")
-    expect(page.get_by_role("heading", level=1)).to_have_accessible_name(
-        "Pocus at River, weddings & events"
-    )
-    expect(
-        page.get_by_test_id("hero").get_by_role("link", name="Book Your Date")
-    ).to_have_attribute("href", "/book/")
-    page.get_by_role("link", name="Get to know the venue").click()
-    expect(page).to_have_url(re.compile(r"/venue/$"))
-    expect(page.get_by_role("link", name="Get Directions")).to_have_attribute(
-        "href", re.compile(r"google.com/maps/dir/.*Aurora")
-    )
+def box(locator: Locator) -> dict:
+    b = locator.bounding_box()
+    assert b, "element has no bounding box"
+    return b
 
 
-@pytest.mark.parametrize("width", [360, 390, 768, 1440])
-@pytest.mark.parametrize("url", ["/", "/venue/", "/walk-throughs/", "/book/"])
-def test_public_pages_fit_the_viewport(page: Page, width, url):
-    page.set_viewport_size({"width": width, "height": 900})
-    page.goto(url)
-    assert page.evaluate(
-        "document.documentElement.scrollWidth <= document.documentElement.clientWidth"
-    )
-    expect(page.get_by_role("heading", level=1)).to_be_visible()
+def page_box(page: Page, locator: Locator) -> dict:
+    """Position on the page (not the viewport), comparable with the original's measurements."""
+    b = box(locator)
+    return {**b, "y": b["y"] + page.evaluate("window.scrollY")}
 
 
-def test_phone_navigation_can_open_close_and_navigate(page: Page):
-    page.set_viewport_size({"width": 390, "height": 844})
-    page.goto("/")
-    nav = page.get_by_role("navigation", name="Main navigation")
-    expect(nav).not_to_be_visible()
-    menu = page.get_by_role("button", name="Menu")
-    menu.click()
-    expect(nav).to_be_visible()
-    page.keyboard.press("Escape")
-    expect(nav).not_to_be_visible()
-    expect(menu).to_be_focused()
-    menu.click()
-    nav.get_by_role("link", name="Walk-throughs").click()
-    expect(page).to_have_url(re.compile(r"/walk-throughs/$"))
-    expect(page.get_by_role("checkbox")).not_to_be_checked()
+def gallery(page: Page) -> Locator:
+    return page.get_by_test_id("gallery").get_by_role("img")
 
 
-def test_gallery_supports_keyboard_navigation_and_restores_focus(page: Page):
-    page.goto("/")
-    photos = page.get_by_test_id("gallery").get_by_role("link")
-    expect(photos).to_have_count(3)
-    photos.nth(0).click()
-    dialog = page.get_by_role("dialog")
-    expect(dialog).to_be_visible()
-    expect(dialog.locator("img")).to_have_attribute("src", re.compile(r"hero.jpg$"))
-    page.keyboard.press("ArrowRight")
-    expect(dialog.locator("img")).to_have_attribute("src", re.compile(r"gallery-dance.jpg$"))
-    dialog.get_by_role("button", name="Previous photo").click()
-    expect(dialog.locator("img")).to_have_attribute("src", re.compile(r"hero.jpg$"))
-    page.keyboard.press("Escape")
-    expect(dialog).not_to_be_visible()
-    expect(photos.nth(0)).to_be_focused()
+def near(actual: float, expected: float, tolerance: float = 4) -> None:
+    assert abs(actual - expected) <= tolerance, f"{actual} not within {tolerance}px of {expected}"
 
 
-def test_faq_expands_and_has_booking_links(page: Page):
-    page.goto("/")
-    question = page.get_by_text("Can I see the venue before booking?", exact=True)
-    question.click()
-    expect(page.locator("details[open]")).to_contain_text("subject to confirmation")
-    expect(page.locator("details[open]").get_by_role("link")).to_have_attribute(
-        "href", "/walk-throughs/"
-    )
+@pytest.fixture
+def desktop(page: Page) -> Page:
+    page.set_viewport_size({"width": 1440, "height": 900})
+    return page
 
 
-def test_walkthrough_submission_reaches_real_confirmation(page: Page):
-    from datetime import timedelta
+class TestContent:
+    def test_title_and_accessible_h1(self, page: Page):
+        page.goto("/")
+        expect(page).to_have_title("HOME | Pocus At River")
+        expect(
+            page.get_by_role("heading", level=1, name="Pocus at River, weddings & events")
+        ).to_be_visible()
 
-    from django.utils import timezone
-
-    page.goto("/walk-throughs/")
-    page.get_by_label("Your name").fill("Tour Guest")
-    page.get_by_label("Email *", exact=True).fill("tour@example.com")
-    page.get_by_label("Preferred visit date").fill(
-        (timezone.localdate() + timedelta(days=10)).isoformat()
-    )
-    page.get_by_label("Preferred time of day").select_option("afternoon")
-    page.get_by_role("checkbox").check()
-    page.get_by_role("button", name="Request a Walk-through").click()
-    expect(page.get_by_role("heading", level=1)).to_have_text("Your walk-through request is in.")
-    assert WalkthroughRequest.objects.get().email == "tour@example.com"
-
-
-def test_real_testimonials_can_be_browsed_without_autoplay(page: Page):
-    for order, quote in enumerate(["First approved guest story.", "Second approved guest story."]):
-        GuestTestimonial.objects.create(
-            quote=quote,
-            attribution=f"Guest {order}",
-            permission_granted=True,
-            is_published=True,
-            display_order=order,
+    def test_section_headings_in_order(self, page: Page):
+        page.goto("/")
+        expect(page.get_by_role("heading", level=2)).to_have_text(
+            [
+                "Host Your Event at the Historic Pocus Motors Building",
+                "Tell Us About Your Event",
+                "Get in Touch",
+            ]
         )
-    page.goto("/")
-    expect(page.get_by_text("“First approved guest story.”")).to_be_visible()
-    expect(page.get_by_text("“Second approved guest story.”")).not_to_be_visible()
-    page.get_by_role("button", name="Next testimonial").click()
-    expect(page.get_by_text("“Second approved guest story.”")).to_be_visible()
-    page.get_by_role("button", name="Previous testimonial").click()
-    expect(page.get_by_text("“First approved guest story.”")).to_be_visible()
+
+    def test_original_text_word_for_word(self, page: Page):
+        page.goto("/")
+        expect(
+            page.get_by_text(re.compile(r"^Say \"I do\" in one of downtown Aurora's"))
+        ).to_be_visible()
+        expect(
+            page.get_by_text(re.compile(r"so it's worth locking in your date now\.$"))
+        ).to_be_visible()
+        expect(page.get_by_text("100 S. River Street, Downtown Aurora IL")).to_be_visible()
+        expect(page.get_by_text("© 2026 by Pocus at River")).to_be_visible()
+
+    def test_book_your_date_button_on_the_hero_goes_to_the_booking_page(self, page: Page):
+        page.goto("/")
+        button = page.get_by_test_id("hero").get_by_role("link", name="Book Your Date")
+        expect(button).to_be_visible()
+        expect(button).to_have_attribute("href", "/book/")
+
+    def test_enquire_button_is_replaced_and_email_us_remains(self, page: Page):
+        page.goto("/")
+        expect(page.get_by_role("link", name="Enquire About Your Event")).to_have_count(0)
+        expect(page.get_by_role("link", name="Email Us")).to_have_attribute(
+            "href", "mailto:events@pocusatriver.com?subject=Event%20Inquiry"
+        )
+
+    def test_social_links(self, page: Page):
+        page.goto("/")
+        expect(page.get_by_role("link", name="Instagram")).to_have_attribute(
+            "href", "https://www.instagram.com/pocusatriver"
+        )
+        expect(page.get_by_role("link", name="Facebook")).to_have_attribute(
+            "href", "https://www.facebook.com/pocusatriver"
+        )
+
+    def test_gallery_has_three_photos_with_alt_text(self, page: Page):
+        page.goto("/")
+        expect(gallery(page)).to_have_count(3)
+        for photo in gallery(page).all():
+            expect(photo).to_have_attribute("alt", re.compile(r"\S"))
 
 
-def test_navigation_and_faq_work_without_javascript(browser, base_url):
-    context = browser.new_context(java_script_enabled=False, base_url=base_url)
-    page = context.new_page()
-    page.set_viewport_size({"width": 390, "height": 844})
-    page.goto("/")
-    expect(page.get_by_role("navigation")).to_be_visible()
-    page.get_by_text("Can I see the venue before booking?", exact=True).click()
-    expect(page.locator("details[open]")).to_contain_text("subject to confirmation")
-    page.get_by_role("navigation").get_by_role("link", name="Walk-throughs").click()
-    expect(page.get_by_label("Preferred visit date")).to_be_visible()
-    context.close()
+class TestMatchesOriginalAt1440:
+    """The original content layout, with the info strip height accounted for."""
+
+    def test_hero_badge_and_address(self, desktop: Page):
+        desktop.goto("/")
+        hero = page_box(desktop, desktop.get_by_test_id("hero"))
+        assert (hero["x"], hero["y"], hero["width"], hero["height"]) == (80, 79, 1280, 821)
+
+        badge = page_box(desktop, desktop.get_by_role("heading", level=1).get_by_role("img"))
+        near(badge["x"], 597, 1)
+        near(badge["y"], 235, 1)
+        near(badge["width"], 245, 0)
+
+        near(
+            page_box(desktop, desktop.get_by_text("100 S. River Street, Downtown Aurora IL"))["y"],
+            529,
+        )
+
+    def test_sections_and_gallery(self, desktop: Page):
+        """The original sections keep their layout below the added venue-info strip."""
+        desktop.goto("/")
+        strip_height = box(desktop.locator(".venue-strip"))["height"]
+        headings = [page_box(desktop, h) for h in desktop.get_by_role("heading", level=2).all()]
+        near(headings[0]["y"], 1002 + strip_height)
+        near(headings[1]["y"], 1638 + strip_height, 8)
+        near(headings[2]["y"], 2532 + strip_height, 8)
+
+        for i, photo in enumerate(gallery(desktop).all()):
+            b = page_box(desktop, photo)
+            near(b["x"], [138, 526, 914][i], 1)
+            near(b["y"], 1700 + strip_height, 8)
+            near(b["width"], 370, 1)
+            near(b["height"], 256, 1)
+
+        near(
+            desktop.evaluate("document.documentElement.scrollHeight"),
+            2773 + strip_height,
+            12,
+        )
+
+    def test_book_button_is_large_centred_and_visible_without_scrolling(self, desktop: Page):
+        desktop.goto("/")
+        button = box(desktop.get_by_role("link", name="Book Your Date"))
+        near(button["x"] + button["width"] / 2, 720, 1)  # centred on the page
+        assert button["height"] >= 48  # larger than the 40px buttons elsewhere
+        assert button["y"] + button["height"] <= 900 - 80  # above the pinned © bar
+        address = box(desktop.get_by_text("100 S. River Street, Downtown Aurora IL"))
+        assert button["y"] > address["y"] + address["height"]  # under the address
 
 
-def test_parallax_respects_reduced_motion(page: Page):
-    page.emulate_media(reduced_motion="reduce")
-    page.goto("/")
-    page.evaluate("window.scrollTo(0, 200)")
-    assert page.get_by_test_id("hero-photo").evaluate("el => el.style.transform") == ""
+class TestScrollEffects:
+    def test_header_and_footer_stay_put(self, desktop: Page):
+        desktop.goto("/")
+        desktop.evaluate("window.scrollTo(0, 1200)")
+        header = box(desktop.get_by_role("banner"))
+        assert (header["y"], header["height"]) == (0, 79)
+        footer = box(desktop.get_by_role("contentinfo"))
+        assert footer["height"] == 80
+        assert footer["y"] + footer["height"] == 900
+
+    def test_hero_photo_moves_at_a_fifth_of_scroll_speed(self, desktop: Page):
+        desktop.goto("/")
+        photo = desktop.get_by_test_id("hero-photo")
+        before = box(photo)["y"]
+        desktop.evaluate("window.scrollTo(0, 200)")
+        # 200px scrolled x 0.8 = the layer shifted down 160px.
+        desktop.wait_for_function(
+            "() => document.querySelector('[data-testid=hero-photo]').style.transform"
+            ".includes('160px')"
+        )
+        assert round(before - box(photo)["y"]) == 40
+
+    def test_hero_photo_still_with_reduced_motion(self, desktop: Page):
+        desktop.emulate_media(reduced_motion="reduce")
+        desktop.goto("/")
+        photo = desktop.get_by_test_id("hero-photo")
+        before = box(photo)["y"]
+        desktop.evaluate("window.scrollTo(0, 200)")
+        desktop.wait_for_timeout(100)
+        assert round(before - box(photo)["y"]) == 200
+
+
+class TestPhoneLayout:
+    def test_no_sideways_scroll_and_stacked_gallery(self, page: Page):
+        page.set_viewport_size({"width": 390, "height": 844})
+        page.goto("/")
+        overflow = page.evaluate(
+            "document.documentElement.scrollWidth - document.documentElement.clientWidth"
+        )
+        assert overflow <= 0
+        lefts = {round(box(photo)["x"]) for photo in gallery(page).all()}
+        assert len(lefts) == 1
+
+    def test_book_button_fits_inside_the_hero(self, page: Page):
+        page.set_viewport_size({"width": 390, "height": 844})
+        page.goto("/")
+        hero = box(page.get_by_test_id("hero"))
+        button = box(page.get_by_role("link", name="Book Your Date"))
+        assert button["x"] >= hero["x"]
+        assert button["x"] + button["width"] <= hero["x"] + hero["width"]
+        assert button["y"] + button["height"] <= hero["y"] + hero["height"]

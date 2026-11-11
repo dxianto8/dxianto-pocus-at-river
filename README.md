@@ -3,23 +3,18 @@
 The website for **Pocus at River**, the event venue in the Historic Pocus Motors
 Building, 100 S. River Street, Downtown Aurora IL. Built with Django and Postgres.
 
-Visitors can explore the venue, arrange a visit, and request an event date:
+It has three parts:
 
-- **Home (`/`):** venue highlights, event ideas, a keyboard-accessible photo
-  viewer, expandable FAQs, and approved guest testimonials.
-- **Venue & location (`/venue/`):** building information, address, directions,
-  arrival guidance, and questions to discuss with the venue team.
-- **Walk-throughs (`/walk-throughs/`):** a real signup form for a preferred visit
-  date and time window. Staff review requests in the admin and arrange actual
-  appointments directly with guests. Contact consent starts unchecked.
-- **Event bookings (`/book/`):** the availability calendar and event request
-  form. Picking a date brings the form into view without a page reload.
-- **Admin (`/admin/`):** manage event bookings, walk-through requests, and guest
-  testimonials. The public calendar never exposes guests' contact details.
-
-The site uses the existing venue photos and forest-green visual identity, with
-responsive navigation and layouts. Photo links, navigation, FAQs, and forms also
-work without JavaScript; enhanced galleries and carousels use JavaScript.
+- **Home page (`/`).** A copy of the original Wix site at desktop sizes: the same
+  text, photos, spacing, fixed top and bottom bars, and the slow-scrolling hero
+  photo. On phones it uses a proper phone layout, which the original lacks.
+- **Booking page (`/book/`),** reached from the green **Book Your Date** button on
+  the home page's photo. A month calendar showing each date as Available,
+  On hold or Booked. Visitors pick a free date and the page slides down to the
+  request form without reloading.
+- **Admin (`/admin/`).** Django's admin. Staff can review requests, confirm or
+  decline them, edit any booking, and use a calendar view to add bookings and
+  block or unblock dates.
 
 ## Run it on your Mac (Docker)
 
@@ -59,7 +54,7 @@ docker compose run --rm web pytest
 docker compose run --rm web ruff check .
 ```
 
-`pytest` covers:
+`pytest` runs 104 tests:
 
 - **Calendar rules:** past dates, the 24-month limit, and which states visitors see.
 - **Form checks** and the spam trap.
@@ -68,12 +63,9 @@ docker compose run --rm web ruff check .
 - **Admin actions:** confirm, decline, cancel, block and unblock.
 - **Browser tests** (Playwright, Chromium), covering:
   - the booking flow and the admin;
-  - navigation and all public pages at phone, tablet, and desktop widths;
-  - photo viewing, keyboard controls, expandable FAQs, and guest testimonials;
-  - walk-through signups, unchecked consent, and no-JavaScript fallbacks.
-- **Walk-through validation:** dates, required contact consent, CSRF protection,
-  spam trapping, staff review, and keeping event availability independent.
-- **Testimonial publishing:** drafts and quotes without permission stay private.
+  - the home page matching the original's measured positions at 1440px;
+  - the fixed bars and the parallax;
+  - the phone layout.
 
 ## How bookings work
 
@@ -94,44 +86,13 @@ docker compose run --rm web ruff check .
 - **The site does not send emails yet.** Check the admin for new requests;
   pending requests are listed first.
 
-## Managing visits and guest stories
-
-Deployments run migrations through `scripts/vercel_build.py`. When running an
-existing local checkout, apply the new tables before starting the site:
-
-```bash
-docker compose exec web python manage.py migrate
-```
-
-In the admin, open **Walkthrough requests** to review new signups. Contact the
-guest, arrange the visit, and update its status to Contacted or Visit confirmed.
-These are preferences, not automatic appointments: multiple guests may request
-the same day, and a request never reserves or blocks an event date. The site
-does not send notifications; staff should check the admin for new requests.
-
-Open **Testimonials → Add** to enter a real guest quote, their approved public
-name, optional event label, and optional source link. Check **Permission granted**
-and **Is published** only when it is ready to go live. Both are off by default;
-the public site requires both to show a quote. **Display order** controls the
-sequence. With multiple published quotes, visitors can browse using previous
-and next buttons; there is no autoplay. Without any published quotes, the site
-invites guests to share a story instead of displaying sample reviews.
-
-Venue information comes from the existing site content. Pricing, rental
-inclusions, parking arrangements, and accessibility details are not assumed;
-the site directs visitors to confirm them with the venue team. The 1–200 guest
-range is the booking form's limit, not a promise that every layout fits 200.
-
-The earlier exact-match homepage specs in `docs/` describe the previous design;
-the expanded pages and interactions above supersede that homepage layout.
-
 ## Project layout
 
 ```
 config/       settings (all from environment variables), URLs
-bookings/     Bookings, visits, testimonials, calendar logic, forms, views, admin
-templates/    public pages, shared sections, booking forms, admin calendar
-static/       styles, gallery/navigation/carousel JS, booking JS, images
+bookings/     Booking model, calendar logic, request form, views, admin
+templates/    home page, booking pages, admin calendar
+static/       site.css, parallax.js, images
 tests/        pytest tests; tests/e2e/ are the browser tests
 docs/         design specs
 ```

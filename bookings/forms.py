@@ -2,7 +2,7 @@ from django import forms
 from django.utils import timezone
 
 from .calendar import bookable_range
-from .models import Booking, WalkthroughRequest
+from .models import Booking
 
 
 class BookingRequestForm(forms.ModelForm):
@@ -54,65 +54,4 @@ class BookingRequestForm(forms.ModelForm):
 
     def save(self, commit=True):
         self.instance.status = Booking.Status.PENDING
-        return super().save(commit=commit)
-
-
-class WalkthroughRequestForm(forms.ModelForm):
-    website = forms.CharField(required=False, label="Leave this field empty")
-    contact_consent = forms.BooleanField(
-        label="You may contact me about this walk-through request.", required=True, initial=False
-    )
-
-    class Meta:
-        model = WalkthroughRequest
-        fields = [
-            "name",
-            "email",
-            "phone",
-            "preferred_date",
-            "preferred_time",
-            "event_type",
-            "message",
-        ]
-        labels = {
-            "name": "Your name",
-            "phone": "Phone (optional)",
-            "preferred_date": "Preferred visit date",
-            "preferred_time": "Preferred time of day",
-            "event_type": "What are you planning? (optional)",
-            "message": "Questions or access needs (optional)",
-        }
-        widgets = {
-            "preferred_date": forms.DateInput(attrs={"type": "date"}),
-            "message": forms.Textarea(attrs={"rows": 4}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("label_suffix", "")
-        super().__init__(*args, **kwargs)
-        first, last = bookable_range(timezone.localdate())
-        self.fields["preferred_date"].widget.attrs.update(
-            min=first.isoformat(), max=last.isoformat()
-        )
-        self.fields["preferred_time"].choices = [("", "Choose a time window")] + list(
-            WalkthroughRequest.TimeWindow.choices
-        )
-        for name, value in (("name", "name"), ("email", "email"), ("phone", "tel")):
-            self.fields[name].widget.attrs["autocomplete"] = value
-        self.fields["website"].widget.attrs.update(tabindex="-1", autocomplete="off")
-
-    def clean_preferred_date(self):
-        day = self.cleaned_data["preferred_date"]
-        first, last = bookable_range(timezone.localdate())
-        if not first <= day <= last:
-            raise forms.ValidationError("Choose a visit date from today up to 24 months ahead.")
-        return day
-
-    @property
-    def is_spam(self):
-        return bool(self.cleaned_data.get("website"))
-
-    def save(self, commit=True):
-        self.instance.status = WalkthroughRequest.Status.PENDING
-        self.instance.contact_consent_at = timezone.now()
         return super().save(commit=commit)

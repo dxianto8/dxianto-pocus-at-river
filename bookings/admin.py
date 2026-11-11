@@ -15,7 +15,7 @@ from django.utils.http import urlencode
 from django.views.decorators.http import require_POST
 
 from .calendar import add_months, month_dates
-from .models import Booking, Testimonial, WalkthroughRequest
+from .models import Booking
 from .views import safe_parse_date
 
 STATUS_COLOURS = {
@@ -25,37 +25,6 @@ STATUS_COLOURS = {
     Booking.Status.CANCELLED: "#7a7a7a",
     Booking.Status.BLOCKED: "#363636",
 }
-
-
-@admin.register(WalkthroughRequest)
-class WalkthroughRequestAdmin(admin.ModelAdmin):
-    list_display = ["name", "preferred_date", "preferred_time", "status", "email", "created_at"]
-    list_filter = ["status", "preferred_time", "event_type"]
-    search_fields = ["name", "email", "phone", "message"]
-    readonly_fields = ["contact_consent_at", "created_at"]
-    fieldsets = [
-        ("Visit request", {"fields": ["preferred_date", "preferred_time", "status"]}),
-        ("Contact", {"fields": ["name", "email", "phone", "contact_consent_at"]}),
-        ("Planning", {"fields": ["event_type", "message"]}),
-        ("Internal", {"fields": ["admin_note", "created_at"]}),
-    ]
-
-    def has_add_permission(self, request):
-        # Requests originate in the public form, where contact consent is recorded.
-        return False
-
-
-@admin.register(Testimonial)
-class TestimonialAdmin(admin.ModelAdmin):
-    list_display = [
-        "attribution",
-        "event_label",
-        "permission_granted",
-        "is_published",
-        "display_order",
-    ]
-    list_filter = ["is_published", "permission_granted"]
-    search_fields = ["attribution", "quote"]
 
 
 @dataclass(frozen=True)
