@@ -15,7 +15,7 @@ from django.utils.http import urlencode
 from django.views.decorators.http import require_POST
 
 from .calendar import add_months, month_dates
-from .models import Booking
+from .models import Booking, EventPackage, VenueSettings
 from .views import safe_parse_date
 
 STATUS_COLOURS = {
@@ -38,6 +38,7 @@ class AdminDay:
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
+    autocomplete_fields = ["owner", "package"]
     list_display = [
         "event_date",
         "status_badge",
@@ -45,20 +46,33 @@ class BookingAdmin(admin.ModelAdmin):
         "event_type",
         "guest_count",
         "email",
+        "owner",
         "created_at",
     ]
     list_display_links = ["event_date", "name"]
     list_filter = ["status", "event_type"]
     date_hierarchy = "event_date"
-    search_fields = ["name", "email", "phone", "message", "admin_note"]
+    search_fields = ["name", "email", "phone", "message", "admin_note", "owner__username"]
     actions = ["confirm", "decline", "cancel"]
-    readonly_fields = ["created_at", "updated_at"]
     fieldsets = [
         (None, {"fields": ["event_date", "status"]}),
-        ("Contact", {"fields": ["name", "email", "phone"]}),
-        ("Event", {"fields": ["event_type", "guest_count", "message"]}),
+        ("Contact", {"fields": ["owner", "name", "email", "phone"]}),
+        (
+            "Event",
+            {
+                "fields": [
+                    "event_type",
+                    "package",
+                    "package_snapshot",
+                    "price_snapshot",
+                    "guest_count",
+                    "message",
+                ]
+            },
+        ),
         ("Internal", {"fields": ["admin_note", "created_at", "updated_at"]}),
     ]
+    readonly_fields = ["created_at", "updated_at", "package_snapshot", "price_snapshot"]
     change_list_template = "admin/bookings/booking/change_list.html"
 
     def get_ordering(self, request):
@@ -209,3 +223,32 @@ class BookingAdmin(admin.ModelAdmin):
         if day:
             url += "?" + urlencode({"month": f"{day:%Y-%m}"})
         return HttpResponseRedirect(url)
+
+
+@admin.register(EventPackage)
+class EventPackageAdmin(admin.ModelAdmin):
+    list_display = ["title", "event_type", "price", "price_unit", "is_published", "display_order"]
+    list_filter = ["event_type", "is_published"]
+    search_fields = ["title", "description"]
+    prepopulated_fields = {"slug": ["title"]}
+    fieldsets = [
+        ("Package", {"fields": ["title", "slug", "event_type", "description"]}),
+        ("Pricing (USD)", {"fields": ["price", "price_unit", "starting_at", "price_note"]}),
+        ("What's included", {"fields": ["inclusions"]}),
+        ("Publishing", {"fields": ["is_published", "display_order"]}),
+    ]
+
+
+@admin.register(VenueSettings)
+class VenueSettingsAdmin(admin.ModelAdmin):
+    fieldsets = [
+        ("Venue & contact", {"fields": ["name", "contact_email", "phone", "address"]}),
+        ("Homepage", {"fields": ["hero_heading"]}),
+        ("Packages page", {"fields": ["pricing_intro", "pricing_note"]}),
+    ]
+
+    def has_add_permission(self, request):
+        return not VenueSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False

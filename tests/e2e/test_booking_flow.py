@@ -1,6 +1,7 @@
 import re
 from datetime import timedelta
 
+import pytest
 from django.utils import timezone
 from playwright.sync_api import Page, expect
 
@@ -26,16 +27,16 @@ def request_date(page: Page, day, name="Avery Jones", email="avery@example.com")
         page.get_by_role("heading", name=f"Request {day:%A, %B} {day.day}, {day.year}")
     ).to_be_visible()
     page.get_by_label("Your name").fill(name)
-    page.get_by_label("Email").fill(email)
     page.get_by_label("Event type").select_option("wedding")
     page.get_by_label("Number of guests").fill("150")
     page.get_by_role("button", name="Send Request").click()
 
 
+@pytest.mark.usefixtures("customer_login")
 class TestVisitor:
     def test_book_your_date_button_leads_to_the_calendar(self, page: Page):
         page.goto("/")
-        page.get_by_role("link", name="Book Your Date").click()
+        page.get_by_test_id("hero").get_by_role("link", name="Start planning").click()
         expect(page.get_by_role("heading", level=1, name="Book Your Date")).to_be_visible()
         expect(page.get_by_test_id("calendar")).to_be_visible()
 
@@ -60,11 +61,14 @@ class TestVisitor:
 
         # Someone else requests the same date in another browser while this form is open.
         other = browser.new_page(base_url=base_url)
+        other.goto("/account/login/")
+        other.get_by_label("Username", exact=True).fill("eventguest")
+        other.get_by_label("Password", exact=True).fill("correct-horse-battery-staple")
+        other.get_by_role("button", name="Log in", exact=True).click()
         request_date(other, day, name="Someone Else", email="else@example.com")
         other.close()
 
         page.get_by_label("Your name").fill("Avery Jones")
-        page.get_by_label("Email").fill("avery@example.com")
         page.get_by_label("Event type").select_option("corporate")
         page.get_by_label("Number of guests").fill("60")
         page.get_by_role("button", name="Send Request").click()

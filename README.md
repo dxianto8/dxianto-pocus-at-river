@@ -3,18 +3,25 @@
 The website for **Pocus at River**, the event venue in the Historic Pocus Motors
 Building, 100 S. River Street, Downtown Aurora IL. Built with Django and Postgres.
 
-It has three parts:
+The `dev` redesign includes a full-width photographic homepage, Weddings,
+Corporate, Gallery, Venue, and Packages & Pricing pages, plus customer accounts.
+It uses sans-serif type and white, charcoal, and deep teal surfaces.
 
-- **Home page (`/`).** A copy of the original Wix site at desktop sizes: the same
-  text, photos, spacing, fixed top and bottom bars, and the stationary hero
-  photo. On phones it uses a proper phone layout, which the original lacks.
-- **Booking page (`/book/`),** reached from the green **Book Your Date** button on
-  the home page's photo. A month calendar showing each date as Available,
-  On hold or Booked. Visitors pick a free date and the page slides down to the
-  request form without reloading.
-- **Admin (`/admin/`).** Django's admin. Staff can review requests, confirm or
-  decline them, edit any booking, and use a calendar view to add bookings and
-  block or unblock dates.
+- **Booking requires an account.** Both GET and POST requests to `/book/` require
+  login. Signup preserves the selected date/package destination. Booking ownership,
+  contact email, pending status, and package snapshots are set on the server.
+- **My events (`/account/`).** Each customer sees only their own requests, status,
+  event details, and the package/pricing recorded when they submitted. Staff notes
+  are never displayed to customers. Accounts also support login, POST-only logout,
+  password changes, and email password recovery.
+- **Packages (`/packages/`).** Published packages and prices come from the admin.
+  Initial packages contain no invented rates or inclusions; they show Request
+  pricing until staff configure them.
+- **Admin (`/admin/`).** Manage event requests and availability, edit packages and
+  pricing, and change venue/contact information in Venue settings.
+
+Photo sources and permissions are documented in [docs/image-sources.md](docs/image-sources.md).
+All images are served locally. Coffee imagery is excluded.
 
 ## Run it on your Mac (Docker)
 
@@ -54,7 +61,7 @@ docker compose run --rm web pytest
 docker compose run --rm web ruff check .
 ```
 
-`pytest` runs 104 tests:
+`pytest` covers:
 
 - **Calendar rules:** past dates, the 24-month limit, and which states visitors see.
 - **Form checks** and the spam trap.
@@ -63,9 +70,13 @@ docker compose run --rm web ruff check .
 - **Admin actions:** confirm, decline, cancel, block and unblock.
 - **Browser tests** (Playwright, Chromium), covering:
   - the booking flow and the admin;
-  - the home page matching the original's measured positions at 1440px;
-  - the fixed bars and stationary hero background;
-  - the phone layout.
+  - all public pages from 360px to desktop;
+  - signup → booking → customer status dashboard;
+  - the login gate, gallery keyboard controls, and no-JavaScript fallbacks.
+- **Account security:** password validation, CSRF, safe redirects, owner-only
+  queries, legacy booking privacy, password resets and one-time tokens.
+- **Admin configuration:** package publishing, rates/inclusions, venue settings,
+  and preserving pricing snapshots when packages change.
 
 ## How bookings work
 
@@ -83,15 +94,52 @@ docker compose run --rm web ruff check .
   Chicago time.
 - The public calendar only ever shows a date's status. Names and contact
   details appear only in the admin.
-- **The site does not send emails yet.** Check the admin for new requests;
+- **Event-status notifications are not sent.** Check the admin for new requests;
   pending requests are listed first.
+
+## Packages, venue settings, and accounts
+
+Deployments run migrations through `scripts/vercel_build.py`. For an existing
+local checkout, run `docker compose exec web python manage.py migrate`.
+Migrations add account ownership and optional packages to existing bookings without
+assigning historical requests to any user. They also create three configurable
+starting packages and the singleton Venue settings record.
+
+In **Admin → Event packages**, edit the title, event type, description, USD price,
+price unit (per event/hour/person), whether the amount is a starting rate, price
+notes, and confirmed inclusions (one per line). Toggle **Is published** to control
+public visibility and booking-form availability. Leave the amount blank to show
+**Request pricing**. Packages are interests expressed in a request; the venue
+still confirms final pricing and inclusions directly. No payment is collected.
+
+In **Admin → Venue settings**, change the venue name, contact email, phone,
+address, homepage headline, and pricing introduction/disclaimer. Changes appear
+on the public site without a code deployment.
+
+Staff confirm, decline, or cancel requests in the existing booking admin. Customers
+see the latest status when opening or refreshing My events. To link a historical
+booking, verify the customer's ownership, then set its **Owner** in the admin.
+Never match or auto-assign legacy bookings by an unverified email address.
+
+### Password recovery email
+
+Set the SMTP variables in `.env.example` in the deployment environment. Password
+reset emails are sent through that connection; the reset links expire after one
+hour and cannot be reused. Development prints emails to the console. Until SMTP
+is configured, production email recovery will not deliver messages. Event-status
+email notifications are not sent; customers use My events and staff coordinate
+arrangements directly.
+
+Older exact-match design documents describe the previous site. The pages and
+account workflows documented here describe the `dev` redesign.
 
 ## Project layout
 
 ```
 config/       settings (all from environment variables), URLs
-bookings/     Booking model, calendar logic, request form, views, admin
-templates/    home page, booking pages, admin calendar
+bookings/     Bookings, packages, venue settings, calendar logic, forms, views, admin
+accounts/     Customer registration, authentication URLs, owner-scoped dashboard
+templates/    Public pages, account flows, booking pages, admin calendar
 static/       site.css, site.js, booking.js, images
 tests/        pytest tests; tests/e2e/ are the browser tests
 docs/         design specs
@@ -174,12 +222,10 @@ When you're ready to move `pocusatriver.com` off Wix:
 
 ## Notes
 
-- **Fonts.** The original uses Didot and Avenir, which are paid fonts that Wix
-  licenses. This site uses the closest free matches: Bodoni Moda italic and
-  Mulish Light. Raleway is the same as the original. If the venue licenses the
-  originals, swap them in `templates/base.html` and `static/css/site.css`.
-- **Hero photo.** The original file on the Wix site is only 640px wide, so it
-  looks soft on large screens, as it does on the original. A larger version of
-  the same photo would sharpen it.
+- **Typography.** The dev redesign uses a system sans-serif stack. It loads no
+  third-party fonts and uses no italic serif headings.
+- **Photography.** Full-width imagery comes from the owner-authorized Society 57
+  assets and a separately verified CC0 wedding detail photograph. See
+  `docs/image-sources.md` for the individual asset URLs, credits, and permissions.
 - **History.** The earlier Next.js version of this site is in the git history
   (commit `947bf87`).
