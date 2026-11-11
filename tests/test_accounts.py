@@ -66,7 +66,7 @@ def test_signup_hashes_password_starts_session_and_keeps_event_destination(clien
 )
 def test_signup_rejects_external_redirects(client, next_url):
     response = client.post(reverse("accounts:signup"), signup_data(next=next_url))
-    assert response.url == reverse("accounts:dashboard")
+    assert response.url == reverse("bookings:book")
 
 
 def test_signup_rejects_weak_password_and_duplicate_username(client, customer):
@@ -95,7 +95,7 @@ def test_anonymous_visitors_cannot_book_even_with_forged_owner(client, customer,
         "/book/", booking_data(owner=customer.pk, status="confirmed")
     )
     assert response.status_code == 302
-    assert response.url.startswith("/account/login/?next=")
+    assert response.url.startswith("/account/signup/?next=")
     assert not Booking.objects.exists()
 
 
@@ -251,3 +251,72 @@ def test_admin_settings_and_packages_update_public_page(admin_client, client):
     package.is_published = False
     package.save()
     assert "Evening wedding" not in client.get("/packages/").content.decode()
+
+
+@pytest.mark.parametrize("destination", ["/book/", "/book/?package=wedding&month=2027-02"])
+def test_plan_signup_returns_to_calendar_with_package_intact(client, destination):
+    gate = client.get(destination)
+    assert gate.url.startswith("/account/signup/?next=")
+    page = client.get(gate.url)
+    assert page.context["next"] == destination
+    response = client.post(gate.url, signup_data(next=page.context["next"]))
+    assert response.url == destination
+    calendar = client.get(response.url)
+    assert calendar.status_code == 200
+    assert b'aria-label="Workspace navigation"' in calendar.content
+    assert b'data-testid="calendar"' in calendar.content
+
+
+def test_signup_without_next_starts_at_calendar(client):
+    assert client.post(reverse("accounts:signup"), signup_data()).url == reverse("bookings:book")
+
+
+def test_authenticated_home_opens_workspace_and_explore_opens_venue(client, customer):
+    client.force_login(customer)
+    assert client.get("/").url == reverse("accounts:dashboard")
+    response = client.get(reverse("explore"))
+    assert response.status_code == 200
+    assert b'data-testid="hero"' in response.content
+    assert b'href="/explore/"' in response.content
+
+
+def test_workspace_counts_filters_and_next_event_are_owner_scoped(client, customer):
+    own = make_booking(customer)
+    next_day = timezone.localdate() + timedelta(days=21)
+    make_booking(customer, event_date=next_day, status="confirmed")
+    other = get_user_model().objects.create_user("unrelated", "unrelated@example.com", PASSWORD)
+    make_booking(other, event_date=next_day + timedelta(days=1), status="confirmed", name="Private")
+    client.force_login(customer)
+    response = client.get(reverse("accounts:dashboard"), {"status": "confirmed"})
+    assert response.context["counts"] == {"total": 2, "pending": 1, "confirmed": 1}
+    assert response.context["next_event"] == own
+    assert len(response.context["bookings"]) == 1
+    assert response.context["bookings"][0].owner == customer
+    assert response.context["bookings"][0].status == "confirmed"
+    assert b"unrelated@example.com" not in response.content
+    response = client.get(reverse("accounts:dashboard"), {"status": "not-a-status"})
+    assert len(response.context["bookings"]) == 2
+    assert response.context["selected_status"] == ""
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "/account/",
+        "/account/settings/",
+        "/account/packages/",
+        "/book/",
+        "/account/password-change/",
+        "/account/password-change/done/",
+    ],
+)
+def test_private_workspace_pages_use_product_shell_and_are_not_cached(client, customer, url):
+    assert client.get(url).status_code == 302
+    client.force_login(customer)
+    response = client.get(url)
+    assert response.status_code == 200
+    assert "no-store" in response["Cache-Control"]
+    assert b'aria-label="Workspace navigation"' in response.content
+    assert b'class="site-footer"' not in response.content
+    assert b'class="site-header"' not in response.content
+    assert customer.email.encode() in response.content

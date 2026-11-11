@@ -35,7 +35,7 @@ def request_date(page: Page, day, name="Avery Jones", email="avery@example.com")
 @pytest.mark.usefixtures("customer_login")
 class TestVisitor:
     def test_book_your_date_button_leads_to_the_calendar(self, page: Page):
-        page.goto("/")
+        page.goto("/explore/")
         page.get_by_test_id("hero").get_by_role("link", name="Start planning").click()
         expect(page.get_by_role("heading", level=1, name="Book Your Date")).to_be_visible()
         expect(page.get_by_test_id("calendar")).to_be_visible()

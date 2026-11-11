@@ -40,7 +40,7 @@ def post_data(event_date, **overrides):
 
 
 def test_home_page_renders(client):
-    response = client.get("/")
+    response = client.get("/explore/")
     assert response.status_code == 200
     assert b"A place with a story." in response.content
     assert b'href="/book/"' in response.content

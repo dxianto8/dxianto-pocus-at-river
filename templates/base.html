@@ -14,7 +14,7 @@
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <div class="header-inner">
-      <a class="wordmark" href="{% url 'home' %}" aria-label="Pocus at River home"><span class="brand-symbol" aria-hidden="true"><i></i><i></i><i></i></span><span>Pocus at River<small>WEDDINGS &amp; EVENTS · AURORA, IL</small></span></a>
+      <a class="wordmark" href="{% if user.is_authenticated %}{% url 'explore' %}{% else %}{% url 'home' %}{% endif %}" aria-label="Pocus at River home"><span class="brand-symbol" aria-hidden="true"><i></i><i></i><i></i></span><span>Pocus at River<small>WEDDINGS &amp; EVENTS · AURORA, IL</small></span></a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu <span aria-hidden="true">☰</span></button>
       {% with current=request.resolver_match.url_name %}
       <nav class="site-nav" id="site-nav" aria-label="Main navigation">
@@ -23,7 +23,7 @@
         <a href="{% url 'gallery' %}" {% if current == 'gallery' %}aria-current="page"{% endif %}>Gallery</a>
         <a href="{% url 'venue' %}" {% if current == 'venue' %}aria-current="page"{% endif %}>The venue</a>
         <a href="{% url 'packages' %}" {% if current == 'packages' %}aria-current="page"{% endif %}>Packages &amp; pricing</a>
-        {% if user.is_authenticated %}<a class="account-link" href="{% url 'accounts:dashboard' %}">My events</a>{% else %}<a class="account-link" href="{% url 'accounts:login' %}">Log in</a>{% endif %}
+        {% if user.is_authenticated %}<a class="account-link" href="{% url 'accounts:dashboard' %}">My events</a>{% else %}<a class="account-link" href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Log in</a>{% endif %}
         <a class="button button--small" href="{% url 'bookings:book' %}">Plan an event <span aria-hidden="true">→</span></a>
       </nav>
       {% endwith %}

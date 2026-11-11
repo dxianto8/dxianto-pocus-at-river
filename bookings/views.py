@@ -43,7 +43,7 @@ def state_of(day: date, month: Month) -> DayState | None:
 
 
 @never_cache
-@login_required
+@login_required(login_url="accounts:signup")
 @require_http_methods(["GET", "POST"])
 def book(request: HttpRequest) -> HttpResponse:
     today = timezone.localdate()

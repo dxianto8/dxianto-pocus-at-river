@@ -67,8 +67,8 @@ def test_mobile_menu_and_account_gate(page: Page):
     page.goto("/")
     page.get_by_role("button", name="Menu").click()
     page.get_by_role("navigation").get_by_role("link", name="Plan an event").click()
-    expect(page).to_have_url(re.compile(r"/account/login/\?next="))
-    expect(page.get_by_role("heading", name="Log in to your account")).to_be_visible()
+    expect(page).to_have_url(re.compile(r"/account/signup/\?next="))
+    expect(page.get_by_role("heading", name="Create your account")).to_be_visible()
 
 
 def test_signup_to_booking_to_status_dashboard(page: Page):
@@ -79,14 +79,19 @@ def test_signup_to_booking_to_status_dashboard(page: Page):
     from bookings.models import Booking
 
     day = timezone.localdate() + timedelta(days=12)
-    page.goto(f"/book/?date={day:%Y-%m-%d}")
-    page.get_by_role("link", name="Create an account", exact=True).click()
+    page.goto("/")
+    page.get_by_role("navigation").get_by_role("link", name="Plan an event").click()
+    expect(page).to_have_url(re.compile(r"/account/signup/\?next="))
     page.get_by_label("Your name", exact=True).fill("New Guest")
     page.get_by_label("Email", exact=True).fill("new@example.com")
     page.get_by_label("Username", exact=True).fill("newguest")
     page.get_by_label("Password", exact=True).fill("Strong-River-Password-2027!")
     page.get_by_label("Password confirmation", exact=True).fill("Strong-River-Password-2027!")
     page.get_by_role("button", name="Create account").click()
+    expect(page).to_have_url(re.compile(r"/book/$"))
+    expect(page.get_by_test_id("calendar")).to_be_visible()
+    expect(page.get_by_role("navigation", name="Workspace navigation")).to_be_visible()
+    page.goto(f"/book/?date={day:%Y-%m-%d}")
     expect(page.get_by_label("Email", exact=True)).to_be_disabled()
     page.get_by_label("Event type").select_option("wedding")
     page.get_by_label("Number of guests").fill("60")
@@ -112,3 +117,39 @@ def test_core_flows_without_javascript(browser, base_url):
     page.get_by_text("Does submitting a request confirm my event?", exact=True).click()
     expect(page.locator("details[open]")).to_contain_text("No.")
     context.close()
+
+
+@pytest.mark.parametrize("width", [390, 1440])
+def test_workspace_navigation_and_account_pages(page: Page, customer_login, width):
+    page.set_viewport_size({"width": width, "height": 900})
+    page.goto("/account/")
+    expect(page.get_by_role("heading", level=1)).to_contain_text("Hello")
+    for path in ["/account/", "/book/", "/account/packages/", "/account/settings/"]:
+        page.goto(path)
+        assert page.evaluate(
+            "document.documentElement.scrollWidth<=document.documentElement.clientWidth"
+        )
+        expect(page.get_by_role("main")).to_be_visible()
+        expect(page.locator(".site-footer")).to_have_count(0)
+    if width < 1024:
+        button = page.get_by_role("button", name="Open workspace navigation")
+        button.click()
+        expect(page.get_by_role("navigation", name="Workspace navigation")).to_be_visible()
+        page.keyboard.press("Escape")
+        expect(button).to_be_focused()
+        expect(page.get_by_role("navigation", name="Workspace navigation")).not_to_be_visible()
+
+
+def test_existing_account_can_continue_plan_event_through_login(page: Page):
+    from django.contrib.auth import get_user_model
+
+    get_user_model().objects.create_user(
+        "returning", "returning@example.com", "Strong-River-Password-2027!"
+    )
+    page.goto("/book/?package=wedding")
+    page.locator(".auth-switch").get_by_role("link", name="Log in").click()
+    page.get_by_label("Username", exact=True).fill("returning")
+    page.get_by_label("Password", exact=True).fill("Strong-River-Password-2027!")
+    page.get_by_role("button", name="Log in", exact=True).click()
+    expect(page).to_have_url(re.compile(r"/book/\?package=wedding$"))
+    expect(page.get_by_test_id("calendar")).to_be_visible()

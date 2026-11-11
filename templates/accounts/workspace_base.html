@@ -1,0 +1,44 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}Event Workspace | Pocus at River{% endblock %}</title>
+  <link rel="icon" href="{% static 'images/badge.png' %}" type="image/png">
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+  <link rel="stylesheet" href="{% static 'css/workspace.css' %}">
+  <script src="{% static 'js/workspace.js' %}" defer></script>
+</head>
+<body class="workspace">
+  <a class="skip-link" href="#workspace-content">Skip to content</a>
+  <aside class="workspace-sidebar" id="workspace-sidebar" aria-label="Workspace sidebar">
+    <a class="workspace-brand" href="{% url 'accounts:dashboard' %}"><span class="workspace-brand-mark" aria-hidden="true">P</span><span>Pocus at River<small>EVENT WORKSPACE</small></span></a>
+    <p class="workspace-nav-label">PLANNING</p>
+    {% with current=request.resolver_match.url_name namespace=request.resolver_match.namespace %}
+    <nav class="workspace-nav" aria-label="Workspace navigation">
+      <a href="{% url 'accounts:dashboard' %}" {% if current == 'dashboard' or current == 'booking_detail' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>My events</a>
+      <a href="{% url 'bookings:book' %}" {% if namespace == 'bookings' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v5m10-5v5M3 11h18m-13 4h2m4 0h2"/></svg>Event calendar</a>
+      <a href="{% url 'accounts:packages' %}" {% if current == 'packages' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5"/></svg>Packages</a>
+      <a href="{% url 'accounts:settings' %}" {% if current == 'settings' or current == 'password_change' or current == 'password_change_done' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>Account</a>
+    </nav>
+    {% endwith %}
+    <div class="workspace-help"><span>Need a hand with your plans?</span><a href="mailto:{{ venue.contact_email }}">Contact the venue <span aria-hidden="true">→</span></a></div>
+    <div class="workspace-profile"><span class="workspace-avatar" aria-hidden="true">{{ user.first_name|default:user.username|first|upper }}</span><div><strong>{{ user.first_name|default:user.username }}</strong><span>{{ user.email }}</span></div></div>
+    <form class="workspace-logout" method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button type="submit">Log out <span aria-hidden="true">→</span></button></form>
+  </aside>
+  <button class="workspace-scrim" type="button" data-workspace-close aria-label="Close navigation" hidden></button>
+  <div class="workspace-main">
+    <header class="workspace-topbar">
+      <div class="workspace-breadcrumb"><button class="workspace-toggle" type="button" data-workspace-menu aria-controls="workspace-sidebar" aria-expanded="false" hidden aria-label="Open workspace navigation">☰</button><span>Workspace</span><span aria-hidden="true">/</span><strong>{% if request.resolver_match.namespace == 'bookings' %}Event calendar{% elif request.resolver_match.url_name == 'packages' %}Packages{% elif request.resolver_match.url_name == 'settings' or request.resolver_match.url_name == 'password_change' or request.resolver_match.url_name == 'password_change_done' %}Account{% elif request.resolver_match.url_name == 'booking_detail' %}Event details{% else %}My events{% endif %}</strong></div>
+      <div class="workspace-top-actions"><a class="workspace-website-link" href="{% url 'explore' %}">Venue website <span aria-hidden="true">→</span></a><a class="button button--small" href="{% url 'bookings:book' %}"><span aria-hidden="true">+</span> New event</a></div>
+    </header>
+    <main id="workspace-content" class="workspace-content">
+      {% if messages %}<div class="notice" role="status">{% for message in messages %}<p>{{ message }}</p>{% endfor %}</div>{% endif %}
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="workspace-footer"><span>{{ venue.name }} · Your event workspace</span><a href="mailto:{{ venue.contact_email }}">Get help</a></footer>
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -3,7 +3,7 @@
 The website for **Pocus at River**, the event venue in the Historic Pocus Motors
 Building, 100 S. River Street, Downtown Aurora IL. Built with Django and Postgres.
 
-The `dev` redesign includes a full-width photographic homepage, Weddings,
+The site includes a full-width photographic homepage, Weddings,
 Corporate, Gallery, Venue, and Packages & Pricing pages, plus customer accounts.
 It pairs upright Libre Caslon Display headings with sans-serif navigation and
 body copy, white surfaces, and restrained dark accents.
@@ -11,10 +11,17 @@ body copy, white surfaces, and restrained dark accents.
 - **Booking requires an account.** Both GET and POST requests to `/book/` require
   login. Signup preserves the selected date/package destination. Booking ownership,
   contact email, pending status, and package snapshots are set on the server.
-- **My events (`/account/`).** Each customer sees only their own requests, status,
+- **Customer workspace (`/account/`).** A separate application shell has sidebar
+  navigation, owner-scoped event counts and status filters, the event calendar,
+  packages, and account settings. Each customer sees only their own requests, status,
   event details, and the package/pricing recorded when they submitted. Staff notes
   are never displayed to customers. Accounts also support login, POST-only logout,
   password changes, and email password recovery.
+- **Planning entry.** Plan an event opens signup for new visitors, preserving the
+  calendar destination and any selected package/date through signup or login.
+  Signup without an explicit destination also opens the calendar. Normal returning
+  logins open My events. Logged-in visits to `/` open the workspace; `/explore/`
+  remains available for browsing the venue website.
 - **Packages (`/packages/`).** Published packages and prices come from the admin.
   Initial packages contain no invented rates or inclusions; they show Request
   pricing until staff configure them.

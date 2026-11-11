@@ -1,5 +1,6 @@
 from django.contrib.auth import views as auth
 from django.urls import path, reverse_lazy
+from django.views.decorators.cache import never_cache
 
 from . import views
 
@@ -15,6 +16,8 @@ urlpatterns = [
     ),
     path("logout/", auth.LogoutView.as_view(), name="logout"),
     path("", views.dashboard, name="dashboard"),
+    path("packages/", views.packages, name="packages"),
+    path("settings/", views.settings, name="settings"),
     path("bookings/<uuid:pk>/", views.booking_detail, name="booking_detail"),
     path(
         "password-reset/",
@@ -48,15 +51,19 @@ urlpatterns = [
     ),
     path(
         "password-change/",
-        auth.PasswordChangeView.as_view(
-            template_name="accounts/password_change.html",
-            success_url=reverse_lazy("accounts:password_change_done"),
+        never_cache(
+            auth.PasswordChangeView.as_view(
+                template_name="accounts/password_change.html",
+                success_url=reverse_lazy("accounts:password_change_done"),
+            )
         ),
         name="password_change",
     ),
     path(
         "password-change/done/",
-        auth.PasswordChangeDoneView.as_view(template_name="accounts/password_change_done.html"),
+        never_cache(
+            auth.PasswordChangeDoneView.as_view(template_name="accounts/password_change_done.html")
+        ),
         name="password_change_done",
     ),
 ]

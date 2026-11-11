@@ -10,6 +10,7 @@ admin.site.index_title = "Events, packages, and venue settings"
 
 urlpatterns = [
     path("", site_views.home, name="home"),
+    path("explore/", site_views.home, name="explore"),
     path("weddings/", TemplateView.as_view(template_name="weddings.html"), name="weddings"),
     path("corporate/", TemplateView.as_view(template_name="corporate.html"), name="corporate"),
     path("gallery/", TemplateView.as_view(template_name="gallery.html"), name="gallery"),
