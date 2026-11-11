@@ -39,3 +39,15 @@ def admin_page(page: Page, admin_user) -> Page:
     page.get_by_role("button", name="Log in").click()
     page.wait_for_url("**/admin/")
     return page
+
+
+@pytest.fixture
+def customer_login(page: Page):
+    """Sign a visitor into their own account before exercising the gated booking flow."""
+    user = get_user_model().objects.create_user("eventguest", "avery@example.com", ADMIN_PASSWORD)
+    page.goto("/account/login/")
+    page.get_by_label("Username", exact=True).fill(user.username)
+    page.get_by_label("Password", exact=True).fill(ADMIN_PASSWORD)
+    page.get_by_role("button", name="Log in", exact=True).click()
+    page.wait_for_url("**/account/")
+    return user

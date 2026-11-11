@@ -75,6 +75,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "bookings.context_processors.venue_settings",
             ],
         },
     },
@@ -151,8 +152,8 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
 
 
-# Email. Nothing is sent yet (notifications are the planned next step), but production is
-# set up for SMTP so it works as soon as sending is added. Locally, mail prints to the console.
+# Email for account password resets. Production uses SMTP; development prints to the
+# console. Event-status notifications are not sent.
 
 if DEBUG:
     MAILERS = {"default": {"BACKEND": "django.core.mail.backends.console.EmailBackend"}}
@@ -178,3 +179,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 BOOKING_MAX_MONTHS_AHEAD = 24
 BOOKING_MAX_GUESTS = 200
+
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "accounts:dashboard"
+LOGOUT_REDIRECT_URL = "home"
+PASSWORD_RESET_TIMEOUT = 3600

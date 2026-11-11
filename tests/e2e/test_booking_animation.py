@@ -40,7 +40,7 @@ def day():
 
 
 @pytest.fixture
-def booking_page(page: Page, day) -> Page:
+def booking_page(page: Page, day, customer_login) -> Page:
     page.set_viewport_size({"width": 1280, "height": 800})
     page.goto(f"/book/?month={day:%Y-%m}")
     page.evaluate("window.__sameDocument = true")  # disappears if the page reloads
@@ -73,7 +73,7 @@ class TestPickingADate:
         in_between = {y for y in positions if start < y < end}
         assert len(in_between) >= 3, f"expected a gradual scroll, got {positions}"
 
-    def test_reduced_motion_jumps_straight_to_the_form(self, page: Page, day):
+    def test_reduced_motion_jumps_straight_to_the_form(self, page: Page, day, customer_login):
         page.emulate_media(reduced_motion="reduce")
         page.set_viewport_size({"width": 1280, "height": 800})
         page.goto(f"/book/?month={day:%Y-%m}")
@@ -95,7 +95,6 @@ class TestPickingADate:
     def test_request_can_be_sent_from_the_form_that_slid_in(self, booking_page: Page, day):
         date_link(booking_page, day).click()
         booking_page.get_by_label("Your name").fill("Avery Jones")
-        booking_page.get_by_label("Email").fill("avery@example.com")
         booking_page.get_by_label("Event type").select_option("wedding")
         booking_page.get_by_label("Number of guests").fill("120")
         booking_page.get_by_role("button", name="Send Request").click()
@@ -103,8 +102,10 @@ class TestPickingADate:
         assert Booking.objects.get().event_date == day
 
 
-def test_date_links_still_work_without_javascript(browser, base_url, day):
-    context = browser.new_context(java_script_enabled=False, base_url=base_url)
+def test_date_links_still_work_without_javascript(browser, base_url, day, customer_login, page):
+    context = browser.new_context(
+        java_script_enabled=False, base_url=base_url, storage_state=page.context.storage_state()
+    )
     page = context.new_page()
     page.goto(f"/book/?month={day:%Y-%m}")
     date_link(page, day).click()

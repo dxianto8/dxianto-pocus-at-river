@@ -1,52 +1,35 @@
 {% load static %}<!doctype html>
-<html lang="en"{% if request.resolver_match.url_name == 'home' %} class="home-page"{% endif %}>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}HOME | Pocus At River{% endblock %}</title>
-  <meta name="description" content="{% block description %}Weddings and events in the Historic Pocus Motors Building, 100 S. River Street, Downtown Aurora IL.{% endblock %}">
+  <title>{% block title %}Pocus at River | Weddings &amp; Events in Aurora{% endblock %}</title>
+  <meta name="description" content="{% block description %}A historic Aurora setting for weddings, company gatherings, and private celebrations. Explore the space, compare packages, and plan your event with Pocus at River.{% endblock %}">
   <link rel="icon" href="{% static 'images/badge.png' %}" type="image/png">
-  {% comment %}
-    Free stand-ins for the paid fonts Wix licenses for the original:
-    Bodoni Moda italic for Didot italic, Mulish Light for Avenir 35 Light. Raleway is the same font.
-  {% endcomment %}
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital@1&family=Mulish:wght@300;500&family=Raleway:wght@400;500&display=swap">
   <link rel="stylesheet" href="{% static 'css/site.css' %}">
   <script src="{% static 'js/site.js' %}" defer></script>
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar__inner">
-      <a class="topbar__label" href="{% url 'home' %}" aria-label="Pocus at River home">
-        <img src="{% static 'images/badge.png' %}" alt="" width="42" height="42">
-        <span>POCUS AT RIVER<small>WEDDINGS &amp; EVENTS · AURORA, IL</small></span>
-      </a>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="{% url 'home' %}" aria-label="Pocus at River home"><span class="brand-symbol" aria-hidden="true"><i></i><i></i><i></i></span><span>POCUS AT RIVER<small>WEDDINGS &amp; EVENTS · AURORA, IL</small></span></a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu <span aria-hidden="true">☰</span></button>
+      {% with current=request.resolver_match.url_name %}
       <nav class="site-nav" id="site-nav" aria-label="Main navigation">
-        <a class="nav-book" href="{% url 'bookings:book' %}">Event bookings <span aria-hidden="true">→</span></a>
-        <ul class="topbar__social">
-          <li>
-            <a href="https://www.instagram.com/pocusatriver" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-              <img src="{% static 'images/instagram.png' %}" alt="" width="39" height="39">
-            </a>
-          </li>
-          <li>
-            <a href="https://www.facebook.com/pocusatriver" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-              <img src="{% static 'images/facebook.png' %}" alt="" width="39" height="39">
-            </a>
-          </li>
-        </ul>
+        <a href="{% url 'weddings' %}" {% if current == 'weddings' %}aria-current="page"{% endif %}>Weddings</a>
+        <a href="{% url 'corporate' %}" {% if current == 'corporate' %}aria-current="page"{% endif %}>Corporate</a>
+        <a href="{% url 'gallery' %}" {% if current == 'gallery' %}aria-current="page"{% endif %}>Gallery</a>
+        <a href="{% url 'venue' %}" {% if current == 'venue' %}aria-current="page"{% endif %}>The venue</a>
+        <a href="{% url 'packages' %}" {% if current == 'packages' %}aria-current="page"{% endif %}>Packages &amp; pricing</a>
+        {% if user.is_authenticated %}<a class="account-link" href="{% url 'accounts:dashboard' %}">My events</a>{% else %}<a class="account-link" href="{% url 'accounts:login' %}">Log in</a>{% endif %}
+        <a class="button button--small" href="{% url 'bookings:book' %}">Plan an event <span aria-hidden="true">→</span></a>
       </nav>
+      {% endwith %}
     </div>
   </header>
-
-  <main class="{% block main_class %}{% endblock %}">
-    {% block content %}{% endblock %}
-  </main>
-
-  <footer class="site-footer">© 2026 by Pocus at River</footer>
+  {% if messages %}<div class="messages wrap" role="status">{% for message in messages %}<p>{{ message }}</p>{% endfor %}</div>{% endif %}
+  <main id="main" class="{% block main_class %}{% endblock %}">{% block content %}{% endblock %}</main>
+  <footer class="site-footer"><div class="wrap footer-grid"><div><a class="footer-wordmark" href="{% url 'home' %}">POCUS AT RIVER</a><p>A historic setting.<br>A new reason to gather.</p></div><div><h2>Find us</h2><p>{{ venue.address }}</p><a href="{% url 'venue' %}">Directions &amp; venue information →</a></div><div><h2>Start a conversation</h2><a href="mailto:{{ venue.contact_email }}">{{ venue.contact_email }}</a>{% if venue.phone %}<p>{{ venue.phone }}</p>{% endif %}<div class="social-links"><a href="https://www.instagram.com/pocusatriver" target="_blank" rel="noopener noreferrer">Instagram →</a><a href="https://www.facebook.com/pocusatriver" target="_blank" rel="noopener noreferrer">Facebook →</a></div></div></div><div class="wrap footer-bottom"><span>© {% now "Y" %} {{ venue.name }}</span><a href="{% url 'gallery' %}#photo-credits">Photography credits</a></div></footer>
   {% block scripts %}{% endblock %}
-</body>
-</html>
+</body></html>

@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 import pytest
+from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.urls import reverse
 from django.utils import timezone
@@ -11,6 +12,15 @@ from bookings.models import Booking
 pytestmark = pytest.mark.django_db
 
 BOOK = "/book/"
+
+
+@pytest.fixture(autouse=True)
+def signed_in(client):
+    user = get_user_model().objects.create_user(
+        "guest", "avery@example.com", "River-Password-2026!"
+    )
+    client.force_login(user)
+    return user
 
 
 def day(offset: int):
@@ -32,7 +42,7 @@ def post_data(event_date, **overrides):
 def test_home_page_renders(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert b"Host Your Event at the Historic Pocus Motors Building" in response.content
+    assert b"A place with a story." in response.content
     assert b'href="/book/"' in response.content
 
 
@@ -78,10 +88,11 @@ class TestSubmittingARequest:
         assert booking.status == Booking.Status.PENDING
         assert booking.event_date == day(20)
         assert response.status_code == 302
-        assert response["Location"] == f"{reverse('bookings:requested')}?date={day(20).isoformat()}"
+        assert response["Location"] == f"{reverse('bookings:requested')}?booking={booking.pk}"
 
     def test_thank_you_page_names_the_date(self, client):
-        response = client.get(reverse("bookings:requested"), {"date": day(20).isoformat()})
+        client.post(BOOK, post_data(day(20)))
+        response = client.get(reverse("bookings:requested"), {"booking": Booking.objects.get().pk})
         assert day(20).strftime("%B") in response.content.decode()
 
     def test_date_shows_on_hold_afterwards(self, client):
