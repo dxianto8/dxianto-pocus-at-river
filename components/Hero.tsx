@@ -1,19 +1,30 @@
 import Image from "next/image";
 
-import type { Badge, Photo } from "@/content/site";
+import type { Photo } from "@/content/site";
 
-import { LogoBadge } from "./LogoBadge";
+import { Parallax } from "./Parallax";
 
 type HeroProps = {
   image: Photo;
-  badge: Badge;
+  badge: Photo;
   address: string;
 };
 
+/**
+ * Matches the original: an 821px-tall panel with 80px side margins. The photo is shown at
+ * 71% opacity over charcoal and lags behind the scroll. The badge and address sit at fixed
+ * heights from the top of the panel.
+ */
 export function Hero({ image, badge, address }: HeroProps) {
   return (
-    <div className="mx-auto max-w-[1440px] sm:px-10 lg:px-20">
-      <div className="relative flex h-[70svh] min-h-[440px] flex-col items-center justify-center overflow-hidden px-6 sm:h-[560px] lg:h-[740px]">
+    <div
+      data-testid="hero"
+      className="relative h-[520px] overflow-hidden bg-charcoal sm:mx-10 sm:h-[821px] desk:mx-20"
+    >
+      <Parallax
+        data-testid="hero-photo"
+        className="absolute inset-x-0 -top-[63px] h-[max(100svh,520px)] opacity-71 will-change-transform sm:h-[max(100svh,821px)]"
+      >
         <Image
           src={image.src}
           alt={image.alt}
@@ -21,19 +32,23 @@ export function Hero({ image, badge, address }: HeroProps) {
           loading="eager"
           fetchPriority="high"
           placeholder="blur"
-          sizes="(min-width: 1440px) 1280px, (min-width: 640px) calc(100vw - 80px), 100vw"
+          sizes="(min-width: 1200px) calc(100vw - 160px), (min-width: 640px) calc(100vw - 80px), 100vw"
           className="object-cover"
         />
-        {/* Darkens the photo a little so the white address line stays readable. */}
-        <div aria-hidden className="absolute inset-0 bg-black/30" />
+      </Parallax>
 
-        <h1 className="relative">
-          <LogoBadge {...badge} className="size-40 drop-shadow-lg sm:size-52 lg:size-60" />
-        </h1>
-        <p className="relative mt-8 text-center font-serif text-lg italic tracking-[0.08em] text-white sm:text-xl">
-          {address}
-        </p>
-      </div>
+      <h1 className="absolute top-[110px] left-1/2 -translate-x-1/2 sm:top-[156px]">
+        <Image
+          src={badge.src}
+          alt={badge.alt}
+          loading="eager"
+          sizes="245px"
+          className="size-40 sm:size-[245px]"
+        />
+      </h1>
+      <p className="absolute inset-x-0 top-[310px] px-6 text-center font-serif text-lg leading-[22px] tracking-[0.08em] text-mist italic sm:top-[450px]">
+        {address}
+      </p>
     </div>
   );
 }
