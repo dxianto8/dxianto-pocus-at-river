@@ -15,7 +15,7 @@
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <div class="wrap header-inner">
-      <a class="wordmark" href="{% if user.is_authenticated %}{% url 'explore' %}{% else %}{% url 'home' %}{% endif %}" aria-label="Pocus at River home">Pocus at River</a>
+      <a class="wordmark" href="{% if user.is_authenticated %}{% url 'explore' %}{% else %}{% url 'home' %}{% endif %}" aria-label="Pocus at River home"><img class="wordmark__logo" src="{% static 'images/badge.png' %}" alt="" width="44" height="44">Pocus at River</a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu</button>
       {% with current=request.resolver_match.url_name %}
       <nav class="site-nav" id="site-nav" aria-label="Main navigation">

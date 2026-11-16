@@ -112,8 +112,10 @@ p { max-width: 68ch; }
 
 .site-header { position: sticky; top: 0; z-index: 20; background: var(--white); border-bottom: 1px solid var(--line); }
 .header-inner { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; min-height: 4.5rem; }
-.wordmark { font: 400 1.625rem/1 var(--display); text-decoration: none; white-space: nowrap; color: var(--steel); }
+.wordmark { display: inline-flex; align-items: center; gap: 0.7rem; font: 400 1.625rem/1 var(--display); text-decoration: none; white-space: nowrap; color: var(--steel); }
+.wordmark__logo { flex: none; width: 2.75rem; height: 2.75rem; border-radius: 50%; }
 .wordmark--light { color: var(--white); }
+.wordmark--light .wordmark__logo { box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.7); }
 .site-nav { display: flex; align-items: center; gap: clamp(1rem, 2vw, 1.9rem); font-size: 0.9375rem; font-weight: 500; }
 .site-nav a:not(.button) { text-decoration: none; padding-block: 0.4rem; border-bottom: 2px solid transparent; }
 .site-nav a:not(.button):hover, .site-nav a[aria-current="page"] { border-bottom-color: var(--brass); }
@@ -341,7 +343,7 @@ body.modal-open { overflow: hidden; }
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2.5rem; }
 .footer-grid h2 { font-size: 0.9375rem; color: var(--white); margin-bottom: 0.75rem; }
 .footer-grid p + p { margin-top: 0.4rem; }
-.footer-grid .wordmark { display: inline-block; font-size: 2rem; margin-bottom: 1rem; }
+.footer-grid .wordmark { display: inline-flex; font-size: 2rem; margin-bottom: 1rem; }
 .footer-grid div:first-child p { max-width: 30ch; }
 .footer-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid rgb(255 255 255 / 0.2); }
 

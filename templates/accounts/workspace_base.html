@@ -14,11 +14,11 @@
 <body class="workspace">
   <a class="skip-link" href="#workspace-content">Skip to content</a>
   <header class="ws-bar">
-    <a class="wordmark wordmark--light" href="{% url 'accounts:dashboard' %}">Pocus at River</a>
+    <a class="wordmark wordmark--light" href="{% url 'accounts:dashboard' %}"><img class="wordmark__logo" src="{% static 'images/badge.png' %}" alt="" width="44" height="44">Pocus at River</a>
     <button class="ws-toggle" type="button" data-workspace-menu aria-controls="workspace-sidebar" aria-expanded="false" hidden aria-label="Open workspace navigation">Menu</button>
   </header>
   <aside class="ws-side" id="workspace-sidebar" aria-label="Workspace sidebar">
-    <a class="wordmark wordmark--light ws-side__brand" href="{% url 'accounts:dashboard' %}">Pocus at River</a>
+    <a class="wordmark wordmark--light ws-side__brand" href="{% url 'accounts:dashboard' %}"><img class="wordmark__logo" src="{% static 'images/badge.png' %}" alt="" width="44" height="44">Pocus at River</a>
     {% with current=request.resolver_match.url_name namespace=request.resolver_match.namespace %}
     <nav class="ws-nav" aria-label="Workspace navigation">
       <a href="{% url 'accounts:dashboard' %}" {% if current == 'dashboard' or 'booking' in current or current == 'checklist_item' or current == 'document' %}aria-current="page"{% endif %}>My events</a>
