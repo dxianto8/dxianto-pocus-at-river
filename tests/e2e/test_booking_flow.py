@@ -37,22 +37,24 @@ class TestVisitor:
     def test_book_your_date_button_leads_to_the_calendar(self, page: Page):
         page.goto("/explore/")
         page.get_by_test_id("hero").get_by_role("link", name="Start planning").click()
-        expect(page.get_by_role("heading", level=1, name="Book Your Date")).to_be_visible()
+        expect(page.get_by_role("heading", level=1, name="Request a date")).to_be_visible()
         expect(page.get_by_test_id("calendar")).to_be_visible()
 
     def test_request_a_date_then_see_it_on_hold(self, page: Page):
         day = future(21)
         request_date(page, day)
 
-        expect(page.get_by_role("heading", name="Thank You")).to_be_visible()
+        expect(page.get_by_role("heading", name="Request received")).to_be_visible()
         expect(page.get_by_text(f"{day:%A, %B} {day.day}, {day.year}")).to_be_visible()
         assert Booking.objects.get().status == Booking.Status.PENDING
 
         open_month(page, day)
         cell = calendar_cell(page, day)
         expect(cell).to_have_attribute("data-state", "on_hold")
-        expect(cell.get_by_text("On hold")).to_be_visible()
-        expect(cell.get_by_role("link")).to_have_count(0)
+        # The customer's own held date links to their event instead of offering it again.
+        expect(cell.get_by_role("link")).to_contain_text("Your request")
+        cell.get_by_role("link").click()
+        expect(page.locator(".status")).to_have_text("Pending")
 
     def test_same_date_cannot_be_requested_twice(self, page: Page, browser, base_url):
         day = future(22)

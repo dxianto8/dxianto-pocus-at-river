@@ -22,5 +22,5 @@
       setOpen(false); toggle.focus();
     }
   });
-  window.matchMedia('(min-width:64rem)').addEventListener('change', () => setOpen(false));
+  window.matchMedia('(min-width:64.01rem)').addEventListener('change', () => setOpen(false));
 })();

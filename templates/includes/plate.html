@@ -1,0 +1,2 @@
+{# A date set as a plate: the one visual motif shared by the public site and the workspace. #}
+<span class="plate{% if size %} plate--{{ size }}{% endif %}{% if tone %} plate--{{ tone }}{% endif %}"><span class="plate__top">{{ day|date:"D" }}</span><span class="plate__day">{{ day|date:"j" }}</span><span class="plate__bottom">{{ day|date:"M Y" }}</span></span>

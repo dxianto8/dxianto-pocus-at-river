@@ -18,7 +18,22 @@ urlpatterns = [
     path("", views.dashboard, name="dashboard"),
     path("packages/", views.packages, name="packages"),
     path("settings/", views.settings, name="settings"),
+    path("messages/", views.inbox, name="inbox"),
     path("bookings/<uuid:pk>/", views.booking_detail, name="booking_detail"),
+    path("bookings/<uuid:pk>/edit/", views.booking_edit, name="booking_edit"),
+    path("bookings/<uuid:pk>/cancel/", views.booking_cancel, name="booking_cancel"),
+    path("bookings/<uuid:pk>/event.ics", views.booking_ics, name="booking_ics"),
+    path("bookings/<uuid:pk>/messages/", views.booking_messages, name="booking_messages"),
+    path("bookings/<uuid:pk>/checklist/", views.booking_checklist, name="booking_checklist"),
+    path(
+        "bookings/<uuid:pk>/checklist/<int:item_id>/",
+        views.checklist_item,
+        name="checklist_item",
+    ),
+    path("bookings/<uuid:pk>/schedule/", views.booking_schedule, name="booking_schedule"),
+    path("bookings/<uuid:pk>/schedule/<int:item_id>/", views.schedule_item, name="schedule_item"),
+    path("bookings/<uuid:pk>/documents/", views.booking_documents, name="booking_documents"),
+    path("bookings/<uuid:pk>/documents/<uuid:document_id>/", views.document, name="document"),
     path(
         "password-reset/",
         auth.PasswordResetView.as_view(

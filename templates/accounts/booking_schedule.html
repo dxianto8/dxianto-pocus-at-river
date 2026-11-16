@@ -1,0 +1,19 @@
+{% extends "accounts/event_base.html" %}
+{% block event %}
+<section class="panel panel--narrow" aria-labelledby="sch-heading">
+  <h2 id="sch-heading">Day schedule</h2>
+  <p class="muted">The running order for {{ booking.event_date|date:"F j" }}: vendor arrivals, doors, dinner, last song. The venue team reads this to prepare the room.</p>
+  {% if items %}
+  <ol class="schedule">
+    {% for item in items %}
+      <li>
+        <time>{{ item.time|time:"g:i A" }}</time>
+        <span><strong>{{ item.title }}</strong>{% if item.note %}<br><span class="muted">{{ item.note }}</span>{% endif %}</span>
+        <form method="post" action="{% url 'accounts:schedule_item' booking.pk item.pk %}">{% csrf_token %}<button class="link-button" type="submit" aria-label="Remove {{ item.title }}">Remove</button></form>
+      </li>
+    {% endfor %}
+  </ol>
+  {% else %}<p>Nothing on the schedule yet. Add the first line below.</p>{% endif %}
+  <form method="post" class="form form--inline form--schedule">{% csrf_token %}{% include "includes/form_fields.html" %}<button class="button" type="submit">Add to schedule</button></form>
+</section>
+{% endblock %}

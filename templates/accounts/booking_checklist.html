@@ -1,0 +1,32 @@
+{% extends "accounts/event_base.html" %}
+{% block event %}
+<section class="panel panel--narrow" aria-labelledby="cl-heading">
+  <div class="panel__head"><h2 id="cl-heading">Checklist</h2><span class="muted">{{ done_items|length }} of {{ total }} done</span></div>
+  <p class="muted">A starting list based on your event date. Tick things off, add your own, and the venue team sees the same list.</p>
+  {% if open_items %}
+  <ul class="checklist">
+    {% for item in open_items %}
+      <li>
+        <form method="post" action="{% url 'accounts:checklist_item' booking.pk item.pk %}">{% csrf_token %}<button class="tick" type="submit" aria-label="Mark “{{ item.title }}” as done"></button></form>
+        <span class="checklist__title">{{ item.title }}{% if item.from_staff %} <span class="chip">From the venue</span>{% endif %}</span>
+        {% if item.due_date %}<span class="muted{% if item.is_overdue %} overdue{% endif %}">{% if item.is_overdue %}Overdue, {% endif %}{{ item.due_date|date:"M j, Y" }}</span>{% endif %}
+        {% if not item.from_staff %}<form method="post" action="{% url 'accounts:checklist_item' booking.pk item.pk %}">{% csrf_token %}<input type="hidden" name="action" value="delete"><button class="link-button" type="submit" aria-label="Remove “{{ item.title }}”">Remove</button></form>{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+  {% elif total %}<p>Everything is ticked off.</p>{% endif %}
+  <form method="post" class="form form--inline">{% csrf_token %}{% include "includes/form_fields.html" %}<button class="button" type="submit">Add task</button></form>
+  {% if done_items %}
+  <h3>Done</h3>
+  <ul class="checklist checklist--done">
+    {% for item in done_items %}
+      <li>
+        <form method="post" action="{% url 'accounts:checklist_item' booking.pk item.pk %}">{% csrf_token %}<button class="tick tick--on" type="submit" aria-label="Mark “{{ item.title }}” as not done"></button></form>
+        <span class="checklist__title">{{ item.title }}</span>
+        <span class="muted">{{ item.done_at|date:"M j" }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endblock %}

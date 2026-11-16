@@ -96,7 +96,7 @@ def test_signup_to_booking_to_status_dashboard(page: Page):
     page.get_by_label("Event type").select_option("wedding")
     page.get_by_label("Number of guests").fill("60")
     page.get_by_role("button", name="Send Request").click()
-    expect(page.get_by_role("heading", name="Thank You")).to_be_visible()
+    expect(page.get_by_role("heading", name="Request received")).to_be_visible()
     page.get_by_role("link", name="View my request").click()
     expect(page.locator(".status")).to_have_text("Pending")
     booking = Booking.objects.get()

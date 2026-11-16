@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
+from django import forms
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
@@ -14,8 +15,18 @@ from django.utils.html import format_html
 from django.utils.http import urlencode
 from django.views.decorators.http import require_POST
 
+from . import services
 from .calendar import add_months, month_dates
-from .models import Booking, EventPackage, VenueSettings
+from .models import (
+    Activity,
+    Booking,
+    ChecklistItem,
+    Document,
+    EventPackage,
+    Message,
+    ScheduleItem,
+    VenueSettings,
+)
 from .views import safe_parse_date
 
 STATUS_COLOURS = {
@@ -36,8 +47,107 @@ class AdminDay:
     booking: Booking | None
 
 
+class MessageInline(admin.TabularInline):
+    """The conversation with the customer. Add a row to reply; sent messages can't be edited."""
+
+    model = Message
+    extra = 1
+    fields = ["sender", "body", "created_at"]
+    readonly_fields = ["sender", "created_at"]
+    can_delete = False
+    verbose_name = "message"
+    verbose_name_plural = "Messages with the customer (add a row to reply)"
+
+    @admin.display(description="From")
+    def sender(self, message: Message):
+        if message.pk is None:
+            return "You (venue)"
+        return "Venue" if message.from_staff else "Customer"
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+class ChecklistInline(admin.TabularInline):
+    model = ChecklistItem
+    extra = 0
+    fields = ["title", "due_date", "done_at", "from_staff"]
+    verbose_name_plural = "Checklist (the customer sees and ticks these)"
+
+
+class ScheduleInline(admin.TabularInline):
+    model = ScheduleItem
+    extra = 0
+    verbose_name_plural = "Day schedule (written by the customer)"
+
+
+class DocumentInlineForm(forms.ModelForm):
+    upload = forms.FileField(
+        required=False, help_text="PDF, Word, Excel, text, JPG or PNG, up to 4 MB."
+    )
+
+    class Meta:
+        model = Document
+        fields = ["title"]
+
+    def clean(self):
+        data = super().clean()
+        upload = data.get("upload")
+        if upload:
+            try:
+                Document.check_upload(upload)
+            except forms.ValidationError as error:
+                self.add_error("upload", error)
+        elif self.instance._state.adding:
+            self.add_error("upload", "Choose a file to share.")
+        return data
+
+    def save(self, commit=True):
+        if self.cleaned_data.get("upload"):
+            self.instance.attach(self.cleaned_data["upload"])
+        return super().save(commit=commit)
+
+
+class DocumentInline(admin.TabularInline):
+    model = Document
+    form = DocumentInlineForm
+    extra = 0
+    fields = ["title", "upload", "file", "shared_by", "created_at"]
+    readonly_fields = ["file", "shared_by", "created_at"]
+    verbose_name_plural = "Documents (proposals, contracts, floor plans)"
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).defer("data")
+
+    @admin.display(description="Stored file")
+    def file(self, document: Document):
+        if document._state.adding:
+            return "-"
+        url = reverse("admin:bookings_booking_document", args=[document.pk])
+        return format_html('<a href="{}">{}</a>', url, document.filename)
+
+    @admin.display(description="From")
+    def shared_by(self, document: Document):
+        if document._state.adding:
+            return "You (venue)"
+        return "Venue" if document.from_staff else "Customer"
+
+
+class ActivityInline(admin.TabularInline):
+    model = Activity
+    extra = 0
+    fields = ["text", "created_at"]
+    readonly_fields = ["text", "created_at"]
+    can_delete = False
+    verbose_name_plural = "History (also shown to the customer)"
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
+    inlines = [MessageInline, DocumentInline, ChecklistInline, ScheduleInline, ActivityInline]
     autocomplete_fields = ["owner", "package"]
     list_display = [
         "event_date",
@@ -47,6 +157,7 @@ class BookingAdmin(admin.ModelAdmin):
         "guest_count",
         "email",
         "owner",
+        "unread",
         "created_at",
     ]
     list_display_links = ["event_date", "name"]
@@ -93,12 +204,82 @@ class BookingAdmin(admin.ModelAdmin):
             booking.get_status_display(),
         )
 
+    @admin.display(description="New from customer")
+    def unread(self, booking: Booking):
+        count = booking.messages.filter(from_staff=False, read_at=None).count()
+        return f"{count} message{'s' if count != 1 else ''}" if count else ""
+
+    # Keeping the customer in step ------------------------------------------------------------
+
+    def get_inlines(self, request, obj):
+        # A venue block has no customer, so there is nothing to talk about or plan.
+        if obj is None or obj.status == Booking.Status.BLOCKED:
+            return []
+        return self.inlines
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        if request.method == "GET":  # opening the booking marks the customer's messages read
+            Message.objects.filter(booking_id=object_id, from_staff=False, read_at=None).update(
+                read_at=timezone.now()
+            )
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if change and "status" in form.changed_data:
+            services.status_changed(obj, by_staff=True, request=request)
+        if change and "event_date" in form.changed_data:
+            services.log(obj, f"The venue moved the event to {obj.event_date:%B %-d, %Y}.")
+
+    def save_formset(self, request, form, formset, change):
+        booking = form.instance
+        for instance in formset.save(commit=False):
+            adding = instance._state.adding
+            if isinstance(instance, Message) and adding:
+                instance.from_staff, instance.author = True, request.user
+                instance.save()
+                services.notify_customer(
+                    booking, "New message from the venue", [instance.body], request
+                )
+                continue
+            if isinstance(instance, Document) and adding:
+                instance.from_staff, instance.uploaded_by = True, request.user
+                instance.save()
+                services.log(booking, f"The venue shared “{instance.title}”."[:200])
+                services.notify_customer(
+                    booking,
+                    "A new document for your event",
+                    [f"The venue team shared “{instance.title}” with you."],
+                    request,
+                )
+                continue
+            if isinstance(instance, ChecklistItem) and adding:
+                instance.from_staff = True
+            instance.save()
+        for removed in formset.deleted_objects:
+            removed.delete()
+        formset.save_m2m()
+
+    def document_view(self, request: HttpRequest, pk) -> HttpResponse:
+        if not self.has_view_permission(request):
+            raise PermissionDenied
+        document = get_object_or_404(Document, pk=pk)
+        response = HttpResponse(bytes(document.data), content_type=document.content_type)
+        name = "".join(c for c in document.filename if c.isalnum() or c in "._- ") or "document"
+        response["Content-Disposition"] = f'attachment; filename="{name}"'
+        response["X-Content-Type-Options"] = "nosniff"
+        return response
+
     # Bulk actions ---------------------------------------------------------------------------
 
     def _move(self, request, queryset, from_statuses, to_status, verb):
+        moving = list(queryset.filter(status__in=from_statuses))
         count = queryset.filter(status__in=from_statuses).update(
             status=to_status, updated_at=timezone.now()
         )
+        for booking in moving:
+            booking.status = to_status
+            services.status_changed(booking, by_staff=True, request=request)
         skipped = queryset.count() - count
         self.message_user(request, f"{verb} {count} booking(s).", messages.SUCCESS)
         if skipped:
@@ -134,6 +315,11 @@ class BookingAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         custom = [
+            path(
+                "document/<uuid:pk>/",
+                self.admin_site.admin_view(self.document_view),
+                name="bookings_booking_document",
+            ),
             path(
                 "calendar/",
                 self.admin_site.admin_view(self.calendar_view),

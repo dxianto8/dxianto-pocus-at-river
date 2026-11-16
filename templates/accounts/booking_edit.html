@@ -1,0 +1,10 @@
+{% extends "accounts/event_base.html" %}
+{% block event %}
+<section class="panel panel--narrow">
+  <h2>Change details or date</h2>
+  <p class="muted">You can change a request until the venue confirms it. The team is told what changed.</p>
+  <form method="post" class="form">{% csrf_token %}{% include "includes/form_fields.html" %}
+    <p class="actions"><button class="button" type="submit">Save changes</button><a class="button button--quiet" href="{% url 'accounts:booking_detail' booking.pk %}">Discard</a></p>
+  </form>
+</section>
+{% endblock %}

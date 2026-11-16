@@ -90,7 +90,9 @@ class TestPickingADate:
         expect(booking_page.get_by_role("heading", name=heading_for(day))).to_be_visible()
         booking_page.go_back()
         expect(booking_page).not_to_have_url(re.compile("date="))
-        expect(booking_page.get_by_role("heading", name=re.compile("^Request"))).to_have_count(0)
+        expect(
+            booking_page.get_by_role("heading", name=re.compile(r"^Request \w+day,"))
+        ).to_have_count(0)
 
     def test_request_can_be_sent_from_the_form_that_slid_in(self, booking_page: Page, day):
         date_link(booking_page, day).click()
@@ -98,7 +100,7 @@ class TestPickingADate:
         booking_page.get_by_label("Event type").select_option("wedding")
         booking_page.get_by_label("Number of guests").fill("120")
         booking_page.get_by_role("button", name="Send Request").click()
-        expect(booking_page.get_by_role("heading", name="Thank You")).to_be_visible()
+        expect(booking_page.get_by_role("heading", name="Request received")).to_be_visible()
         assert Booking.objects.get().event_date == day
 
 

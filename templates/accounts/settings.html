@@ -1,6 +1,19 @@
 {% extends "accounts/workspace_base.html" %}
 {% block title %}Account | Pocus at River{% endblock %}
 {% block content %}
-<section class="workspace-page-heading"><div><p class="workspace-kicker">YOUR PROFILE</p><h1>Account</h1><p>Your identity, contact details, and sign-in settings.</p></div></section>
-<section class="workspace-settings-grid"><div class="workspace-card"><h2>Account details</h2><dl class="event-details"><div><dt>Name</dt><dd>{{ user.get_full_name|default:user.username }}</dd></div><div><dt>Username</dt><dd>{{ user.username }}</dd></div><div><dt>Email</dt><dd>{{ user.email }}</dd></div></dl><p class="workspace-subtle">Your account email is used for event requests and password recovery. Contact the venue team if your contact details need updating.</p></div><div class="workspace-card"><h2>Sign-in &amp; security</h2><p>Keep your password private and use one you don't use for other services.</p><a class="button button--outline" href="{% url 'accounts:password_change' %}">Change password <span aria-hidden="true">→</span></a><form class="workspace-signout-form" method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="text-button" type="submit">Log out of this account</button></form></div></section>
+<section class="ws-head"><h1>Account</h1><p>Signed in as {{ user.username }}.</p></section>
+<div class="event-grid">
+  <section class="panel" aria-labelledby="profile-heading">
+    <h2 id="profile-heading">Your details</h2>
+    <form method="post" class="form">{% csrf_token %}{% include "includes/form_fields.html" %}
+      <p class="actions"><button class="button" type="submit">Save profile</button></p>
+    </form>
+  </section>
+  <section class="panel" aria-labelledby="security-heading">
+    <h2 id="security-heading">Password</h2>
+    <p class="muted">Use a password you do not use anywhere else.</p>
+    <p><a class="button button--quiet" href="{% url 'accounts:password_change' %}">Change password</a></p>
+    <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="link-button" type="submit">Log out</button></form>
+  </section>
+</div>
 {% endblock %}

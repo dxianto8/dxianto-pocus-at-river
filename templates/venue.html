@@ -1,3 +1,36 @@
 {% extends "base.html" %}{% load static %}
 {% block title %}The Venue &amp; Location | Pocus at River{% endblock %}
-{% block content %}<section class="wrap page-intro"><p class="eyebrow">THE HISTORIC POCUS MOTORS BUILDING</p><h1>Part of Aurora.<br>Part of your story.</h1><p>A downtown setting with architectural character, and a new reason to bring everyone together.</p></section><section class="wrap feature-row"><img src="{% static 'images/event-hall.jpg' %}" alt="A ceremony aisle and floral installation at Society 57 in the historic Pocus building"><div><p class="eyebrow">COME TAKE A LOOK</p><h2>The best way to plan<br>is to be here.</h2><p>Visit the space, imagine your guests arriving, and talk through the details with the venue team. Bring your ideas for the layout and a few dates that could work.</p><p>Ask about capacity for your specific arrangement, accessibility, catering and vendor policies, and what's included in the rental.</p><a class="text-link" href="mailto:{{ venue.contact_email }}?subject=Venue%20Walk-through">Request a walk-through →</a></div></section><section class="wrap section arrival"><div><p class="eyebrow">DIRECTIONS &amp; ARRIVAL</p><h2>Meet us on River Street.</h2><address>{{ venue.name }}<br>{{ venue.address }}</address><a class="button" href="https://www.google.com/maps/dir/?api=1&amp;destination={{ venue.address|urlencode }}" target="_blank" rel="noopener noreferrer">Get directions →</a></div><div class="body-copy"><h3>Before you arrive</h3><p>Visits are by appointment. Contact the team for current parking, drop-off, and step-free access information, and let us know about any accommodations your group needs.</p><h3>For guests coming to Aurora</h3><p>Allow time to explore downtown and the riverfront. Ask the team for current local dining and lodging suggestions as you put your guest information together.</p><h3>Let's talk</h3><p><a href="mailto:{{ venue.contact_email }}">{{ venue.contact_email }}</a>{% if venue.phone %}<br>{{ venue.phone }}{% endif %}</p></div></section>{% endblock %}
+{% block content %}
+<section class="page-hero">
+  <div class="page-hero__text">
+    <h1>The venue</h1>
+    <p>The Historic Pocus Motors Building stands on River Street in downtown Aurora.</p>
+    <div class="actions">
+      <a class="button" href="https://www.google.com/maps/dir/?api=1&amp;destination={{ venue.address|urlencode }}" target="_blank" rel="noopener noreferrer">Get directions</a>
+      <a class="button button--quiet" href="mailto:{{ venue.contact_email }}?subject=Venue%20walk-through">Arrange a walk-through</a>
+    </div>
+  </div>
+  <img src="{% static 'images/event-hall.jpg' %}" alt="A ceremony aisle and floral installation in the hall" width="1800" height="1200">
+</section>
+
+<section class="wrap section visit">
+  <div>
+    <h2 class="section-title">Find us</h2>
+    <address>{{ venue.name }}<br>{{ venue.address }}</address>
+  </div>
+  <dl class="facts">
+    <div><dt>Guests</dt><dd>Up to 200</dd></div>
+    <div><dt>Visits</dt><dd>By appointment</dd></div>
+    <div><dt>Email</dt><dd><a href="mailto:{{ venue.contact_email }}">{{ venue.contact_email }}</a></dd></div>
+    {% if venue.phone %}<div><dt>Phone</dt><dd>{{ venue.phone }}</dd></div>{% endif %}
+  </dl>
+</section>
+
+<section class="wrap section section--flush">
+  <div class="three">
+    <article><h2>Before you visit</h2><p>Ask the team about parking, drop-off and step-free access, and tell us about any accommodations your group needs.</p></article>
+    <article><h2>What to ask about</h2><p>Capacity for your layout, catering and vendor policies, setup time, and what the rental includes.</p></article>
+    <article><h2>For guests from out of town</h2><p>Downtown and the riverfront are on the doorstep. Ask us for current dining and lodging suggestions for your guest information.</p></article>
+  </div>
+</section>
+{% endblock %}

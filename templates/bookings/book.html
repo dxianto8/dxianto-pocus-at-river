@@ -1,25 +1,34 @@
 {% extends "accounts/workspace_base.html" %}
-{% load static %}
+{% load static workspace %}
 
 {% block title %}Book Your Date | Pocus At River{% endblock %}
 {% block description %}See which dates are free and request your event date at Pocus at River, Downtown Aurora IL.{% endblock %}
 
 {% block content %}
   <section class="booking" aria-labelledby="booking-heading">
-    <p class="eyebrow">YOUR NEXT OCCASION</p>
-    <h1 id="booking-heading" class="section-heading section-heading--forest">Book Your Date</h1>
-    <div class="prose">
-      <p>Choose an available date and share your plans. A request holds the date while the venue team reviews it. Follow its progress in My events. Questions first? <a href="mailto:{{ venue.contact_email }}?subject=Event%20Inquiry">Email us</a>.</p>
+    <div class="ws-head">
+      <h1 id="booking-heading">Request a date</h1>
+      <p>Pick an open day. Your request puts it on hold while the venue team reviews it; nothing is charged.</p>
     </div>
 
     <div class="calendar">
       <div class="calendar__nav">
         {% if month.previous %}
-          <a href="?{% if request.GET.package %}package={{ request.GET.package|urlencode }}&amp;{% endif %}month={{ month.previous|date:'Y-m' }}" rel="prev">‹ {{ month.previous|date:"F" }}</a>
+          <a class="calendar__step" href="?{% if request.GET.package %}package={{ request.GET.package|urlencode }}&amp;{% endif %}month={{ month.previous|date:'Y-m' }}" rel="prev" aria-label="Previous month, {{ month.previous|date:'F Y' }}">{{ month.previous|date:"M" }}</a>
         {% else %}<span></span>{% endif %}
-        <h2 class="calendar__title" id="calendar-title">{{ month.label }}</h2>
+        <div class="calendar__heading">
+          <h2 class="calendar__title" id="calendar-title">{{ month.label }}</h2>
+          <form class="calendar__jump" method="get">
+            {% if package_slug %}<input type="hidden" name="package" value="{{ package_slug }}">{% endif %}
+            <label class="visually-hidden" for="jump-month">Jump to month</label>
+            <select id="jump-month" name="month" data-autosubmit>
+              {% for option in jump %}<option value="{{ option|date:'Y-m' }}"{% if option == month.first %} selected{% endif %}>{{ option|date:"F Y" }}</option>{% endfor %}
+            </select>
+            <button class="button button--quiet button--small" type="submit">Go</button>
+          </form>
+        </div>
         {% if month.next %}
-          <a href="?{% if request.GET.package %}package={{ request.GET.package|urlencode }}&amp;{% endif %}month={{ month.next|date:'Y-m' }}" rel="next">{{ month.next|date:"F" }} ›</a>
+          <a href="?{% if request.GET.package %}package={{ request.GET.package|urlencode }}&amp;{% endif %}month={{ month.next|date:'Y-m' }}" rel="next" class="calendar__step" aria-label="Next month, {{ month.next|date:'F Y' }}">{{ month.next|date:"M" }}</a>
         {% else %}<span></span>{% endif %}
       </div>
 
@@ -40,13 +49,20 @@
             <tr>
               {% for d in week %}
                 {% if d.in_month %}
-                  <td class="day day--{{ d.state }}{% if d.is_today %} day--today{% endif %}{% if d.date == selected %} day--selected{% endif %}"
+                  {% with own=mine|lookup:d.date %}
+                  <td class="day day--{{ d.state }}{% if own %} day--mine{% endif %}{% if d.is_today %} day--today{% endif %}{% if d.date == selected %} day--selected{% endif %}"
                       data-date="{{ d.date|date:'Y-m-d' }}" data-state="{{ d.state }}">
                     {% if d.state == "available" %}
                       <a class="day__inner" href="?{% if request.GET.package %}package={{ request.GET.package|urlencode }}&amp;{% endif %}month={{ month.first|date:'Y-m' }}&amp;date={{ d.date|date:'Y-m-d' }}#request"
                          {% if d.date == selected %}aria-current="date"{% endif %}>
                         <span class="day__number" aria-hidden="true">{{ d.date.day }}</span>
                         <span class="visually-hidden">{{ d.date|date:"l, F j" }}, available</span>
+                      </a>
+                    {% elif own %}
+                      <a class="day__inner day__own" href="{% url 'accounts:booking_detail' own.pk %}">
+                        <span class="day__number" aria-hidden="true">{{ d.date.day }}</span>
+                        <span class="visually-hidden">{{ d.date|date:"l, F j" }},</span>
+                        <span class="day__state">{% if own.status == "confirmed" %}Your event{% else %}Your request{% endif %}</span>
                       </a>
                     {% else %}
                       <span class="day__inner">
@@ -56,6 +72,7 @@
                       </span>
                     {% endif %}
                   </td>
+                  {% endwith %}
                 {% else %}
                   <td aria-hidden="true"></td>
                 {% endif %}
@@ -66,16 +83,17 @@
       </table>
 
       <ul class="calendar__legend" aria-label="Key">
-        <li><span class="legend-swatch" aria-hidden="true"></span> Available</li>
-        <li><span class="legend-swatch legend-swatch--on_hold" aria-hidden="true"></span> On hold (request pending)</li>
+        <li><span class="legend-swatch" aria-hidden="true"></span> Open</li>
+        <li><span class="legend-swatch legend-swatch--on_hold" aria-hidden="true"></span> On hold (someone has requested it)</li>
         <li><span class="legend-swatch legend-swatch--booked" aria-hidden="true"></span> Booked</li>
+        <li><span class="legend-swatch legend-swatch--mine" aria-hidden="true"></span> Yours</li>
       </ul>
     </div>
 
     <div class="request" id="request">
       {% if form %}
         <h2 class="request__title" tabindex="-1">Request {{ selected|date:"l, F j, Y" }}</h2>
-        <form class="form" method="post" action="{% url 'bookings:book' %}?month={{ month.first|date:'Y-m' }}#request">
+        <form class="form form--grid" method="post" action="{% url 'bookings:book' %}?month={{ month.first|date:'Y-m' }}#request">
           {% csrf_token %}
           {{ form.event_date }}
           {% if form.non_field_errors or form.event_date.errors %}
@@ -84,24 +102,25 @@
               {% for error in form.event_date.errors %}{{ error }} {% endfor %}
             </div>
           {% endif %}
-          <p class="form-fineprint">Your contact email comes from your account. Submitting holds this date for review; it does not confirm a booking or take a payment.</p>
+          <p class="muted">Sending this holds the date for review. It does not confirm a booking or take a payment.</p>
           {% for field in form.visible_fields %}
             {% if field.name == "website" %}
               <div class="visually-hidden" aria-hidden="true">{{ field.label_tag }} {{ field }}</div>
             {% else %}
-              <div class="field{% if field.errors %} field--invalid{% endif %}">
+              <div class="field{% if field.errors %} field--invalid{% endif %}{% if field.name == 'message' or field.name == 'package' %} field--wide{% endif %}">
                 {{ field.label_tag }}
                 {{ field }}
+                {% if field.name == 'email' %}<div class="help-text">From your account. Change it under Account.</div>{% endif %}
                 {{ field.errors }}
               </div>
             {% endif %}
           {% endfor %}
-          <p class="form__actions"><button class="button" type="submit">Send Request</button></p>
+          <p class="actions field--wide"><button class="button" type="submit">Send request</button></p>
         </form>
       {% elif selected %}
-        <p class="notice" role="status">Sorry, {{ selected|date:"l, F j, Y" }} isn't available. Please choose another date.</p>
+        <p class="notice" role="status">{{ selected|date:"l, F j, Y" }} isn't available. Choose another date.</p>
       {% else %}
-        <p class="request__hint">Pick an available date above to start your request.</p>
+        <p class="request__hint muted">Pick an open date to start your request.</p>
       {% endif %}
     </div>
   </section>

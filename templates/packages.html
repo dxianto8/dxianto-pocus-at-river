@@ -1,3 +1,44 @@
 {% extends layout_template|default:"base.html" %}
 {% block title %}Packages &amp; Pricing | Pocus at River{% endblock %}
-{% block content %}<section class="wrap page-intro"><p class="eyebrow">PACKAGES &amp; PRICING</p><h1>Your event.<br>A plan that fits.</h1><p>{{ venue.pricing_intro }}</p></section><section class="wrap packages-section" aria-label="Event packages"><div class="package-grid">{% for package in packages %}<article class="package-card"><span class="eyebrow">{{ package.get_event_type_display }}</span><h2>{{ package.title }}</h2><p class="package-price">{{ package.price_display }}</p>{% if package.price_note %}<p class="package-note">{{ package.price_note }}</p>{% endif %}<p>{{ package.description }}</p>{% if package.inclusion_list %}<h3>What's included</h3><ul class="inclusion-list">{% for item in package.inclusion_list %}<li>{{ item }}</li>{% endfor %}</ul>{% else %}<p class="package-note">Contact the team to discuss rental inclusions and a proposal for your event.</p>{% endif %}<a class="button" href="{% url 'bookings:book' %}?package={{ package.slug|urlencode }}">Plan with this package →</a></article>{% empty %}<div class="empty-state"><h2>Let's build your event plan.</h2><p>Contact the team for current packages and a proposal based on your date and guest list.</p><a class="button" href="mailto:{{ venue.contact_email }}">Request pricing →</a></div>{% endfor %}</div><p class="pricing-note">{{ venue.pricing_note }}</p></section><section class="wrap section pricing-faq"><div><p class="eyebrow">BEFORE YOU REQUEST A DATE</p><h2>Know what comes next.</h2></div><div class="faq-list"><details><summary>Does submitting a request confirm my event?</summary><p>No. A valid request places your date on hold while the team reviews it. Your dashboard will show the status. The venue team will confirm the arrangements directly with you.</p></details><details><summary>Can the package be tailored to my plans?</summary><p>Tell us about your guest list, schedule, and priorities in your request. The team will discuss what's possible and confirm the final inclusions and price in your proposal.</p></details><details><summary>Do I pay when I request a date?</summary><p>No payment is collected on this site. Confirm any deposit, payment schedule, and cancellation terms with the venue team before booking.</p></details></div></section>{% endblock %}
+{% block content %}
+<section class="{% if layout_template %}ws-head{% else %}wrap page-head{% endif %}">
+  <h1>Packages and pricing</h1>
+  <p>{{ venue.pricing_intro }}</p>
+</section>
+<section class="{% if not layout_template %}wrap {% endif %}package-list" aria-label="Event packages">
+  {% for package in packages %}
+    <article class="package">
+      <div class="package__main">
+        <h2>{{ package.title }}</h2>
+        <p>{{ package.description }}</p>
+        {% if package.inclusion_list %}
+          <h3>Included</h3>
+          <ul class="ticks">{% for item in package.inclusion_list %}<li>{{ item }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+      <div class="package__side">
+        {% if package.price is None %}
+          <p class="package__price package__price--ask">Priced by proposal</p>
+          <p class="small">Tell us your date and guest count and the team will send a quote.</p>
+        {% else %}
+          <p class="package__price">{{ package.price_display }}</p>
+          {% if package.price_note %}<p class="small">{{ package.price_note }}</p>{% endif %}
+        {% endif %}
+        <a class="button" href="{% url 'bookings:book' %}?package={{ package.slug|urlencode }}">Pick a date</a>
+      </div>
+    </article>
+  {% empty %}
+    <div class="empty"><h2>No packages are published yet</h2><p>Email the team for current packages and a proposal for your date and guest list.</p><a class="button" href="mailto:{{ venue.contact_email }}">Email the venue</a></div>
+  {% endfor %}
+  <p class="small package-list__note">{{ venue.pricing_note }}</p>
+</section>
+<section class="{% if not layout_template %}wrap {% endif %}section faq">
+  <h2 class="section-title">Before you request a date</h2>
+  <div class="faq-list">
+    <details><summary>Does submitting a request confirm my event?</summary><p>No. A request puts your date on hold while the team reviews it. Your account shows the status, and the team confirms the arrangements with you directly.</p></details>
+    <details><summary>Can the package be tailored to my plans?</summary><p>Yes. Describe your guest list, schedule and priorities in your request. The team confirms the final inclusions and price in your proposal.</p></details>
+    <details><summary>Do I pay when I request a date?</summary><p>No payment is collected on this site. Agree any deposit, payment schedule and cancellation terms with the venue team before booking.</p></details>
+    <details><summary>Can I change or cancel a request?</summary><p>Yes. While a request is pending you can change the date and details or cancel it from your account. After it is confirmed, message the team from the event page.</p></details>
+  </div>
+</section>
+{% endblock %}

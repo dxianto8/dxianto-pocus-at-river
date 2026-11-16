@@ -1,0 +1,17 @@
+{% extends "accounts/workspace_base.html" %}
+{% block title %}{{ booking.get_event_type_display }}, {{ booking.event_date|date:"M j, Y" }} | Pocus at River{% endblock %}
+{% block content %}
+<p class="crumb"><a href="{% url 'accounts:dashboard' %}">My events</a></p>
+<header class="event-head">
+  {% include "includes/plate.html" with day=booking.event_date size="lg" tone="dark" %}
+  <div class="event-head__body">
+    <h1>{{ booking.get_event_type_display }}</h1>
+    <p class="event-head__date">{{ booking.event_date|date:"l, F j, Y" }}{% if booking.is_active and booking.is_upcoming %}, {% if booking.days_until == 0 %}today{% else %}in {{ booking.days_until }} day{{ booking.days_until|pluralize }}{% endif %}{% endif %}</p>
+    <p><span class="status chip chip--{{ booking.status }}">{{ booking.get_status_display }}</span></p>
+  </div>
+</header>
+<nav class="tabs" aria-label="Event sections">
+  {% for key, label, url, count in tabs %}<a href="{{ url }}" {% if tab == key %}aria-current="page"{% endif %}>{{ label }}{% if count %} <span class="count">{{ count }}</span>{% endif %}</a>{% endfor %}
+</nav>
+{% block event %}{% endblock %}
+{% endblock %}

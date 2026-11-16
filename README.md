@@ -3,30 +3,39 @@
 The website for **Pocus at River**, the event venue in the Historic Pocus Motors
 Building, 100 S. River Street, Downtown Aurora IL. Built with Django and Postgres.
 
-The site includes a full-width photographic homepage, Weddings,
-Corporate, Gallery, Venue, and Packages & Pricing pages, plus customer accounts.
-It pairs upright Libre Caslon Display headings with sans-serif navigation and
-body copy, white surfaces, and restrained dark accents.
+The public site (home, Weddings, Corporate, Gallery, Venue, Packages & pricing) and the
+signed-in workspace share one design: Libre Caslon Display for headings and dates,
+Instrument Sans for everything else, and a palette taken from the building (painted
+brick, dark steel, river green, brass). Dates are set as "plates" throughout.
 
+- **Home page.** Shows the next eight Saturdays and whether each is open, on hold or
+  booked, straight from the bookings table. Only states are shown, never names.
 - **Booking requires an account.** Both GET and POST requests to `/book/` require
   login. Signup preserves the selected date/package destination. Booking ownership,
   contact email, pending status, and package snapshots are set on the server.
-- **Customer workspace (`/account/`).** A separate application shell has sidebar
-  navigation, owner-scoped event counts and status filters, the event calendar,
-  packages, and account settings. Each customer sees only their own requests, status,
-  event details, and the package/pricing recorded when they submitted. Staff notes
-  are never displayed to customers. Accounts also support login, POST-only logout,
-  password changes, and email password recovery.
+- **Customer workspace (`/account/`).** Each customer sees only their own events.
+  - *My events:* the next event with a countdown, a "Needs your attention" list
+    (unread messages, new documents, tasks due or overdue), and every request with
+    status filters.
+  - *Request a date:* the calendar marks the customer's own dates and has a month
+    jump list.
+  - *Each event* has five sections: **Overview** (progress, details, history, add to
+    calendar as `.ics`), **Messages** with the venue, a **Checklist** (a starting list
+    is created from the event type and date), a **Day schedule**, and **Documents**.
+  - Customers can **change the date and details** of a pending request and **cancel**
+    a pending or confirmed event themselves. Cancelling frees the date.
+  - *Messages:* one inbox across all events, with an unread count in the navigation.
+  - *Account:* edit name, email (needs the current password), phone, and whether to
+    receive emails; change password.
 - **Planning entry.** Plan an event opens signup for new visitors, preserving the
   calendar destination and any selected package/date through signup or login.
-  Signup without an explicit destination also opens the calendar. Normal returning
-  logins open My events. Logged-in visits to `/` open the workspace; `/explore/`
-  remains available for browsing the venue website.
+  Logged-in visits to `/` open the workspace; `/explore/` shows the venue website.
 - **Packages (`/packages/`).** Published packages and prices come from the admin.
-  Initial packages contain no invented rates or inclusions; they show Request
-  pricing until staff configure them.
-- **Admin (`/admin/`).** Manage event requests and availability, edit packages and
-  pricing, and change venue/contact information in Venue settings.
+  Initial packages contain no invented rates or inclusions; they show "Priced by
+  proposal" until staff configure them.
+- **Admin (`/admin/`).** Manage requests and availability, packages, and venue
+  settings. Opening a booking also shows its conversation (add a row to reply),
+  documents (upload a proposal or contract), checklist, day schedule and history.
 
 Photo sources and permissions are documented in [docs/image-sources.md](docs/image-sources.md).
 All images are served locally. Coffee imagery is excluded.
@@ -81,6 +90,9 @@ docker compose run --rm web ruff check .
   - all public pages from 360px to desktop;
   - signup → booking → customer status dashboard;
   - the login gate, gallery keyboard controls, and no-JavaScript fallbacks.
+- **Workspace features:** editing, moving and cancelling requests, messages and
+  unread counts, checklist, day schedule, document upload limits, the calendar file,
+  profile changes, and that none of it is reachable for another customer's event.
 - **Account security:** password validation, CSRF, safe redirects, owner-only
   queries, legacy booking privacy, password resets and one-time tokens.
 - **Admin configuration:** package publishing, rates/inclusions, venue settings,
@@ -94,7 +106,7 @@ docker compose run --rm web ruff check .
 | Confirmed | Admin: "Confirm" action    | Yes             | Booked       |
 | Blocked   | Admin: calendar "Block"    | Yes             | Booked       |
 | Declined  | Admin: "Decline" action    | No              | Available    |
-| Cancelled | Admin: "Cancel" action     | No              | Available    |
+| Cancelled | Admin "Cancel", or the customer | No         | Available    |
 
 - Each date can have only one booking that holds it. The database enforces this,
   so two visitors submitting at the same moment can't both get the date.
@@ -102,8 +114,13 @@ docker compose run --rm web ruff check .
   Chicago time.
 - The public calendar only ever shows a date's status. Names and contact
   details appear only in the admin.
-- **Event-status notifications are not sent.** Check the admin for new requests;
-  pending requests are listed first.
+- **Emails.** The venue's contact address is emailed about new requests, customer
+  messages, uploads, changes and cancellations. Customers are emailed when the status
+  changes, when staff reply, and when staff share a document, unless they turn emails
+  off under Account. Email needs the SMTP settings below; without them nothing is
+  sent and everything still works inside the workspace and the admin.
+- **Documents** are stored in the database (PDF, Word, Excel, text, JPG, PNG; 4 MB
+  each), so no file storage needs setting up. No payments are taken on the site.
 
 ## Packages, venue settings, and accounts
 
@@ -124,19 +141,18 @@ In **Admin → Venue settings**, change the venue name, contact email, phone,
 address, homepage headline, and pricing introduction/disclaimer. Changes appear
 on the public site without a code deployment.
 
-Staff confirm, decline, or cancel requests in the existing booking admin. Customers
-see the latest status when opening or refreshing My events. To link a historical
+Staff confirm, decline, or cancel requests in the booking admin. Customers see the
+new status in My events and get an email. To link a historical
 booking, verify the customer's ownership, then set its **Owner** in the admin.
 Never match or auto-assign legacy bookings by an unverified email address.
 
-### Password recovery email
+### Email
 
 Set the SMTP variables in `.env.example` in the deployment environment. Password
 reset emails are sent through that connection; the reset links expire after one
 hour and cannot be reused. Development prints emails to the console. Until SMTP
-is configured, production email recovery will not deliver messages. Event-status
-email notifications are not sent; customers use My events and staff coordinate
-arrangements directly.
+is configured, production sends no email at all: neither password resets nor the
+event notifications described above.
 
 Older exact-match design documents describe the previous site. The pages and
 account workflows documented here describe the `dev` redesign.
@@ -145,10 +161,11 @@ account workflows documented here describe the `dev` redesign.
 
 ```
 config/       settings (all from environment variables), URLs
-bookings/     Bookings, packages, venue settings, calendar logic, forms, views, admin
-accounts/     Customer registration, authentication URLs, owner-scoped dashboard
+bookings/     Bookings, messages, checklist, schedule, documents, packages, venue
+              settings, calendar logic, forms, admin; services.py holds emails and history
+accounts/     Customer registration, authentication URLs, the owner-scoped workspace views
 templates/    Public pages, account flows, booking pages, admin calendar
-static/       site.css, site.js, booking.js, images
+static/       site.css (shared), workspace.css, site.js, booking.js, workspace.js, fonts, images
 tests/        pytest tests; tests/e2e/ are the browser tests
 docs/         design specs
 ```

@@ -1,0 +1,22 @@
+{% extends "accounts/event_base.html" %}
+{% load workspace %}
+{% block event %}
+<section class="panel panel--narrow" aria-labelledby="doc-heading">
+  <h2 id="doc-heading">Documents</h2>
+  <p class="muted">Proposals and agreements from the venue appear here. You can add your own files too, such as a floor plan or a vendor's insurance certificate.</p>
+  {% if documents %}
+  <ul class="rows">
+    {% for doc in documents %}
+      <li class="row row--static">
+        <span class="row__main"><a href="{% url 'accounts:document' booking.pk doc.pk %}"><strong>{{ doc.title }}</strong></a><span class="muted">{% if doc.from_staff %}From the venue{% else %}Added by you{% endif %}, {{ doc.created_at|date:"M j, Y" }}, {{ doc.size|filesize }}</span></span>
+        {% if doc.from_staff and not doc.seen_at %}<span class="chip chip--document">New</span>{% endif %}
+        <a class="button button--quiet button--small" href="{% url 'accounts:document' booking.pk doc.pk %}">Download</a>
+        {% if not doc.from_staff %}<form method="post" action="{% url 'accounts:document' booking.pk doc.pk %}">{% csrf_token %}<button class="link-button" type="submit" aria-label="Remove {{ doc.title }}">Remove</button></form>{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+  {% else %}<p>No documents yet.</p>{% endif %}
+  <h3>Add a document</h3>
+  <form method="post" class="form" enctype="multipart/form-data">{% csrf_token %}{% include "includes/form_fields.html" %}<p class="actions"><button class="button" type="submit">Upload document</button></p></form>
+</section>
+{% endblock %}

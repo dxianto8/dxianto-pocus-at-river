@@ -1,5 +1,7 @@
 {% if form.non_field_errors %}<div class="notice notice--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
 {% for field in form %}
   {% if field.name == 'website' %}<div class="visually-hidden" aria-hidden="true">{{ field.label_tag }} {{ field }}</div>
+  {% elif field.is_hidden %}{{ field }}
+  {% elif field.widget_type == 'checkbox' %}<div class="field field--check{% if field.errors %} field--invalid{% endif %}">{{ field }}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{% if field.help_text %}<div class="help-text" id="{{ field.auto_id }}_helptext">{{ field.help_text|safe }}</div>{% endif %}{{ field.errors }}</div>
   {% else %}<div class="field{% if field.errors %} field--invalid{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<div class="help-text" id="{{ field.auto_id }}_helptext">{{ field.help_text|safe }}</div>{% endif %}{{ field.errors }}</div>{% endif %}
 {% endfor %}

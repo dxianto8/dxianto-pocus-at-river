@@ -1,0 +1,20 @@
+{% extends "accounts/workspace_base.html" %}
+{% block title %}Messages | Pocus at River{% endblock %}
+{% block content %}
+<section class="ws-head"><h1>Messages</h1><p>One conversation with the venue team for each event.</p></section>
+<section class="panel">
+  {% if rows %}
+  <ul class="rows">
+    {% for row in rows %}
+      <li><a class="row" href="{% url 'accounts:booking_messages' row.booking.pk %}">
+        {% include "includes/plate.html" with day=row.booking.event_date size="sm" %}
+        <span class="row__main"><strong>{{ row.booking.get_event_type_display }}, {{ row.booking.event_date|date:"F j, Y" }}</strong><span class="muted">{% if row.latest %}{% if row.latest.from_staff %}Venue{% else %}You{% endif %}: {{ row.latest.body|truncatechars:90 }}{% else %}No messages yet{% endif %}</span></span>
+        {% if row.booking.unread %}<span class="chip chip--message">{{ row.booking.unread }} new</span>{% endif %}
+      </a></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+    <div class="empty"><p>Conversations start once you have requested a date.</p><a class="button" href="{% url 'bookings:book' %}">Request a date</a></div>
+  {% endif %}
+</section>
+{% endblock %}

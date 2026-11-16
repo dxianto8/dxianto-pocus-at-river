@@ -1,0 +1,21 @@
+{% extends "accounts/event_base.html" %}
+{% block event %}
+<section class="panel panel--narrow" aria-labelledby="thread-heading">
+  <h2 id="thread-heading">Messages with the venue</h2>
+  {% if thread %}
+  <ol class="thread">
+    {% for message in thread %}
+      <li class="thread__item{% if not message.from_staff %} thread__item--mine{% endif %}"{% if forloop.last %} id="latest"{% endif %}>
+        <p class="thread__meta">{% if message.from_staff %}{{ venue.name }}{% else %}You{% endif %}, <time datetime="{{ message.created_at|date:'c' }}">{{ message.created_at|date:"M j, g:i A" }}</time></p>
+        <div class="thread__body">{{ message.body|linebreaksbr }}</div>
+      </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+    <p class="muted">No messages yet. Questions about the space, vendors, timing or your proposal all go here, and the team answers in the same place.</p>
+  {% endif %}
+  <form method="post" class="form">{% csrf_token %}{% include "includes/form_fields.html" %}
+    <p class="actions"><button class="button" type="submit">Send message</button></p>
+  </form>
+</section>
+{% endblock %}

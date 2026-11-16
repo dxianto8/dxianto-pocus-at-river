@@ -4,18 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Pocus at River | Weddings &amp; Events in Aurora{% endblock %}</title>
-  <meta name="description" content="{% block description %}A historic Aurora setting for weddings, company gatherings, and private celebrations. Explore the space, compare packages, and plan your event with Pocus at River.{% endblock %}">
+  <meta name="description" content="{% block description %}An event venue in the Historic Pocus Motors Building in downtown Aurora, Illinois. See open dates, compare packages, and plan your wedding, company event or celebration.{% endblock %}">
   <link rel="icon" href="{% static 'images/badge.png' %}" type="image/png">
   <link rel="preload" href="{% static 'fonts/libre-caslon-display.ttf' %}" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="{% static 'fonts/instrument-sans.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'css/site.css' %}">
   <script src="{% static 'js/site.js' %}" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
-    <div class="header-inner">
-      <a class="wordmark" href="{% if user.is_authenticated %}{% url 'explore' %}{% else %}{% url 'home' %}{% endif %}" aria-label="Pocus at River home"><span class="brand-symbol" aria-hidden="true"><i></i><i></i><i></i></span><span>Pocus at River<small>WEDDINGS &amp; EVENTS · AURORA, IL</small></span></a>
-      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu <span aria-hidden="true">☰</span></button>
+    <div class="wrap header-inner">
+      <a class="wordmark" href="{% if user.is_authenticated %}{% url 'explore' %}{% else %}{% url 'home' %}{% endif %}" aria-label="Pocus at River home">Pocus at River</a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu</button>
       {% with current=request.resolver_match.url_name %}
       <nav class="site-nav" id="site-nav" aria-label="Main navigation">
         <a href="{% url 'weddings' %}" {% if current == 'weddings' %}aria-current="page"{% endif %}>Weddings</a>
@@ -23,14 +24,42 @@
         <a href="{% url 'gallery' %}" {% if current == 'gallery' %}aria-current="page"{% endif %}>Gallery</a>
         <a href="{% url 'venue' %}" {% if current == 'venue' %}aria-current="page"{% endif %}>The venue</a>
         <a href="{% url 'packages' %}" {% if current == 'packages' %}aria-current="page"{% endif %}>Packages &amp; pricing</a>
-        {% if user.is_authenticated %}<a class="account-link" href="{% url 'accounts:dashboard' %}">My events</a>{% else %}<a class="account-link" href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Log in</a>{% endif %}
-        <a class="button button--small" href="{% url 'bookings:book' %}">Plan an event <span aria-hidden="true">→</span></a>
+        <span class="site-nav__account">
+          {% if user.is_authenticated %}<a href="{% url 'accounts:dashboard' %}">My events</a>{% else %}<a href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Log in</a>{% endif %}
+          <a class="button button--small" href="{% url 'bookings:book' %}">Plan an event</a>
+        </span>
       </nav>
       {% endwith %}
     </div>
   </header>
-  {% if messages %}<div class="messages wrap" role="status">{% for message in messages %}<p>{{ message }}</p>{% endfor %}</div>{% endif %}
-  <main id="main" class="{% block main_class %}{% endblock %}">{% block content %}{% endblock %}</main>
-  <footer class="site-footer"><div class="wrap footer-grid"><div><a class="footer-wordmark" href="{% url 'home' %}">Pocus at River</a><p>A historic setting.<br>A new reason to gather.</p></div><div><h2>Find us</h2><p>{{ venue.address }}</p><a href="{% url 'venue' %}">Directions &amp; venue information →</a></div><div><h2>Start a conversation</h2><a href="mailto:{{ venue.contact_email }}">{{ venue.contact_email }}</a>{% if venue.phone %}<p>{{ venue.phone }}</p>{% endif %}<div class="social-links"><a href="https://www.instagram.com/pocusatriver" target="_blank" rel="noopener noreferrer">Instagram →</a><a href="https://www.facebook.com/pocusatriver" target="_blank" rel="noopener noreferrer">Facebook →</a></div></div></div><div class="wrap footer-bottom"><span>© {% now "Y" %} {{ venue.name }}</span><a href="{% url 'gallery' %}#photo-credits">Photography credits</a></div></footer>
+  {% if messages %}<div class="wrap" role="status">{% for message in messages %}<p class="notice">{{ message }}</p>{% endfor %}</div>{% endif %}
+  <main id="main">{% block content %}{% endblock %}</main>
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <div>
+        <a class="wordmark wordmark--light" href="{% url 'home' %}">Pocus at River</a>
+        <p>Weddings and events in the Historic Pocus Motors Building, downtown Aurora.</p>
+      </div>
+      <div>
+        <h2>Visit</h2>
+        <p>{{ venue.address }}</p>
+        <p><a href="{% url 'venue' %}">Directions and visiting</a></p>
+      </div>
+      <div>
+        <h2>Contact</h2>
+        <p><a href="mailto:{{ venue.contact_email }}">{{ venue.contact_email }}</a></p>
+        {% if venue.phone %}<p>{{ venue.phone }}</p>{% endif %}
+        <p><a href="https://www.instagram.com/pocusatriver" target="_blank" rel="noopener noreferrer">Instagram</a> and <a href="https://www.facebook.com/pocusatriver" target="_blank" rel="noopener noreferrer">Facebook</a></p>
+      </div>
+      <div>
+        <h2>Plan</h2>
+        <p><a href="{% url 'bookings:book' %}">Check open dates</a></p>
+        <p><a href="{% url 'packages' %}">Packages and pricing</a></p>
+        <p>{% if user.is_authenticated %}<a href="{% url 'accounts:dashboard' %}">My events</a>{% else %}<a href="{% url 'accounts:login' %}">Log in</a>{% endif %}</p>
+      </div>
+    </div>
+    <div class="wrap footer-bottom"><span>© {% now "Y" %} {{ venue.name }}</span><a href="{% url 'gallery' %}#photo-credits">Photography credits</a></div>
+  </footer>
   {% block scripts %}{% endblock %}
-</body></html>
+</body>
+</html>

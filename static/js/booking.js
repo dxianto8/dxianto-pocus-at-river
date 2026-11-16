@@ -36,6 +36,11 @@
     });
   });
 
+  // Choosing a month from the list goes straight there; the Go button is for no-JavaScript.
+  document.addEventListener("change", (event) => {
+    if (event.target.matches("[data-autosubmit]")) event.target.form.submit();
+  });
+
   // The page was updated without loading a new one, so Back reloads to show the matching state.
   window.addEventListener("popstate", () => window.location.reload());
 })();

@@ -153,7 +153,7 @@ if not DEBUG:
 
 
 # Email for account password resets. Production uses SMTP; development prints to the
-# console. Event-status notifications are not sent.
+# console. services.py sends the event notifications through the same connection.
 
 if DEBUG:
     MAILERS = {"default": {"BACKEND": "django.core.mail.backends.console.EmailBackend"}}

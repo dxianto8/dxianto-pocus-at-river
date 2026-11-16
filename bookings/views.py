@@ -12,7 +12,8 @@ from django.utils.http import urlencode
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
-from .calendar import DayState, Month, add_months, build_month, parse_month
+from . import services
+from .calendar import DayState, Month, add_months, bookable_range, build_month, parse_month
 from .forms import BookingRequestForm
 from .models import Booking, EventPackage
 
@@ -59,6 +60,14 @@ def book(request: HttpRequest) -> HttpResponse:
             except IntegrityError:  # someone else took the date between our check and the insert
                 form.add_error("event_date", TAKEN_MESSAGE)
             else:
+                services.seed_checklist(booking)
+                services.log(booking, "You requested this date.")
+                services.notify_venue(
+                    booking,
+                    f"New request: {booking.name}, {booking.event_date:%B %-d, %Y}",
+                    [f"{booking.guest_count} guests.", booking.message or "No notes."],
+                    request,
+                )
                 return redirect(
                     f"{reverse('bookings:requested')}?{urlencode({'booking': booking.pk})}"
                 )
@@ -79,10 +88,31 @@ def book(request: HttpRequest) -> HttpResponse:
             initial.update(package=package, event_type=package.event_type)
         form = BookingRequestForm(initial=initial, user=request.user)
 
+    grid = [week[0].date for week in month.weeks] + [month.weeks[-1][-1].date]
+    mine = {
+        b.event_date: b
+        for b in Booking.objects.active().filter(
+            owner=request.user, event_date__range=(grid[0], grid[-1])
+        )
+    }
+    first_month, last_day = bookable_range(today)
+    jump = []
+    cursor = first_month.replace(day=1)
+    while cursor <= last_day:
+        jump.append(cursor)
+        cursor = add_months(cursor, 1)
     return render(
         request,
         "bookings/book.html",
-        {"month": month, "form": form, "selected": selected, "selected_state": selected_state},
+        {
+            "month": month,
+            "form": form,
+            "selected": selected,
+            "selected_state": selected_state,
+            "mine": mine,
+            "jump": jump,
+            "package_slug": request.GET.get("package", ""),
+        },
     )
 
 

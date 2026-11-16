@@ -20,7 +20,8 @@ Source page: https://www.society57.com/ (checked November 11, 2026).
 | `static/images/meeting-room.jpg` | https://images.squarespace-cdn.com/content/v1/5c45f31cfcf7fd208d8cf835/1581553280639-Z3VAJISOQLJ7VW6607SD/DSCF9205.jpg |
 
 Files were downloaded using Squarespace's 2500w / 2000w image variants. No semantic
-edits were made. Display cropping is done by CSS.
+edits were made. `event-hall.jpg` was scaled down to 1800px wide and `celebration.jpg`
+recompressed to keep pages light. Display cropping is done by CSS.
 
 ## Creative Commons photograph
 
@@ -33,4 +34,10 @@ edits were made. Display cropping is done by CSS.
 - License verified on Wikimedia Commons on November 11, 2026. This individual file
   is dedicated under CC0; this does not assert that current Unsplash uploads use CC0.
 - Used as wedding detail inspiration, identified as such in the site and credits.
-- Downloaded unmodified. CSS may crop the image for the layout.
+- Scaled down from 6000px to 1800px wide; otherwise unmodified. CSS may crop it for the layout.
+
+## Fonts
+
+- `static/fonts/libre-caslon-display.ttf`: Libre Caslon Display, SIL Open Font License (`OFL.txt`).
+- `static/fonts/instrument-sans.woff2`: Instrument Sans (variable, Latin), SIL Open Font
+  License (`instrument-sans-OFL.txt`), from the `@fontsource-variable/instrument-sans` package.
