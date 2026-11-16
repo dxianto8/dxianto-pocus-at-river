@@ -168,8 +168,8 @@ a.row:hover { background: var(--brick); }
 .day__inner { display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-height: 4.75rem; padding: 0.4rem 0.5rem; border-radius: var(--radius); text-decoration: none; }
 .day__number { font: 400 1.5rem/1 var(--display); }
 .day__state { font-size: 0.75rem; font-weight: 600; line-height: 1.2; }
-.day--available a.day__inner { transition: background-color 0.18s, color 0.18s, transform 0.18s; }
-.day--available a.day__inner:hover { background: var(--river); color: var(--white); transform: translateY(-2px); }
+.day--available a.day__inner { transition: background-color 0.15s, color 0.15s; }
+.day--available a.day__inner:hover { background: var(--river); color: var(--white); }
 .day--selected .day__inner { background: var(--river); color: var(--white); }
 .day--today .day__number { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.2em; text-decoration-color: var(--brass); }
 .day--unavailable .day__inner { color: #9aa3a1; }
