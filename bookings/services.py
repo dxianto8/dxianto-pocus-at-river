@@ -158,3 +158,21 @@ def status_changed(booking: Booking, *, by_staff: bool, request=None) -> None:
             ["The customer cancelled this event in their workspace. The date is free again."],
             request,
         )
+
+
+def notify_appointment(appointment, subject, request=None):
+    profile = profile_for(appointment.owner)
+    slot = appointment.slot
+    url = reverse("accounts:walkthroughs")
+    link = request.build_absolute_uri(url) if request else settings.SITE_URL + url
+    body = (
+        f"{subject}: {timezone.localtime(slot.starts_at):%A, %B %d, %Y at %I:%M %p} "
+        f"(Chicago time). Status: {appointment.get_status_display()}.\n\n{link}"
+    )
+    if profile.email_updates:
+        _send(f"{subject} | Pocus at River", body, appointment.owner.email)
+    _send(
+        f"{subject} | Pocus at River",
+        body + f"\nCustomer: {appointment.owner.get_full_name() or appointment.owner.username}",
+        _venue().contact_email,
+    )

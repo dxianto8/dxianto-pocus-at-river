@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="{% static 'css/workspace.css' %}">
   <script src="{% static 'js/motion.js' %}" defer></script>
   <script src="{% static 'js/workspace.js' %}" defer></script>
+  <script src="{% static 'js/questionnaire.js' %}" defer></script>
 </head>
 <body class="workspace">
   <a class="skip-link" href="#workspace-content">Skip to content</a>
@@ -28,6 +29,9 @@
       <a href="{% url 'bookings:book' %}" {% if namespace == 'bookings' %}aria-current="page"{% endif %}>Request a date</a>
       <a href="{% url 'accounts:inbox' %}" {% if current == 'inbox' %}aria-current="page"{% endif %}>Messages{% if unread_messages %} <span class="count" aria-label="{{ unread_messages }} unread">{{ unread_messages }}</span>{% endif %}</a>
       <a href="{% url 'accounts:packages' %}" {% if current == 'packages' %}aria-current="page"{% endif %}>Packages</a>
+      <a href="{% url 'accounts:walkthroughs' %}" {% if current == 'walkthroughs' %}aria-current="page"{% endif %}>Walkthroughs</a>
+      <a href="{% url 'accounts:loyalty' %}" {% if current == 'loyalty' %}aria-current="page"{% endif %}>Loyalty</a>
+      <a href="{% url 'accounts:payments' %}" {% if current == 'payments' %}aria-current="page"{% endif %}>Payments</a>
       <a href="{% url 'accounts:settings' %}" {% if current == 'settings' or current == 'password_change' or current == 'password_change_done' %}aria-current="page"{% endif %}>Account</a>
     </nav>
     {% endwith %}

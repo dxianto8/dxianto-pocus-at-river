@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from functools import wraps
 
 from django.contrib import messages
@@ -135,7 +135,11 @@ def dashboard(request):
         .first()
     )
     selected_status = request.GET.get("status", "")
-    if selected_status in Booking.Status.values and selected_status != Booking.Status.BLOCKED:
+    if selected_status == "completed":
+        bookings = bookings.filter(status="confirmed", event_date__lt=today)
+    elif selected_status == "upcoming":
+        bookings = bookings.filter(status__in=["pending", "confirmed"], event_date__gte=today)
+    elif selected_status in Booking.Status.values and selected_status != Booking.Status.BLOCKED:
         bookings = bookings.filter(status=selected_status)
     else:
         selected_status = ""
@@ -154,6 +158,8 @@ def dashboard(request):
             "attention": attention_for(request.user, today),
             "filters": [
                 ("", "All"),
+                ("upcoming", "Upcoming"),
+                ("completed", "Completed"),
                 ("pending", "Pending"),
                 ("confirmed", "Confirmed"),
                 ("cancelled", "Cancelled"),
@@ -311,6 +317,18 @@ def booking_ics(request, booking):
             .replace("\n", "\\n")
         )
 
+    if booking.start_time and booking.end_time:
+        start_at = timezone.make_aware(datetime.combine(booking.event_date, booking.start_time))
+        end_at = timezone.make_aware(datetime.combine(booking.event_date, booking.end_time))
+        dates = [
+            f"DTSTART:{start_at.astimezone(UTC):%Y%m%dT%H%M%SZ}",
+            f"DTEND:{end_at.astimezone(UTC):%Y%m%dT%H%M%SZ}",
+        ]
+    else:
+        dates = [
+            f"DTSTART;VALUE=DATE:{booking.event_date:%Y%m%d}",
+            f"DTEND;VALUE=DATE:{end:%Y%m%d}",
+        ]
     status = "CONFIRMED" if booking.status == Booking.Status.CONFIRMED else "TENTATIVE"
     lines = [
         "BEGIN:VCALENDAR",
@@ -319,8 +337,7 @@ def booking_ics(request, booking):
         "BEGIN:VEVENT",
         f"UID:{booking.pk}@pocusatriver",
         f"DTSTAMP:{timezone.now():%Y%m%dT%H%M%SZ}",
-        f"DTSTART;VALUE=DATE:{booking.event_date:%Y%m%d}",
-        f"DTEND;VALUE=DATE:{end:%Y%m%d}",
+        *dates,
         f"SUMMARY:{esc(booking.get_event_type_display())} at {esc(venue.name)}",
         f"LOCATION:{esc(venue.address)}",
         f"STATUS:{status}",
@@ -491,7 +508,7 @@ def packages(request):
         request,
         "packages.html",
         {
-            "packages": EventPackage.objects.filter(is_published=True),
+            "packages": EventPackage.objects.published(),
             "layout_template": "accounts/workspace_base.html",
         },
     )

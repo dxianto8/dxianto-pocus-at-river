@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block title %}Recent Events | Pocus at River{% endblock %}
+{% block content %}<section class="wrap page-head"><p class="section-label">From the room</p><h1>Recent events</h1><p>A look back at gatherings, details, and the people who made them their own.</p></section><section class="wrap section section--flush">{% if events %}{% include "includes/recent_events.html" %}{% else %}<div class="empty"><h2>Stories from the room, coming soon</h2><p>In the meantime, explore the event photography and imagine your own gathering.</p><a class="text-link" href="{% url 'gallery' %}">See the gallery {% include "includes/arrow.html" %}</a></div>{% endif %}</section>{% endblock %}

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from django import forms
+from django.conf import settings
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
@@ -20,12 +21,25 @@ from .calendar import add_months, month_dates
 from .models import (
     Activity,
     Booking,
+    BookingQuestion,
+    CateringItem,
     ChecklistItem,
+    CustomerProfile,
     Document,
+    EventFeedback,
     EventPackage,
+    EventTypeOption,
+    LoyaltyCredit,
+    LoyaltyReward,
     Message,
+    PackageOffer,
+    RecentEvent,
+    RewardRedemption,
+    ScheduledNotification,
     ScheduleItem,
     VenueSettings,
+    WalkthroughAppointment,
+    WalkthroughSlot,
 )
 from .views import safe_parse_date
 
@@ -145,8 +159,19 @@ class ActivityInline(admin.TabularInline):
         return False
 
 
+class EventTypeAdminForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        choices = list(EventTypeOption.objects.filter(is_active=True).values_list("code", "label"))
+        current = self.instance.event_type
+        if current and current not in dict(choices):
+            choices.append((current, self.instance.get_event_type_display()))
+        self.fields["event_type"] = forms.ChoiceField(choices=choices or Booking.EventType.choices)
+
+
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
+    form = EventTypeAdminForm
     inlines = [MessageInline, DocumentInline, ChecklistInline, ScheduleInline, ActivityInline]
     autocomplete_fields = ["owner", "package"]
     list_display = [
@@ -177,6 +202,11 @@ class BookingAdmin(admin.ModelAdmin):
                     "package_snapshot",
                     "price_snapshot",
                     "guest_count",
+                    "start_time",
+                    "end_time",
+                    "catering_interest",
+                    "dietary_notes",
+                    "questionnaire_answers",
                     "message",
                 ]
             },
@@ -413,6 +443,7 @@ class BookingAdmin(admin.ModelAdmin):
 
 @admin.register(EventPackage)
 class EventPackageAdmin(admin.ModelAdmin):
+    form = EventTypeAdminForm
     list_display = ["title", "event_type", "price", "price_unit", "is_published", "display_order"]
     list_filter = ["event_type", "is_published"]
     search_fields = ["title", "description"]
@@ -431,10 +462,226 @@ class VenueSettingsAdmin(admin.ModelAdmin):
         ("Venue & contact", {"fields": ["name", "contact_email", "phone", "address"]}),
         ("Homepage", {"fields": ["hero_heading"]}),
         ("Packages page", {"fields": ["pricing_intro", "pricing_note"]}),
+    ] + [
+        (
+            "Booking questionnaire",
+            {
+                "fields": ["booking_intro", "require_event_times"],
+                "description": (
+                    "Manage Event type options and Booking questions "
+                    "for the form's choices and custom fields."
+                ),
+            },
+        ),
+        ("Visits and catering", {"fields": ["walkthrough_intro", "catering_intro"]}),
+        (
+            "Email, texting, and feedback",
+            {
+                "fields": [
+                    "messaging_status",
+                    "automated_email_enabled",
+                    "automated_sms_enabled",
+                    "reminder_days",
+                    "feedback_delay_days",
+                    "review_url",
+                ],
+                "description": (
+                    "Provider credentials belong in deployment environment variables. "
+                    "Reminders are opt-in and run from the daily scheduler."
+                ),
+            },
+        ),
+        (
+            "Loyalty",
+            {
+                "fields": [
+                    "loyalty_enabled",
+                    "loyalty_start_date",
+                    "loyalty_points_per_event",
+                    "loyalty_description",
+                ]
+            },
+        ),
     ]
+
+    readonly_fields = ["messaging_status"]
+
+    def messaging_status(self, obj):
+        return "SendGrid: {} · Twilio: {} · Scheduler token: {}".format(
+            "configured" if settings.SENDGRID_API_KEY else "not configured (SMTP fallback)",
+            "configured"
+            if all(
+                [
+                    settings.TWILIO_ACCOUNT_SID,
+                    settings.TWILIO_AUTH_TOKEN,
+                    settings.TWILIO_FROM_NUMBER,
+                ]
+            )
+            else "not configured",
+            "configured" if settings.CRON_SECRET else "not configured",
+        )
 
     def has_add_permission(self, request):
         return not VenueSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+# Venue services share the same staff-only administration and validation as bookings.
+
+
+@admin.register(EventTypeOption)
+class EventTypeOptionAdmin(admin.ModelAdmin):
+    list_display = ["label", "code", "is_active", "display_order"]
+    prepopulated_fields = {"code": ["label"]}
+    list_filter = ["is_active"]
+    search_fields = ["label"]
+
+    def get_readonly_fields(self, request, obj=None):
+        return ["code"] if obj else []
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(BookingQuestion)
+class BookingQuestionAdmin(admin.ModelAdmin):
+    list_display = ["label", "kind", "is_required", "is_active", "display_order"]
+    list_filter = ["is_active", "kind", "event_types"]
+    filter_horizontal = ["event_types"]
+
+
+@admin.register(PackageOffer)
+class PackageOfferAdmin(admin.ModelAdmin):
+    list_display = [
+        "title",
+        "package",
+        "percent_off",
+        "amount_off",
+        "starts_on",
+        "ends_on",
+        "is_published",
+    ]
+    list_filter = ["is_published", "package"]
+
+
+@admin.register(CateringItem)
+class CateringItemAdmin(admin.ModelAdmin):
+    list_display = ["title", "category", "price", "is_published", "display_order"]
+    list_filter = ["category", "is_published"]
+    search_fields = ["title", "description"]
+
+
+@admin.register(WalkthroughSlot)
+class WalkthroughSlotAdmin(admin.ModelAdmin):
+    list_display = ["starts_at", "ends_at", "is_published"]
+    list_filter = ["is_published"]
+    date_hierarchy = "starts_at"
+
+    def get_readonly_fields(self, request, obj=None):
+        # Do not move an appointment out from under a customer's confirmed visit.
+        if obj and obj.appointments.filter(status__in=["pending", "confirmed"]).exists():
+            return ["starts_at", "ends_at"]
+        return []
+
+
+@admin.register(WalkthroughAppointment)
+class WalkthroughAppointmentAdmin(admin.ModelAdmin):
+    list_display = ["owner", "slot", "status", "created_at"]
+    list_filter = ["status"]
+    readonly_fields = ["owner", "slot", "notes", "created_at"]
+
+    def has_add_permission(self, request):
+        return False
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if "status" in form.changed_data:
+            services.notify_appointment(
+                obj, f"Walkthrough {obj.get_status_display().lower()}", request
+            )
+
+
+@admin.register(RecentEvent)
+class RecentEventAdmin(admin.ModelAdmin):
+    list_display = ["title", "event_date", "category", "is_published"]
+    list_filter = ["is_published", "category"]
+    search_fields = ["title", "summary"]
+
+
+@admin.register(EventFeedback)
+class EventFeedbackAdmin(admin.ModelAdmin):
+    list_display = ["booking", "rating", "created_at"]
+    list_filter = ["rating"]
+    readonly_fields = ["booking", "rating", "comments", "created_at"]
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(LoyaltyReward)
+class LoyaltyRewardAdmin(admin.ModelAdmin):
+    list_display = ["title", "points_required", "is_published"]
+    list_filter = ["is_published"]
+
+
+@admin.register(LoyaltyCredit)
+class LoyaltyCreditAdmin(admin.ModelAdmin):
+    list_display = ["owner", "points", "reason", "created_at"]
+    autocomplete_fields = ["owner"]
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(RewardRedemption)
+class RewardRedemptionAdmin(admin.ModelAdmin):
+    list_display = ["owner", "title_snapshot", "points", "status", "created_at"]
+    list_filter = ["status"]
+    readonly_fields = ["owner", "reward", "title_snapshot", "points", "created_at"]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(CustomerProfile)
+class CustomerProfileAdmin(admin.ModelAdmin):
+    list_display = ["user", "email_updates", "sms_reminders", "feedback_updates"]
+    readonly_fields = ["user", "phone", "email_updates", "sms_reminders", "feedback_updates"]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(ScheduledNotification)
+class ScheduledNotificationAdmin(admin.ModelAdmin):
+    list_display = ["owner", "kind", "channel", "scheduled_for", "status", "attempts"]
+    list_filter = ["status", "channel", "kind"]
+    readonly_fields = [field.name for field in ScheduledNotification._meta.fields]
+    actions = ["retry_failed"]
+
+    def has_add_permission(self, request):
+        return False
+
+    @admin.action(description="Retry selected failed notifications")
+    def retry_failed(self, request, queryset):
+        count = queryset.filter(status="failed").update(
+            status="queued", attempts=0, last_attempt_at=None, last_error=""
+        )
+        self.message_user(request, f"Queued {count} failed notification(s) for retry.")
 
     def has_delete_permission(self, request, obj=None):
         return False

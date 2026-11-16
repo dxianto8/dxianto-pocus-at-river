@@ -26,6 +26,8 @@
         <a href="{% url 'gallery' %}" {% if current == 'gallery' %}aria-current="page"{% endif %}>Gallery</a>
         <a href="{% url 'venue' %}" {% if current == 'venue' %}aria-current="page"{% endif %}>The venue</a>
         <a href="{% url 'packages' %}" {% if current == 'packages' %}aria-current="page"{% endif %}>Packages &amp; pricing</a>
+        <a href="{% url 'catering' %}" {% if current == 'catering' %}aria-current="page"{% endif %}>Catering</a>
+        <a href="{% url 'walkthroughs' %}" {% if current == 'walkthroughs' %}aria-current="page"{% endif %}>Walkthroughs</a>
         <span class="site-nav__account">
           {% if user.is_authenticated %}<a href="{% url 'accounts:dashboard' %}">My events</a>{% else %}<a href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Log in</a>{% endif %}
           <a class="button button--small" href="{% url 'bookings:book' %}">Plan an event</a>
@@ -45,7 +47,7 @@
       <div>
         <h2>Visit</h2>
         <p>{{ venue.address }}</p>
-        <p><a href="{% url 'venue' %}">Directions and visiting</a></p>
+        <p><a href="{% url 'venue' %}">Directions and visiting</a></p><p><a href="{% url 'walkthroughs' %}">Walkthrough appointments</a></p><p><a href="{% url 'recent_events' %}">Recent events</a></p>
       </div>
       <div>
         <h2>Contact</h2>
@@ -56,7 +58,7 @@
       <div>
         <h2>Plan</h2>
         <p><a href="{% url 'bookings:book' %}">Check open dates</a></p>
-        <p><a href="{% url 'packages' %}">Packages and pricing</a></p>
+        <p><a href="{% url 'packages' %}">Packages and pricing</a></p><p><a href="{% url 'catering' %}">Catering menu</a></p>
         <p>{% if user.is_authenticated %}<a href="{% url 'accounts:dashboard' %}">My events</a>{% else %}<a href="{% url 'accounts:login' %}">Log in</a>{% endif %}</p>
       </div>
     </div>

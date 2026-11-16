@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
@@ -38,6 +40,19 @@ class ProfileForm(forms.ModelForm):
         label="Email me about my events",
         help_text="Status changes, new messages and new documents.",
     )
+    sms_reminders = forms.BooleanField(
+        required=False,
+        label="Text me event and walkthrough reminders",
+        help_text=(
+            "Optional. Message and data rates may apply. Reply STOP to opt out. "
+            "Use an international phone number, such as +13125550123."
+        ),
+    )
+    feedback_updates = forms.BooleanField(
+        required=False,
+        label="Invite me to share feedback after an event",
+        help_text="Email invitations, and text invitations if you also enable texting.",
+    )
     current_password = forms.CharField(
         required=False,
         label="Current password",
@@ -56,7 +71,12 @@ class ProfileForm(forms.ModelForm):
         self.profile = profile
         self.fields["first_name"].required = True
         self.fields["email"].required = True
-        self.initial.update(phone=profile.phone, email_updates=profile.email_updates)
+        self.initial.update(
+            phone=profile.phone,
+            email_updates=profile.email_updates,
+            sms_reminders=profile.sms_reminders,
+            feedback_updates=profile.feedback_updates,
+        )
         for field, autocomplete in [
             ("first_name", "given-name"),
             ("last_name", "family-name"),
@@ -67,6 +87,12 @@ class ProfileForm(forms.ModelForm):
 
     def clean(self):
         data = super().clean()
+        if data.get("sms_reminders") and not re.fullmatch(
+            r"\+[1-9]\d{6,14}", data.get("phone", "")
+        ):
+            self.add_error(
+                "phone", "Use an international number, for example +13125550123, to enable texting."
+            )
         changed_email = (
             data.get("email")
             and data["email"] != self.instance.__class__.objects.get(pk=self.instance.pk).email
@@ -79,5 +105,7 @@ class ProfileForm(forms.ModelForm):
         user = super().save(commit=commit)
         self.profile.phone = self.cleaned_data["phone"]
         self.profile.email_updates = self.cleaned_data["email_updates"]
+        self.profile.sms_reminders = self.cleaned_data["sms_reminders"]
+        self.profile.feedback_updates = self.cleaned_data["feedback_updates"]
         self.profile.save()
         return user

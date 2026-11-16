@@ -11,6 +11,7 @@
       <div class="package__main">
         <h2>{{ package.title }}</h2>
         <p>{{ package.description }}</p>
+        {% with offer=package.current_offer %}{% if offer %}<aside class="offer-note"><p class="section-label">Current offer · through {{ offer.ends_on|date:"M j, Y" }}</p><h3>{{ offer.title }}</h3><p>{{ offer.terms }}</p><p class="small">Best current offer shown. Offers do not stack. Final terms are confirmed in your proposal.</p></aside>{% endif %}{% endwith %}
         {% if package.inclusion_list %}
           <h3>Included</h3>
           <ul class="ticks">{% for item in package.inclusion_list %}<li>{{ item }}</li>{% endfor %}</ul>
@@ -21,7 +22,7 @@
           <p class="package__price package__price--ask">Priced by proposal</p>
           <p class="small">Tell us your date and guest count and the team will send a quote.</p>
         {% else %}
-          <p class="package__price">{{ package.price_display }}</p>
+          <p class="package__price">{{ package.price_display }}</p>{% if package.current_offer %}<p class="small muted">Standard rate: ${{ package.price|floatformat:2 }} {{ package.get_price_unit_display }}</p>{% endif %}
           {% if package.price_note %}<p class="small">{{ package.price_note }}</p>{% endif %}
         {% endif %}
         <a class="button" href="{% url 'bookings:book' %}?package={{ package.slug|urlencode }}">Pick a date</a>
@@ -30,7 +31,7 @@
   {% empty %}
     <div class="empty"><h2>No packages are published yet</h2><p>Email the team for current packages and a proposal for your date and guest list.</p><a class="button" href="mailto:{{ venue.contact_email }}">Email the venue</a></div>
   {% endfor %}
-  <p class="small package-list__note">{{ venue.pricing_note }}</p>
+  <p class="small package-list__note">{{ venue.pricing_note }}</p><p class="small package-list__note">Stripe event payments and Toast catering payments are not available yet. No payment is collected on this website.</p>
 </section>
 <section class="{% if not layout_template %}wrap {% endif %}section faq">
   <h2 class="section-title">Before you request a date</h2>

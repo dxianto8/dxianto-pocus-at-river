@@ -13,12 +13,16 @@
     </div>
     <dl class="details">
       <div><dt>Date</dt><dd>{{ booking.event_date|date:"l, F j, Y" }}</dd></div>
+      {% if booking.start_time %}<div><dt>Time</dt><dd>{{ booking.start_time|time:"g:i A" }}–{{ booking.end_time|time:"g:i A" }} · Chicago time</dd></div>{% endif %}
+      <div><dt>Catering</dt><dd>{% if booking.catering_interest %}Interested in catering{% else %}Not requested{% endif %}{% if booking.dietary_notes %}<br>{{ booking.dietary_notes|linebreaksbr }}{% endif %}</dd></div>
+      {% for answer in booking.questionnaire_answers %}<div><dt>{{ answer.question }}</dt><dd>{% if answer.answer == True %}Yes{% elif answer.answer == False %}No{% else %}{{ answer.answer|default:"—" }}{% endif %}</dd></div>{% endfor %}
       <div><dt>Guests</dt><dd>{{ booking.guest_count }}</dd></div>
       <div><dt>Contact</dt><dd>{{ booking.name }}<br>{{ booking.email }}{% if booking.phone %}<br>{{ booking.phone }}{% endif %}</dd></div>
       {% if booking.package_snapshot %}<div><dt>Package</dt><dd>{{ booking.package_snapshot }}<br><span class="muted">{{ booking.price_snapshot }} when requested. The final price is in your proposal.</span></dd></div>{% endif %}
       {% if booking.message %}<div><dt>Your notes</dt><dd>{{ booking.message|linebreaksbr }}</dd></div>{% endif %}
     </dl>
     <p class="actions">
+      {% if booking.status == "confirmed" and not booking.is_upcoming %}<a class="button button--small" href="{% url 'accounts:feedback' booking.pk %}">Share event feedback</a>{% endif %}
       {% if booking.is_active %}<a class="button button--quiet button--small" href="{% url 'accounts:booking_ics' booking.pk %}">Add to my calendar</a>{% endif %}
       {% if booking.can_cancel %}<a class="button button--danger button--small" href="{% url 'accounts:booking_cancel' booking.pk %}">Cancel this event</a>{% endif %}
       {% if not booking.is_active %}<a class="button button--small" href="{% url 'bookings:book' %}">Request another date</a>{% endif %}

@@ -7,7 +7,7 @@
     <p>The Historic Pocus Motors Building stands on River Street in downtown Aurora.</p>
     <div class="actions">
       <a class="button" href="https://www.google.com/maps/dir/?api=1&amp;destination={{ venue.address|urlencode }}" target="_blank" rel="noopener noreferrer">Get directions</a>
-      <a class="button button--quiet" href="mailto:{{ venue.contact_email }}?subject=Venue%20walk-through">Arrange a walk-through</a>
+      <a class="button button--quiet" href="{% url 'walkthroughs' %}">Arrange a walk-through</a>
     </div>
   </div>
   <img src="{% static 'images/event-hall.jpg' %}" alt="A ceremony aisle and floral installation in the hall" width="1800" height="1200">

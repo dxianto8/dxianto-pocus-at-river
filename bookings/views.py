@@ -81,9 +81,9 @@ def book(request: HttpRequest) -> HttpResponse:
     selected_state = state_of(selected, month) if selected else None
     if form is None and selected_state is DayState.AVAILABLE:
         initial = {"event_date": selected}
-        package = EventPackage.objects.filter(
-            is_published=True, slug=request.GET.get("package", "")
-        ).first()
+        package = (
+            EventPackage.objects.published().filter(slug=request.GET.get("package", "")).first()
+        )
         if package:
             initial.update(package=package, event_type=package.event_type)
         form = BookingRequestForm(initial=initial, user=request.user)

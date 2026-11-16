@@ -141,13 +141,14 @@ p { max-width: 68ch; }
   background: none; color: var(--steel); font: 600 0.9375rem var(--sans); cursor: pointer;
 }
 
-@media (max-width: 76rem) {
+@media (max-width: 84rem) {
   .js .menu-toggle { display: inline-flex; align-items: center; }
   .site-nav { flex-wrap: wrap; }
   .header-inner { flex-wrap: wrap; padding-block: 0.9rem; }
   .js .site-nav {
     display: none; flex-direction: column; align-items: stretch; gap: 0;
     width: 100%; padding-bottom: 0.5rem;
+    max-height: calc(100svh - 6.5rem); overflow-y: auto; overscroll-behavior: contain;
   }
   .js .menu-toggle[aria-expanded="true"] + .site-nav { display: flex; }
   .js .site-nav a:not(.button) { padding-block: 0.85rem; border-bottom: 1px solid var(--line); font-size: 1.0625rem; }
@@ -461,3 +462,40 @@ body.modal-open { overflow: hidden; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* Venue services follow the same measured spacing, rules, and upright type. */
+.service-layout { display:grid; grid-template-columns:minmax(0, 3fr) minmax(0, 2fr); gap:clamp(2rem,5vw,5rem); align-items:start; }
+.service-layout > .panel, main > .wrap .panel { border:1px solid var(--line); padding:clamp(1.5rem,3vw,2.5rem); background:var(--white); }
+.service-layout > .panel > * + *, .service-aside > * + * { margin-top:1.5rem; }
+.service-layout .form { margin-top:2rem; }
+.service-aside { padding-block:1rem; }
+.service-aside h2 { font-size:clamp(2rem,3vw,2.75rem); }
+.service-aside p:not(.section-label) { color:var(--muted); }
+.section-heading { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:1.5rem 3rem; margin-bottom:3rem; }
+.section-heading > p { max-width:48ch; }
+.menu-category { display:grid; grid-template-columns:minmax(8rem,1fr) minmax(0,4fr); gap:2rem; padding-block:2rem; border-top:1px solid var(--line); }
+.menu-category > h3 { font:400 1.875rem/1.2 var(--display); }
+.menu-item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.75rem 2rem; padding-bottom:2rem; }
+.menu-item + .menu-item { padding-top:2rem; border-top:1px solid var(--line); }
+.menu-item dt { font:400 1.75rem/1.2 var(--display); }
+.menu-item dd:not(.menu-item__price) { grid-column:1; color:var(--muted); }
+.menu-item__price { grid-column:2; grid-row:1 / span 2; text-align:right; }
+.menu-item__price span { display:block; color:var(--muted); }
+.event-journal { display:grid; gap:5rem; }
+.event-journal article { display:grid; grid-template-columns:minmax(0,6fr) minmax(0,4fr); gap:clamp(2rem,5vw,5rem); align-items:center; }
+.event-journal article:nth-child(even) img { order:2; }
+.event-journal img { width:100%; aspect-ratio:4/3; object-fit:cover; }
+.event-journal article > div > * + * { margin-top:1.5rem; }
+.event-journal h2 { font-size:clamp(2rem,4vw,3rem); }
+.service-note { border-top:1px solid var(--line); padding-top:1.5rem; margin-top:2rem; font-size:.9375rem; color:var(--muted); }
+.offer-note { border-left:2px solid var(--river); padding: .25rem 0 .25rem 1.5rem; }
+.offer-note > * + * { margin-top:.75rem; }
+.button:disabled { opacity:.55; cursor:not-allowed; }
+@media(max-width:84rem){ .site-nav{gap:1rem} .site-nav__account{gap:1rem;padding-left:1rem} }
+@media(max-width:60rem){ .service-layout,.menu-category,.event-journal article{grid-template-columns:minmax(0,1fr)} .event-journal article:nth-child(even) img{order:0} }
+@media(max-width:36rem){ .menu-item{grid-template-columns:minmax(0,1fr)} .menu-item__price{grid-column:1;grid-row:auto;text-align:left} }
+
+.field[hidden] { display:none; }
+
+.ws-head .section-label, .page-hero__text .section-label { font-size:.75rem; }
+.page-hero__text .text-link { align-self:flex-start; }

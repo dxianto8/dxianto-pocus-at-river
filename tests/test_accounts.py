@@ -239,6 +239,14 @@ def test_admin_settings_and_packages_update_public_page(admin_client, client):
             "hero_heading": venue.hero_heading,
             "pricing_intro": "A plan built around your guests.",
             "pricing_note": venue.pricing_note,
+            "booking_intro": venue.booking_intro,
+            "walkthrough_intro": venue.walkthrough_intro,
+            "catering_intro": venue.catering_intro,
+            "reminder_days": venue.reminder_days,
+            "feedback_delay_days": venue.feedback_delay_days,
+            "loyalty_start_date": venue.loyalty_start_date,
+            "loyalty_points_per_event": venue.loyalty_points_per_event,
+            "loyalty_description": venue.loyalty_description,
         },
     )
     assert response.status_code == 302

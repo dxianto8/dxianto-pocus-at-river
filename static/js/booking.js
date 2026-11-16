@@ -17,6 +17,7 @@
       if (!fresh || !current) throw new Error(`Missing ${selector}`);
       current.replaceWith(fresh);
     }
+    window.pocusQuestionnaire?.();
     history.pushState({}, "", url);
 
     const request = document.getElementById("request");

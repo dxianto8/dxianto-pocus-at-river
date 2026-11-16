@@ -1,11 +1,24 @@
 from django.contrib.auth import views as auth
+from django.contrib.auth.decorators import login_required
 from django.urls import path, reverse_lazy
 from django.views.decorators.cache import never_cache
+
+from bookings import offering_views
 
 from . import views
 
 app_name = "accounts"
 urlpatterns = [
+    path("walkthroughs/", login_required(offering_views.walkthroughs), name="walkthroughs"),
+    path(
+        "walkthroughs/<int:pk>/cancel/",
+        offering_views.cancel_walkthrough,
+        name="cancel_walkthrough",
+    ),
+    path("loyalty/", offering_views.loyalty, name="loyalty"),
+    path("loyalty/<int:pk>/redeem/", offering_views.redeem_reward, name="redeem_reward"),
+    path("payments/", offering_views.payments, name="payments"),
+    path("bookings/<uuid:pk>/feedback/", offering_views.feedback, name="feedback"),
     path("signup/", views.signup, name="signup"),
     path(
         "login/",

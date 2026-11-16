@@ -19,7 +19,7 @@
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && menu.getAttribute('aria-expanded') === 'true') { close(); menu.focus(); }
     });
-    window.matchMedia('(min-width:76.01rem)').addEventListener('change', close);
+    window.matchMedia('(min-width:84.01rem)').addEventListener('change', close);
   }
 
   const photos = [...document.querySelectorAll('[data-gallery]')];

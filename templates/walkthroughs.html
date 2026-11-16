@@ -1,0 +1,24 @@
+{% extends layout_template %}
+{% block title %}Walkthrough Appointments | Pocus at River{% endblock %}
+{% block content %}
+<section class="{% if user.is_authenticated %}ws-head{% else %}wrap page-head{% endif %}"><p class="section-label">See it in person</p><h1>Walkthroughs</h1><p>{{ venue.walkthrough_intro }}</p></section>
+{% if user.is_authenticated %}{% include "includes/account_tabs.html" %}{% endif %}
+<div class="{% if not user.is_authenticated %}wrap section section--flush {% endif %}service-layout">
+  <section class="panel" aria-labelledby="visit-request-heading">
+    <h2 id="visit-request-heading">Find a time to visit</h2>
+    <p class="muted">Appointments are in Chicago time. Your visit is reserved for review until the team confirms it.</p>
+    {% if not user.is_authenticated %}
+      <p>Use your account to request a visit and keep track of its status.</p><p><a class="button" href="{% url 'accounts:signup' %}?next={% url 'accounts:walkthroughs' %}">Create an account</a> <a class="text-link" href="{% url 'accounts:login' %}?next={% url 'accounts:walkthroughs' %}">Log in</a></p>
+    {% elif has_slots %}
+      <form method="post" class="form">{% csrf_token %}{% include "includes/form_fields.html" %}<button class="button" type="submit">Request this appointment</button></form>
+    {% else %}
+      <p>No appointment times are published right now. <a href="mailto:{{ venue.contact_email }}?subject=Venue%20walk-through">Email the team to arrange a visit</a>.</p>
+    {% endif %}
+  </section>
+  <aside class="service-aside"><p class="section-label">Before you come</p><h2 class="display">Bring a few ideas.<br>Leave with a clearer picture.</h2><p>Your guest count, possible dates, layout, catering, and access needs are a good place to start.</p><address>{{ venue.address }}</address><a class="text-link" href="{% url 'catering' %}">Explore catering {% include "includes/arrow.html" %}</a></aside>
+</div>
+{% if user.is_authenticated %}
+<section class="panel" aria-labelledby="visits-heading"><h2 id="visits-heading">My walkthrough appointments</h2><ul class="rows">
+{% for appointment in appointments %}<li class="row row--static"><span class="row__main"><strong>{{ appointment.slot.starts_at|date:"l, F j, Y" }}</strong><span class="muted">{{ appointment.slot.starts_at|date:"g:i A" }}–{{ appointment.slot.ends_at|date:"g:i A" }} · Chicago time</span></span><span class="chip chip--{{ appointment.status }}">{{ appointment.get_status_display }}</span>{% if appointment.status == 'pending' or appointment.status == 'confirmed' %}<form method="post" action="{% url 'accounts:cancel_walkthrough' appointment.pk %}">{% csrf_token %}<button type="submit" class="link-button">Cancel appointment</button></form>{% endif %}</li>{% empty %}<li class="empty">You have no walkthrough appointments yet.</li>{% endfor %}</ul></section>
+{% endif %}
+{% endblock %}

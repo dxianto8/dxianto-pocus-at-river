@@ -117,7 +117,7 @@ docker compose run --rm web ruff check .
 - **Emails.** The venue's contact address is emailed about new requests, customer
   messages, uploads, changes and cancellations. Customers are emailed when the status
   changes, when staff reply, and when staff share a document, unless they turn emails
-  off under Account. Email needs the SMTP settings below; without them nothing is
+  off under Account. Email needs a configured provider (SendGrid or SMTP); without one nothing is
   sent and everything still works inside the workspace and the admin.
 - **Documents** are stored in the database (PDF, Word, Excel, text, JPG, PNG; 4 MB
   each), so no file storage needs setting up. No payments are taken on the site.
@@ -148,14 +148,14 @@ Never match or auto-assign legacy bookings by an unverified email address.
 
 ### Email
 
-Set the SMTP variables in `.env.example` in the deployment environment. Password
+Set SendGrid or the SMTP variables in `.env.example` in the deployment environment. Password
 reset emails are sent through that connection; the reset links expire after one
-hour and cannot be reused. Development prints emails to the console. Until SMTP
+hour and cannot be reused. Development prints emails to the console. Until an email provider
 is configured, production sends no email at all: neither password resets nor the
 event notifications described above.
 
 Older exact-match design documents describe the previous site. The pages and
-account workflows documented here describe the `dev` redesign.
+account workflows documented here describe the current `main` site.
 
 ## Project layout
 
@@ -251,11 +251,22 @@ When you're ready to move `pocusatriver.com` off Wix:
 - **Typography.** Upright Libre Caslon Display is self-hosted under the SIL Open
   Font License (`static/fonts/OFL.txt`). Body copy and controls use system sans-serif
   fonts. No external font service is contacted at runtime.
-- **Motion.** JavaScript adds staggered hero entrances, one-time scroll reveals,
-  and gallery/menu transitions. Reduced-motion preferences disable these effects;
-  content remains visible without JavaScript. The hero background stays fixed.
+- **Motion.** JavaScript adds small settling movements and gallery/menu feedback. Native page
+  transitions preserve the previous screen while the next is ready. Reduced-motion preferences disable these effects;
+  content remains visible without JavaScript.
 - **Photography.** Full-width imagery comes from the owner-authorized Society 57
   assets and a separately verified CC0 wedding detail photograph. See
   `docs/image-sources.md` for the individual asset URLs, credits, and permissions.
 - **History.** The earlier Next.js version of this site is in the git history
   (commit `947bf87`).
+
+## Walkthroughs, catering, offers, loyalty, and messaging
+
+The current `main` includes appointment requests, admin-published catering menus and recent
+stories, dated package offers, configurable event types/questions and start/end times, loyalty
+credits/rewards, private post-event feedback, and SendGrid/Twilio messaging support. Stripe and
+Toast checkout remain **Not available yet**. No payments are taken.
+
+See [docs/venue-services.md](docs/venue-services.md) for configuration, privacy rules, scheduler
+setup, provider environment variables, and activation steps. Reminder sending and loyalty start
+disabled until staff configure them; customer SMS and feedback preferences are opt-in.

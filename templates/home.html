@@ -103,7 +103,7 @@
     <p class="section-label">River Street, Aurora</p>
     <h2 id="visit-heading" class="section-title">Walk the room.<br>Picture the day.</h2>
     <p>A floor plan only tells you so much. Come by with a guest count, a few possible dates, and the questions on your mind.</p>
-    <a class="text-link" href="mailto:{{ venue.contact_email }}?subject=Venue%20walk-through">Arrange a walk-through <span aria-hidden="true">{% include "includes/arrow.html" %}</span></a>
+    <a class="text-link" href="{% url 'walkthroughs' %}">Arrange a walk-through <span aria-hidden="true">{% include "includes/arrow.html" %}</span></a>
   </div>
   <div class="visit-note__details" data-motion>
     <p class="section-label">Find us here</p>
@@ -115,4 +115,5 @@
     </dl>
   </div>
 </section>
+{% if recent_events %}<section class="wrap section section--flush"><div class="section-heading"><h2 class="section-title">Recently, at River</h2><a class="text-link" href="{% url 'recent_events' %}">All recent events {% include "includes/arrow.html" %}</a></div>{% include "includes/recent_events.html" with events=recent_events %}</section>{% endif %}
 {% endblock %}

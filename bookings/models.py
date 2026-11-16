@@ -1,6 +1,7 @@
 import os
 import uuid
 from datetime import date
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -60,7 +61,12 @@ class Booking(models.Model):
     name = models.CharField(max_length=120, blank=True)
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=40, blank=True)
-    event_type = models.CharField("event type", max_length=10, choices=EventType, blank=True)
+    event_type = models.CharField("event type", max_length=40, blank=True)
+    start_time = models.TimeField(null=True, blank=True)
+    end_time = models.TimeField(null=True, blank=True)
+    catering_interest = models.BooleanField(default=False)
+    dietary_notes = models.TextField(max_length=1000, blank=True)
+    questionnaire_answers = models.JSONField(default=list, blank=True)
     guest_count = models.PositiveSmallIntegerField(
         "guests",
         null=True,
@@ -92,6 +98,14 @@ class Booking(models.Model):
         who = self.name or self.get_status_display()
         return f"{self.event_date:%a %d %b %Y}: {who}"
 
+    def get_event_type_display(self):
+        option = EventTypeOption.objects.filter(code=self.event_type).first()
+        return (
+            option.label
+            if option
+            else dict(self.EventType.choices).get(self.event_type, self.event_type)
+        )
+
     @property
     def is_active(self) -> bool:
         return self.status in self.ACTIVE_STATUSES
@@ -100,6 +114,10 @@ class Booking(models.Model):
         super().clean()
         if self.status == self.Status.BLOCKED:
             return
+        if self.start_time and self.end_time and self.end_time <= self.start_time:
+            raise ValidationError(
+                {"end_time": "End time must be after start time on the same day."}
+            )
         required = {
             "name": self.name,
             "email": self.email,
@@ -308,8 +326,23 @@ class CustomerProfile(models.Model):
         help_text="Status changes, new messages and new documents.",
     )
 
+    sms_reminders = models.BooleanField("Text me event and walkthrough reminders", default=False)
+    feedback_updates = models.BooleanField(
+        "Invite me to share feedback after an event", default=False
+    )
+
     def __str__(self):
         return f"Profile of {self.user}"
+
+
+class EventPackageQuerySet(models.QuerySet):
+    def published(self):
+        packages = self.filter(is_published=True)
+        if EventTypeOption.objects.exists():
+            packages = packages.filter(
+                event_type__in=EventTypeOption.objects.filter(is_active=True).values("code")
+            )
+        return packages
 
 
 class EventPackage(models.Model):
@@ -320,7 +353,7 @@ class EventPackage(models.Model):
 
     title = models.CharField(max_length=120)
     slug = models.SlugField(unique=True)
-    event_type = models.CharField(max_length=10, choices=Booking.EventType)
+    event_type = models.CharField(max_length=40)
     description = models.TextField(max_length=1000)
     price = models.DecimalField(
         max_digits=10,
@@ -337,17 +370,38 @@ class EventPackage(models.Model):
     is_published = models.BooleanField(default=False)
     display_order = models.PositiveSmallIntegerField(default=0)
 
+    objects = EventPackageQuerySet.as_manager()
+
     class Meta:
         ordering = ["display_order", "pk"]
 
     def __str__(self):
         return self.title
 
+    def get_event_type_display(self):
+        option = EventTypeOption.objects.filter(code=self.event_type).first()
+        return option.label if option else self.event_type
+
+    @property
+    def current_offer(self):
+        today = timezone.localdate()
+        offers = self.offers.filter(is_published=True, starts_on__lte=today, ends_on__gte=today)
+        return (
+            max(offers, key=lambda offer: offer.saving(self.price), default=None)
+            if self.price is not None
+            else None
+        )
+
+    @property
+    def effective_price(self):
+        offer = self.current_offer
+        return self.price - offer.saving(self.price) if offer else self.price
+
     @property
     def price_display(self):
         if self.price is None:
             return "Request pricing"
-        amount = f"{self.price:,.2f}".removesuffix(".00")
+        amount = f"{self.effective_price:,.2f}".removesuffix(".00")
         return f"{'From ' if self.starting_at else ''}${amount} {self.get_price_unit_display()}"
 
     @property
@@ -377,6 +431,49 @@ class VenueSettings(models.Model):
         )
     )
 
+    booking_intro = models.TextField(
+        default=(
+            "Tell us the shape of your day. "
+            "We will confirm timing, catering, and pricing in your proposal."
+        )
+    )
+    require_event_times = models.BooleanField(default=False)
+    walkthrough_intro = models.TextField(
+        default=(
+            "Come and see the space. Choose a published appointment, "
+            "and the team will confirm your visit."
+        )
+    )
+    catering_intro = models.TextField(
+        default=(
+            "Plan the table around your guests. Ask the team about the current menu, "
+            "dietary needs, and catering arrangements."
+        )
+    )
+    automated_email_enabled = models.BooleanField(default=False)
+    automated_sms_enabled = models.BooleanField(default=False)
+    reminder_days = models.PositiveSmallIntegerField(
+        default=1, validators=[MinValueValidator(1), MaxValueValidator(14)]
+    )
+    feedback_delay_days = models.PositiveSmallIntegerField(
+        default=1, validators=[MinValueValidator(1), MaxValueValidator(30)]
+    )
+    review_url = models.URLField(
+        blank=True,
+        help_text=(
+            "Optional public review destination, shared after every event regardless of rating."
+        ),
+    )
+    loyalty_enabled = models.BooleanField(default=False)
+    loyalty_start_date = models.DateField(default=timezone.localdate)
+    loyalty_points_per_event = models.PositiveSmallIntegerField(default=100)
+    loyalty_description = models.TextField(
+        default=(
+            "Earn points for completed, confirmed events. "
+            "Redeem points for rewards published by the venue."
+        )
+    )
+
     class Meta:
         verbose_name = "Venue settings"
         verbose_name_plural = "Venue settings"
@@ -388,3 +485,284 @@ class VenueSettings(models.Model):
     def save(self, *args, **kwargs):
         self.pk = 1
         return super().save(*args, **kwargs)
+
+
+class EventTypeOption(models.Model):
+    code = models.SlugField(max_length=40, unique=True)
+    label = models.CharField(max_length=80)
+    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["display_order", "pk"]
+
+    def __str__(self):
+        return self.label
+
+
+class BookingQuestion(models.Model):
+    class Kind(models.TextChoices):
+        TEXT = "text", "Short answer"
+        LONG = "long", "Long answer"
+        SELECT = "select", "Choose an option"
+        CHECK = "check", "Checkbox"
+
+    label = models.CharField(max_length=180)
+    help_text = models.CharField(max_length=300, blank=True)
+    kind = models.CharField(max_length=10, choices=Kind, default=Kind.TEXT)
+    options = models.TextField(blank=True, help_text="One choice per line, for a select question.")
+    event_types = models.ManyToManyField(
+        EventTypeOption, blank=True, help_text="Empty means all event types."
+    )
+    is_required = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["display_order", "pk"]
+
+    def __str__(self):
+        return self.label
+
+    def clean(self):
+        if self.kind == self.Kind.SELECT and not self.options.strip():
+            raise ValidationError({"options": "Add at least one choice."})
+
+
+class PackageOffer(models.Model):
+    package = models.ForeignKey(EventPackage, on_delete=models.CASCADE, related_name="offers")
+    title = models.CharField(max_length=120)
+    percent_off = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    amount_off = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)]
+    )
+    starts_on = models.DateField(default=timezone.localdate)
+    ends_on = models.DateField()
+    terms = models.TextField(max_length=1000)
+    is_published = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.title
+
+    def clean(self):
+        if bool(self.percent_off) == bool(self.amount_off):
+            raise ValidationError("Set either a percentage or a fixed discount, not both.")
+        if self.starts_on and self.ends_on and self.ends_on < self.starts_on:
+            raise ValidationError({"ends_on": "End date must be on or after the start date."})
+
+    def saving(self, price):
+        if price is None:
+            return Decimal("0")
+        saving = price * self.percent_off / 100 if self.percent_off else self.amount_off
+        return min(price, saving).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+class CateringItem(models.Model):
+    title = models.CharField(max_length=120)
+    category = models.CharField(max_length=80, default="Menu")
+    description = models.TextField(max_length=1000)
+    dietary_notes = models.CharField(max_length=200, blank=True)
+    price = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)]
+    )
+    price_note = models.CharField(
+        max_length=120,
+        blank=True,
+        help_text="For example, per person. Do not include unconfirmed terms.",
+    )
+    is_published = models.BooleanField(default=False)
+    display_order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["category", "display_order", "pk"]
+
+    def __str__(self):
+        return self.title
+
+
+class WalkthroughSlot(models.Model):
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField()
+    is_published = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["starts_at"]
+
+    def __str__(self):
+        return f"{timezone.localtime(self.starts_at):%b %d, %Y %I:%M %p}"
+
+    def clean(self):
+        if self.starts_at and self.ends_at and self.ends_at <= self.starts_at:
+            raise ValidationError({"ends_at": "End must be after the start."})
+        if (
+            self.starts_at
+            and self.ends_at
+            and WalkthroughSlot.objects.filter(
+                starts_at__lt=self.ends_at, ends_at__gt=self.starts_at, is_published=True
+            )
+            .exclude(pk=self.pk)
+            .exists()
+            and self.is_published
+        ):
+            raise ValidationError("That slot overlaps another published appointment slot.")
+
+
+class WalkthroughAppointment(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        CONFIRMED = "confirmed", "Confirmed"
+        CANCELLED = "cancelled", "Cancelled"
+        DECLINED = "declined", "Declined"
+
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    slot = models.ForeignKey(WalkthroughSlot, on_delete=models.PROTECT, related_name="appointments")
+    status = models.CharField(max_length=10, choices=Status, default=Status.PENDING)
+    notes = models.TextField(max_length=1000, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["slot__starts_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["slot"],
+                condition=Q(status__in=["pending", "confirmed"]),
+                name="one_active_walkthrough_per_slot",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.owner}: {self.slot}"
+
+
+class RecentEvent(models.Model):
+    PHOTO_CHOICES = [
+        (name, name.replace("-", " ").title())
+        for name in [
+            "event-hall",
+            "wedding-couple",
+            "celebration",
+            "meeting-room",
+            "gallery-hall",
+            "gallery-dance",
+        ]
+    ]
+    title = models.CharField(max_length=160)
+    event_date = models.DateField()
+    category = models.CharField(max_length=80)
+    summary = models.TextField(max_length=1500)
+    photo = models.CharField(max_length=40, choices=PHOTO_CHOICES, default="event-hall")
+    photo_caption = models.CharField(max_length=200, blank=True)
+    is_published = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-event_date", "-pk"]
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def image_path(self):
+        return f"images/{self.photo}.jpg"
+
+    def clean(self):
+        if self.is_published and self.event_date and self.event_date > timezone.localdate():
+            raise ValidationError({"event_date": "Recent events must have already taken place."})
+
+
+class EventFeedback(models.Model):
+    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name="feedback")
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    comments = models.TextField(max_length=3000, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Feedback for {self.booking}"
+
+
+class LoyaltyCredit(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    booking = models.OneToOneField(Booking, null=True, blank=True, on_delete=models.PROTECT)
+    points = models.IntegerField()
+    reason = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.owner}: {self.points} points"
+
+    def clean(self):
+        if self.booking_id and self.booking.owner_id != self.owner_id:
+            raise ValidationError("The credit must belong to the event's owner.")
+
+
+class LoyaltyReward(models.Model):
+    title = models.CharField(max_length=120)
+    description = models.TextField(max_length=1000)
+    points_required = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    is_published = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.title
+
+
+class RewardRedemption(models.Model):
+    class Status(models.TextChoices):
+        REQUESTED = "requested", "Requested"
+        APPROVED = "approved", "Approved"
+        REDEEMED = "redeemed", "Redeemed"
+        DECLINED = "declined", "Declined"
+
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    reward = models.ForeignKey(LoyaltyReward, on_delete=models.PROTECT)
+    title_snapshot = models.CharField(max_length=120)
+    points = models.PositiveIntegerField()
+    status = models.CharField(max_length=10, choices=Status, default=Status.REQUESTED)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.owner}: {self.title_snapshot} ({self.status})"
+
+
+class ScheduledNotification(models.Model):
+    class Status(models.TextChoices):
+        QUEUED = "queued", "Queued"
+        SENDING = "sending", "Sending"
+        SENT = "sent", "Sent"
+        FAILED = "failed", "Failed"
+        SKIPPED = "skipped", "Skipped"
+
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    booking = models.ForeignKey(Booking, null=True, blank=True, on_delete=models.CASCADE)
+    appointment = models.ForeignKey(
+        WalkthroughAppointment, null=True, blank=True, on_delete=models.CASCADE
+    )
+    kind = models.CharField(
+        max_length=20,
+        choices=[
+            ("event", "Event reminder"),
+            ("walkthrough", "Walkthrough reminder"),
+            ("feedback", "Feedback invitation"),
+        ],
+    )
+    channel = models.CharField(max_length=5, choices=[("email", "Email"), ("sms", "Text")])
+    key = models.CharField(max_length=200, unique=True)
+    reference_date = models.DateField()
+    scheduled_for = models.DateTimeField()
+    status = models.CharField(max_length=10, choices=Status, default=Status.QUEUED)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    last_attempt_at = models.DateTimeField(null=True, blank=True)
+    provider_id = models.CharField(max_length=100, blank=True)
+    last_error = models.CharField(max_length=200, blank=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["scheduled_for"]
+
+    def __str__(self):
+        return f"{self.kind} / {self.channel}: {self.status}"

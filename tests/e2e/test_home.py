@@ -80,6 +80,9 @@ def test_signup_to_booking_to_status_dashboard(page: Page):
 
     day = timezone.localdate() + timedelta(days=12)
     page.goto("/")
+    menu = page.get_by_role("button", name="Menu", exact=True)
+    if menu.is_visible():
+        menu.click()
     page.get_by_role("navigation").get_by_role("link", name="Plan an event").click()
     expect(page).to_have_url(re.compile(r"/account/signup/\?next="))
     page.get_by_label("Your name", exact=True).fill("New Guest")

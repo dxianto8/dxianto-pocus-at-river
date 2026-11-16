@@ -93,6 +93,7 @@
 
     <div class="request" id="request">
       {% if form %}
+        <p class="muted">{{ venue.booking_intro }}</p>
         <h2 class="request__title" tabindex="-1">Request {{ selected|date:"l, F j, Y" }}</h2>
         <form class="form form--grid" method="post" action="{% url 'bookings:book' %}?month={{ month.first|date:'Y-m' }}#request">
           {% csrf_token %}
@@ -105,16 +106,9 @@
           {% endif %}
           <p class="muted">Sending this holds the date for review. It does not confirm a booking or take a payment.</p>
           {% for field in form.visible_fields %}
-            {% if field.name == "website" %}
-              <div class="visually-hidden" aria-hidden="true">{{ field.label_tag }} {{ field }}</div>
-            {% else %}
-              <div class="field{% if field.errors %} field--invalid{% endif %}{% if field.name == 'message' or field.name == 'package' %} field--wide{% endif %}">
-                {{ field.label_tag }}
-                {{ field }}
-                {% if field.name == 'email' %}<div class="help-text">From your account. Change it under Account.</div>{% endif %}
-                {{ field.errors }}
-              </div>
-            {% endif %}
+            {% if field.name == "website" %}<div class="visually-hidden" aria-hidden="true">{{ field.label_tag }} {{ field }}</div>
+            {% elif field.widget_type == 'checkbox' %}<div class="field field--check field--wide{% if field.errors %} field--invalid{% endif %}">{{ field }}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{% if field.help_text %}<div class="help-text">{{ field.help_text }}</div>{% endif %}{{ field.errors }}</div>
+            {% else %}<div class="field{% if field.errors %} field--invalid{% endif %}{% if field.name == 'message' or field.name == 'package' or field.name == 'dietary_notes' or field.widget_type == 'textarea' %} field--wide{% endif %}">{{ field.label_tag }}{{ field }}{% if field.name == 'email' %}<div class="help-text">From your account. Change it under Account.</div>{% elif field.help_text %}<div class="help-text">{{ field.help_text }}</div>{% endif %}{{ field.errors }}</div>{% endif %}
           {% endfor %}
           <p class="actions field--wide"><button class="button" type="submit">Send request</button></p>
         </form>

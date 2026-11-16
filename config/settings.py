@@ -155,7 +155,15 @@ if not DEBUG:
 # Email for account password resets. Production uses SMTP; development prints to the
 # console. services.py sends the event notifications through the same connection.
 
-if DEBUG:
+SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "")
+if SENDGRID_API_KEY:
+    MAILERS = {
+        "default": {
+            "BACKEND": "bookings.email_backend.SendGridBackend",
+            "OPTIONS": {"api_key": SENDGRID_API_KEY},
+        }
+    }
+elif DEBUG:
     MAILERS = {"default": {"BACKEND": "django.core.mail.backends.console.EmailBackend"}}
 else:
     MAILERS = {
@@ -184,3 +192,10 @@ LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "accounts:dashboard"
 LOGOUT_REDIRECT_URL = "home"
 PASSWORD_RESET_TIMEOUT = 3600
+
+# Messaging providers and the public origin used in notification links.
+SITE_URL = os.environ.get("PUBLIC_SITE_URL", "https://pocusatriver.com").rstrip("/")
+TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")
+TWILIO_FROM_NUMBER = os.environ.get("TWILIO_FROM_NUMBER", "")
+CRON_SECRET = os.environ.get("CRON_SECRET", "")

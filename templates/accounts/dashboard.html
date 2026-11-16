@@ -8,6 +8,8 @@
   </div>
   <a class="button" href="{% url 'bookings:book' %}">Request a date</a>
 </section>
+{% include "includes/account_tabs.html" %}
+
 
 {% if next_event %}
 <section class="next" aria-labelledby="next-heading">

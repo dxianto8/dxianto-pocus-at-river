@@ -6,7 +6,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
 from .calendar import DayState
-from .models import Booking, EventPackage
+from .models import Booking, EventPackage, RecentEvent
 
 
 @never_cache
@@ -14,7 +14,16 @@ from .models import Booking, EventPackage
 def home(request):
     if request.user.is_authenticated and request.resolver_match.url_name == "home":
         return redirect("accounts:dashboard")
-    return render(request, "home.html", {"saturdays": upcoming_saturdays()})
+    return render(
+        request,
+        "home.html",
+        {
+            "saturdays": upcoming_saturdays(),
+            "recent_events": RecentEvent.objects.filter(
+                is_published=True, event_date__lte=timezone.localdate()
+            )[:2],
+        },
+    )
 
 
 def upcoming_saturdays(count: int = 8):
@@ -28,6 +37,4 @@ def upcoming_saturdays(count: int = 8):
 
 @require_GET
 def packages(request):
-    return render(
-        request, "packages.html", {"packages": EventPackage.objects.filter(is_published=True)}
-    )
+    return render(request, "packages.html", {"packages": EventPackage.objects.published()})

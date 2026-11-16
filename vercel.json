@@ -1,0 +1,3 @@
+{
+  "crons": [{"path": "/notifications/dispatch/", "schedule": "0 14 * * *"}]
+}
