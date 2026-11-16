@@ -19,7 +19,10 @@
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="wordmark" href="{% if user.is_authenticated %}{% url 'explore' %}{% else %}{% url 'home' %}{% endif %}" aria-label="Pocus at River home"><img class="wordmark__logo" src="{% static 'images/badge.png' %}" alt="" width="44" height="44">Pocus at River</a>
-      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <div class="header-controls">
+        <span class="header-account">{% if user.is_authenticated %}<a href="{% url 'accounts:dashboard' %}">My events</a>{% else %}<a href="{% url 'accounts:signup' %}?next={% if next %}{{ next|urlencode }}{% else %}{% url 'bookings:book' %}{% endif %}">Sign up</a><a href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in</a>{% endif %}</span>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      </div>
       {% with current=request.resolver_match.url_name %}
       <nav class="site-nav" id="site-nav" aria-label="Main navigation">
         <a href="{% url 'weddings' %}" {% if current == 'weddings' %}aria-current="page"{% endif %}>Weddings</a>
@@ -30,7 +33,6 @@
         <a href="{% url 'catering' %}" {% if current == 'catering' %}aria-current="page"{% endif %}>Catering</a>
         <a href="{% url 'walkthroughs' %}" {% if current == 'walkthroughs' %}aria-current="page"{% endif %}>Walkthroughs</a>
         <span class="site-nav__account">
-          <span class="site-nav__identity">{% if user.is_authenticated %}<a href="{% url 'accounts:dashboard' %}">My events</a>{% else %}<a href="{% url 'accounts:signup' %}?next={% if next %}{{ next|urlencode }}{% else %}{% url 'bookings:book' %}{% endif %}">Sign up</a><a href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in</a>{% endif %}</span>
           <a class="button button--small" href="{% url 'bookings:book' %}">Plan an event</a>
         </span>
       </nav>
