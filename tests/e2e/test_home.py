@@ -11,7 +11,7 @@ def test_home_has_full_width_photography_and_new_navigation(page: Page):
         "A place with a story. An event that's yours."
     )
     hero = page.get_by_test_id("hero").bounding_box()
-    assert hero["x"] == 0 and hero["width"] == 1440
+    assert hero["x"] == 0 and hero["width"] == page.locator("body").bounding_box()["width"]
     nav = page.get_by_role("navigation")
     for label, path in [
         ("Weddings", "/weddings/"),

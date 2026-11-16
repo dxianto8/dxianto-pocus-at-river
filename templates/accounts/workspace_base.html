@@ -3,7 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script>document.documentElement.classList.add('js');</script>
+  <script>
+    document.documentElement.classList.add('js');
+    window.addEventListener('pagereveal', event => {
+      window.pocusPageTransition = event.viewTransition?.finished.catch(() => {});
+    }, {once: true});
+  </script>
   <meta name="robots" content="noindex, nofollow">
   <title>{% block title %}My Events | Pocus at River{% endblock %}</title>
   <link rel="icon" href="{% static 'images/badge.png' %}" type="image/png">

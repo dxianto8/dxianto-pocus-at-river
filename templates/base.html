@@ -3,12 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script>document.documentElement.classList.add('js');</script>
+  <script>
+    document.documentElement.classList.add('js');
+    window.addEventListener('pagereveal', event => {
+      window.pocusPageTransition = event.viewTransition?.finished.catch(() => {});
+    }, {once: true});
+  </script>
   <title>{% block title %}Pocus at River | Weddings &amp; Events in Aurora{% endblock %}</title>
   <meta name="description" content="{% block description %}An event venue in the Historic Pocus Motors Building in downtown Aurora, Illinois. See open dates, compare packages, and plan your wedding, company event or celebration.{% endblock %}">
   <link rel="icon" href="{% static 'images/badge.png' %}" type="image/png">
   <link rel="preload" href="{% static 'fonts/libre-caslon-display.ttf' %}" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="{% static 'fonts/instrument-sans.woff2' %}" as="font" type="font/woff2" crossorigin>
+  {% block image_preload %}{% endblock %}
   <link rel="stylesheet" href="{% static 'css/site.css' %}">
   <script src="{% static 'js/motion.js' %}" defer></script>
   <script src="{% static 'js/site.js' %}" defer></script>
@@ -29,7 +35,7 @@
         <a href="{% url 'catering' %}" {% if current == 'catering' %}aria-current="page"{% endif %}>Catering</a>
         <a href="{% url 'walkthroughs' %}" {% if current == 'walkthroughs' %}aria-current="page"{% endif %}>Walkthroughs</a>
         <span class="site-nav__account">
-          {% if user.is_authenticated %}<a href="{% url 'accounts:dashboard' %}">My events</a>{% else %}<a href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Log in</a>{% endif %}
+          <span class="site-nav__identity">{% if user.is_authenticated %}<a href="{% url 'accounts:dashboard' %}">My events</a>{% else %}<a href="{% url 'accounts:signup' %}?next={% if next %}{{ next|urlencode }}{% else %}{% url 'bookings:book' %}{% endif %}">Sign up</a><a href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in</a>{% endif %}</span>
           <a class="button button--small" href="{% url 'bookings:book' %}">Plan an event</a>
         </span>
       </nav>

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% block image_preload %}<link rel="preload" as="image" href="{% static 'images/event-hall.jpg' %}" fetchpriority="high">{% endblock %}
 {% block content %}
 <section class="hero" data-testid="hero">
   <div class="hero__text">
@@ -10,7 +11,7 @@
       <a class="button button--quiet" href="{% url 'gallery' %}">See the space</a>
     </div>
   </div>
-  <img class="hero__photo" src="{% static 'images/event-hall.jpg' %}" alt="A ceremony aisle lined with dark steel chairs, leading to a floral installation" width="1800" height="1200" fetchpriority="high">
+  <div class="hero__media photo-frame" data-photo-motion><img decoding="async" class="hero__photo" src="{% static 'images/event-hall.jpg' %}" alt="A ceremony aisle lined with dark steel chairs, leading to a floral installation" width="1800" height="1200" fetchpriority="high"></div>
 </section>
 
 <section class="dates-band" aria-labelledby="dates-heading">
@@ -55,7 +56,7 @@
   </div>
   <div class="setting__study" data-motion>
     <figure class="setting__image">
-      <img src="{% static 'images/meeting-room.jpg' %}" alt="Dark steel, leather seating, and daylight through a glass overhead door" width="1365" height="1365" loading="lazy">
+      <div class="photo-frame" data-photo-motion><img decoding="async" src="{% static 'images/meeting-room.jpg' %}" alt="Dark steel, leather seating, and daylight through a glass overhead door" width="1365" height="1365" loading="lazy"></div>
       <figcaption>A different perspective on gathering. Photography from Society 57.</figcaption>
     </figure>
     <div class="setting__aside">
@@ -68,7 +69,7 @@
 
 <section class="wrap section section--flush gatherings" aria-labelledby="gatherings-heading">
   <div class="gatherings__photo" data-motion>
-    <img src="{% static 'images/wedding-couple.jpg' %}" alt="A couple sharing a laugh beside a white brick wall" width="1667" height="1667" loading="lazy">
+    <div class="photo-frame" data-photo-motion><img decoding="async" src="{% static 'images/wedding-couple.jpg' %}" alt="A couple sharing a laugh beside a white brick wall" width="1667" height="1667" loading="lazy"></div>
     <p class="caption">The moments between the plans. Society 57 photography.</p>
   </div>
   <div class="gatherings__body" data-motion>

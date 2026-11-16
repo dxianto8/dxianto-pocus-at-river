@@ -8,6 +8,6 @@
     <form method="post" class="form">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">{% include "includes/form_fields.html" %}<button class="button" type="submit">Create account</button></form>
     <div class="auth-switch"><p>Already have an account?</p><a class="button button--quiet" href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Log in</a></div>
   </div>
-  <img class="auth__photo" src="{% static 'images/wedding-couple.jpg' %}" alt="" width="1667" height="1667">
+  <div class="auth__media photo-frame" data-photo-motion><img decoding="async" class="auth__photo" src="{% static 'images/wedding-couple.jpg' %}" alt="" width="1667" height="1667"></div>
 </section>
 {% endblock %}

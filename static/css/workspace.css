@@ -27,8 +27,6 @@ body.workspace {
 .ws-side__user span { font-size: 0.875rem; }
 .ws-side__foot button { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
 .ws-scrim { display: none; }
-.ws-side { view-transition-name: workspace-sidebar; }
-.ws-bar { view-transition-name: workspace-bar; }
 
 /* Quiet feedback on the controls people use throughout planning. */
 .ws-nav a, .filters a, .calendar__step, .tick {

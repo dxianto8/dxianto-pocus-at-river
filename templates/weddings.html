@@ -1,5 +1,6 @@
 {% extends "base.html" %}{% load static %}
 {% block title %}Weddings | Pocus at River{% endblock %}
+{% block image_preload %}<link rel="preload" as="image" href="{% static 'images/wedding-couple.jpg' %}" fetchpriority="high">{% endblock %}
 {% block content %}
 <section class="page-hero">
   <div class="page-hero__text">
@@ -10,7 +11,7 @@
       <a class="button button--quiet" href="{% url 'packages' %}">Packages and pricing</a>
     </div>
   </div>
-  <img src="{% static 'images/wedding-couple.jpg' %}" alt="A wedding couple sharing a relaxed moment against white brick" width="1667" height="1667">
+  <div class="page-hero__media photo-frame" data-photo-motion><img decoding="async" src="{% static 'images/wedding-couple.jpg' %}" alt="A wedding couple sharing a relaxed moment against white brick" width="1667" height="1667"></div>
 </section>
 
 <section class="wrap section split">
@@ -22,7 +23,7 @@
 </section>
 
 <section class="wrap section feature">
-  <img src="{% static 'images/celebration.jpg' %}" alt="A wedding table styled with flowers and candles" width="1667" height="1667" loading="lazy">
+  <div class="feature__media photo-frame" data-photo-motion><img decoding="async" src="{% static 'images/celebration.jpg' %}" alt="A wedding table styled with flowers and candles" width="1667" height="1667" loading="lazy"></div>
   <div>
     <h2 class="section-title">What to settle with us</h2>
     <dl class="topics">
@@ -34,7 +35,7 @@
 </section>
 
 <section class="wrap section feature feature--flip">
-  <img src="{% static 'images/wedding-rings.jpg' %}" alt="Wedding rings on an open book" width="1800" height="1200" loading="lazy">
+  <div class="feature__media photo-frame" data-photo-motion><img decoding="async" src="{% static 'images/wedding-rings.jpg' %}" alt="Wedding rings on an open book" width="1800" height="1200" loading="lazy"></div>
   <div>
     <h2 class="section-title">Walk the space first</h2>
     <p class="lede">A visit turns an idea into a plan. Bring your guest count, a few possible dates, and your questions.</p>

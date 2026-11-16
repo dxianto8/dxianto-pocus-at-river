@@ -1,13 +1,11 @@
-// Motion is additive: content remains visible from its first paint.
+// Quiet movement: one page dissolve, stationary text, and a one-time photograph glide.
 (() => {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const EASE = 'cubic-bezier(.22, .61, .36, 1)';
   const running = new Set();
-
   const play = (element, keyframes, options = {}) => {
     if (!element || reduced.matches || typeof element.animate !== 'function') return null;
     const animation = element.animate(keyframes, {
-      duration: 380, easing: EASE, fill: 'backwards', ...options,
+      duration: 240, easing: 'cubic-bezier(.22, .61, .36, 1)', ...options,
     });
     running.add(animation);
     const forget = () => running.delete(animation);
@@ -15,44 +13,57 @@
     animation.addEventListener('cancel', forget, {once: true});
     return animation;
   };
-  reduced.addEventListener('change', () => {
-    if (reduced.matches) for (const animation of [...running]) animation.cancel();
-  });
+  window.pocusMotion = {play};
 
-  // Never reset opacity or clip a photo after the browser has already painted it.
-  const rise = (element, delay = 0, distance = 6) => play(element, [
-    {transform: `translateY(${distance}px)`},
-    {transform: 'none'},
-  ], {delay});
-  const all = selector => [...document.querySelectorAll(selector)];
-  window.pocusMotion = {play, rise};
+  const frames = [...document.querySelectorAll('.photo-frame[data-photo-motion]')];
+  const started = new WeakSet();
+  const settle = frame => { frame.dataset.photoSettled = ''; };
+  const glide = async frame => {
+    if (started.has(frame)) return;
+    started.add(frame);
+    const photo = frame.querySelector('img');
+    if (!photo) return;
+    if (reduced.matches || typeof photo.animate !== 'function') { settle(frame); return; }
+    try {
+      // Move only real pixels, after the page dissolve. Never animate a loading placeholder.
+      await Promise.all([photo.decode?.(), window.pocusPageTransition]);
+    } catch {
+      settle(frame);
+      return;
+    }
+    if (reduced.matches || document.visibilityState === 'hidden') { settle(frame); return; }
+    const animation = play(photo, [
+      {transform: 'translateX(-3%) scale(1.08)'},
+      {transform: 'translateX(0) scale(1)'},
+    ], {duration: 850, easing: 'cubic-bezier(.4, 0, .2, 1)', fill: 'forwards'});
+    if (!animation) { settle(frame); return; }
+    animation.addEventListener('finish', () => { settle(frame); animation.cancel(); }, {once: true});
+    animation.addEventListener('cancel', () => settle(frame), {once: true});
+  };
 
-  all('.hero__text, .page-hero__text, .page-head, .auth__form, .auth-simple')
-    .forEach(element => rise(element));
-
-  // A small settling movement in the product. The rail and headings stay still.
-  all('.workspace .next, .workspace .event-grid, .workspace .calendar, .workspace .panel--narrow')
-    .forEach(element => rise(element, 0, 4));
-  all('.meter span').forEach(bar => play(bar, [
-    {transform: 'scaleX(.96)', transformOrigin: 'left'},
-    {transform: 'scaleX(1)', transformOrigin: 'left'},
-  ], {duration: 320}));
-
-  // Only animate sections that start below the fold, once, with no delayed hiding.
-  const onScroll = all(
-    '[data-motion], .three article, .package, .feature > img, .gallery-grid figure'
-  ).filter(element => !element.closest('.workspace') &&
-    element.getBoundingClientRect().top >= window.innerHeight);
-  if ('IntersectionObserver' in window && !reduced.matches && onScroll.length) {
+  if ('IntersectionObserver' in window && !reduced.matches) {
     const observer = new IntersectionObserver(entries => {
-      entries.filter(entry => entry.isIntersecting).forEach(entry => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
         observer.unobserve(entry.target);
-        rise(entry.target, 0, 10);
-      });
+        glide(entry.target);
+      }
     }, {threshold: 0.08});
-    onScroll.forEach(element => observer.observe(element));
+    frames.forEach(frame => observer.observe(frame));
+  } else {
+    frames.forEach(settle);
   }
-
+  const stop = () => {
+    for (const animation of [...running]) animation.cancel();
+  };
+  reduced.addEventListener('change', () => {
+    if (reduced.matches) { stop(); frames.forEach(settle); }
+  });
+  // A restored Back/Forward page should not replay an old animation half-way through.
+  window.addEventListener('pagehide', stop);
+  window.addEventListener('pageshow', event => {
+    if (event.persisted) frames.forEach(settle);
+  });
   const header = document.querySelector('.site-header');
   if (header) {
     const mark = () => header.classList.toggle('site-header--scrolled', window.scrollY > 8);

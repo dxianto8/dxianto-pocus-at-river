@@ -16,7 +16,14 @@
   toggle.hidden = false;
   toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
   scrim.addEventListener('click', () => { setOpen(false); toggle.focus(); });
-  sidebar.addEventListener('click', event => { if (event.target.closest('a')) setOpen(false); });
+  sidebar.addEventListener('click', event => {
+    const link = event.target.closest('a');
+    if (!link) return;
+    const destination = new URL(link.href);
+    // A new document starts with a closed drawer; keep the outgoing snapshot stationary.
+    if (destination.origin !== location.origin ||
+        (destination.pathname === location.pathname && destination.hash)) setOpen(false);
+  });
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
       setOpen(false); toggle.focus();

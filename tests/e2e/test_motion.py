@@ -58,3 +58,72 @@ def test_workspace_motion_keeps_content_visible_and_respects_reduced_motion(page
     page.reload()
     assert page.evaluate("document.getAnimations().length") == 0
     expect(page.get_by_role("heading", name="Request a date")).to_be_visible()
+
+
+PHOTO_FRAMES = """() => {
+  window.__photoFrames = [];
+  const record = () => {
+    const photo = document.querySelector('.hero__photo');
+    const heading = document.querySelector('.hero h1');
+    if (photo && heading) {
+      const transform = new DOMMatrixReadOnly(getComputedStyle(photo).transform);
+      const box = heading.getBoundingClientRect();
+      window.__photoFrames.push({x: transform.m41, headingX: box.x, headingY: box.y});
+    }
+    requestAnimationFrame(record);
+  };
+  requestAnimationFrame(record);
+}"""
+
+
+def test_photo_glides_once_while_text_and_layout_stay_still(page):
+    page.add_init_script(f"({PHOTO_FRAMES})();")
+    page.goto("/")
+    page.evaluate("document.fonts.ready")
+    page.evaluate("window.__photoFrames = []")
+    expect(page.locator(".hero__media")).to_have_attribute("data-photo-settled", "")
+    samples = page.evaluate("window.__photoFrames")
+    assert len({round(sample["x"], 1) for sample in samples}) > 3
+    assert (
+        max(sample["headingX"] for sample in samples)
+        - min(sample["headingX"] for sample in samples)
+        < 0.5
+    )
+    assert (
+        max(sample["headingY"] for sample in samples)
+        - min(sample["headingY"] for sample in samples)
+        < 0.5
+    )
+    page.locator(".setting").scroll_into_view_if_needed()
+    page.locator(".hero").scroll_into_view_if_needed()
+    assert page.locator(".hero__photo").evaluate("el => el.getAnimations().length") == 0
+
+
+def test_public_photography_is_still_with_reduced_motion(page):
+    page.emulate_media(reduced_motion="reduce")
+    page.goto("/")
+    assert page.locator(".hero__photo").evaluate("el => getComputedStyle(el).transform") == "none"
+    assert page.evaluate("document.getAnimations().length") == 0
+
+
+def test_navigation_has_one_opacity_animation_without_geometry_or_text_movement(page):
+    page.add_init_script("""addEventListener('pagereveal', event => {
+      if (!event.viewTransition) return;
+      event.viewTransition.ready.then(() => {
+        window.__navigationMotion = document.getAnimations().map(animation => ({
+          name: animation.animationName,
+          frames: animation.effect.getKeyframes(),
+        }));
+      });
+    });""")
+    page.set_viewport_size({"width": 1440, "height": 900})
+    page.goto("/")
+    page.get_by_role("navigation", name="Main navigation").get_by_role(
+        "link", name="Weddings", exact=True
+    ).click()
+    page.wait_for_function("window.__navigationMotion !== undefined")
+    animations = page.evaluate("window.__navigationMotion")
+    assert len(animations) == 1
+    for frame in animations[0]["frames"]:
+        assert "opacity" in frame
+        assert not {"transform", "width", "height"}.intersection(frame)

@@ -1,5 +1,6 @@
 {% extends "base.html" %}{% load static %}
 {% block title %}Corporate Events | Pocus at River{% endblock %}
+{% block image_preload %}<link rel="preload" as="image" href="{% static 'images/meeting-room.jpg' %}" fetchpriority="high">{% endblock %}
 {% block content %}
 <section class="page-hero">
   <div class="page-hero__text">
@@ -10,7 +11,7 @@
       <a class="button button--quiet" href="{% url 'packages' %}">Packages and pricing</a>
     </div>
   </div>
-  <img src="{% static 'images/meeting-room.jpg' %}" alt="A lounge with comfortable seating and a glass overhead door" width="1365" height="1365">
+  <div class="page-hero__media photo-frame" data-photo-motion><img decoding="async" src="{% static 'images/meeting-room.jpg' %}" alt="A lounge with comfortable seating and a glass overhead door" width="1365" height="1365"></div>
 </section>
 
 <section class="wrap section split">
