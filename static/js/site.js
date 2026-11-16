@@ -7,16 +7,12 @@
   const nav = document.getElementById('site-nav');
   if (menu && nav) {
     menu.hidden = false;
-    nav.classList.add('site-nav--enhanced');
     const close = () => menu.setAttribute('aria-expanded', 'false');
     menu.addEventListener('click', () => {
       const opening = menu.getAttribute('aria-expanded') !== 'true';
       menu.setAttribute('aria-expanded', String(opening));
       if (opening) {
-        [...nav.querySelectorAll('a')].forEach((link, index) => window.pocusMotion?.play(link, [
-          {opacity: 0, transform: 'translateY(-8px)'},
-          {opacity: 1, transform: 'none'},
-        ], {delay: index * 35, duration: 300}));
+        window.pocusMotion?.rise(nav, 0, 4);
       }
     });
     nav.addEventListener('click', event => { if (event.target.closest('a')) close(); });
@@ -39,7 +35,7 @@
       image.alt = photo.querySelector('img').alt;
       dialog.querySelector('#photo-caption').textContent = photo.dataset.caption;
       dialog.querySelector('[data-gallery-count]').textContent = `${current + 1} of ${photos.length}`;
-      window.pocusMotion?.play(image, [{opacity: 0}, {opacity: 1}], {duration: 260});
+      window.pocusMotion?.play(image, [{transform: 'scale(1.015)'}, {transform: 'none'}], {duration: 260});
     };
     photos.forEach((photo, index) => photo.addEventListener('click', event => {
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -49,9 +45,9 @@
       dialog.showModal();
       document.body.classList.add('modal-open');
       window.pocusMotion?.play(dialog.querySelector('.lightbox-inner'), [
-        {opacity: 0, transform: 'scale(.96)'},
-        {opacity: 1, transform: 'none'},
-      ], {duration: 300});
+        {transform: 'scale(.99)'},
+        {transform: 'none'},
+      ], {duration: 220});
     }));
     dialog.querySelector('[data-gallery-close]').addEventListener('click', () => dialog.close());
     dialog.querySelector('[data-gallery-prev]').addEventListener('click', () => show(current - 1));
