@@ -3,12 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script>
-    document.documentElement.classList.add('js');
-    window.addEventListener('pagereveal', event => {
-      window.pocusPageTransition = event.viewTransition?.finished.catch(() => {});
-    }, {once: true});
-  </script>
+  <script>document.documentElement.classList.add('js');</script>
   <title>{% block title %}Pocus at River | Weddings &amp; Events in Aurora{% endblock %}</title>
   <meta name="description" content="{% block description %}An event venue in the Historic Pocus Motors Building in downtown Aurora, Illinois. See open dates, compare packages, and plan your wedding, company event or celebration.{% endblock %}">
   <link rel="icon" href="{% static 'images/badge.png' %}" type="image/png">

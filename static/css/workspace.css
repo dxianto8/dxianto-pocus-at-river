@@ -28,14 +28,6 @@ body.workspace {
 .ws-side__foot button { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
 .ws-scrim { display: none; }
 
-/* Quiet feedback on the controls people use throughout planning. */
-.ws-nav a, .filters a, .calendar__step, .tick {
-  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
-}
-a.row { transition: background-color 180ms ease; }
-.tabs a { transition: border-color 180ms ease, color 180ms ease; }
-.ws-side__foot a, .link-button { transition: color 180ms ease; }
-
 .count {
   display: inline-grid; place-items: center; min-width: 1.4rem; height: 1.4rem; padding-inline: 0.35rem;
   border-radius: 1rem; background: var(--brass); color: var(--white); font-size: 0.75rem; font-weight: 700; line-height: 1;

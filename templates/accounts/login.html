@@ -9,6 +9,6 @@
     <p><a href="{% url 'accounts:password_reset' %}">Forgot your password?</a></p>
     <div class="auth-switch"><p>New here?</p><a class="button button--quiet" href="{% url 'accounts:signup' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Create an account</a></div>
   </div>
-  <div class="auth__media photo-frame" data-photo-motion><img decoding="async" class="auth__photo" src="{% static 'images/celebration.jpg' %}" alt="" width="1667" height="1667"></div>
+  <div class="auth__media photo-frame"><img decoding="async" class="auth__photo" src="{% static 'images/celebration.jpg' %}" alt="" width="1667" height="1667"></div>
 </section>
 {% endblock %}

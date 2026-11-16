@@ -21,6 +21,7 @@
     history.pushState({}, "", url);
 
     const request = document.getElementById("request");
+    window.pocusMotion?.rise(request, 0, 16);
     // Keyboard and screen-reader users continue from the form's heading.
     request.querySelector(".request__title")?.focus({ preventScroll: true });
     request.scrollIntoView({ behavior: reducedMotion.matches ? "auto" : "smooth", block: "start" });

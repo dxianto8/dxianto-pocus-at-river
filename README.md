@@ -251,10 +251,10 @@ When you're ready to move `pocusatriver.com` off Wix:
 - **Typography.** Upright Libre Caslon Display is self-hosted under the SIL Open
   Font License (`static/fonts/OFL.txt`). Body copy and controls use system sans-serif
   fonts. No external font service is contacted at runtime.
-- **Motion.** JavaScript glides decoded photographs once inside fixed frames. Text remains still.
-  A single short page dissolve keeps the outgoing screen visible until the next is ready;
-  gallery photos also decode before replacing the current image. Reduced-motion preferences disable these effects;
-  content remains visible without JavaScript.
+- **Motion.** Restored the animation timelines from `81c143e`: staggered heading entrances,
+  photo wipes, one-time scroll reveals, gallery/menu effects, smooth booking-form scrolling,
+  and the checklist progress bar. The workspace otherwise stays still. Reduced-motion
+  preferences disable the effects; pages still work without JavaScript.
 - **Photography.** Full-width imagery comes from the owner-authorized Society 57
   assets and a separately verified CC0 wedding detail photograph. See
   `docs/image-sources.md` for the individual asset URLs, credits, and permissions.
