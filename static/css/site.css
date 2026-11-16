@@ -183,15 +183,14 @@ p { max-width: 68ch; }
 .date-strip { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 0.75rem; }
 .date-chip {
   display: grid; justify-items: center; gap: 0.1rem; padding: 0.8rem 0.25rem 0.75rem;
-  border: 1.5px solid rgb(255 255 255 / 0.55); border-radius: var(--radius);
-  color: var(--white); text-decoration: none; line-height: 1;
+  border-radius: var(--radius); color: var(--white); text-decoration: none; line-height: 1;
 }
-a.date-chip { transition: background-color 0.18s, color 0.18s, transform 0.18s; }
-a.date-chip:hover { background: var(--white); color: var(--river); border-color: var(--white); transform: translateY(-3px); }
+a.date-chip { transition: background-color 0.18s, color 0.18s; }
+a.date-chip:hover { background: var(--white); color: var(--river); }
 .date-chip__month { font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.04em; }
 .date-chip__day { font: 400 2.75rem/1 var(--display); }
 .date-chip__state { font-size: 0.8125rem; font-weight: 600; margin-top: 0.3rem; }
-.date-chip--taken { border-style: dashed; border-color: rgb(255 255 255 / 0.3); color: rgb(255 255 255 / 0.62); }
+.date-chip--taken { color: rgb(255 255 255 / 0.58); }
 .date-chip--taken .date-chip__day { text-decoration: line-through; text-decoration-thickness: 1px; }
 
 .occasion-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(1.25rem, 2.5vw, 2.25rem); margin-top: 2.5rem; align-items: start; }

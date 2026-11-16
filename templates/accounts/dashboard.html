@@ -4,7 +4,7 @@
 <section class="ws-head ws-head--row">
   <div>
     <h1>Hello, {{ user.first_name|default:user.username }}</h1>
-    <p>{% if next_event %}Your next event is in <span data-count>{{ next_event.days_until }}</span> day{{ next_event.days_until|pluralize }}.{% elif counts.total %}You have no upcoming events.{% else %}Request a date to start planning.{% endif %}</p>
+    <p>{% if next_event %}Your next event is in {{ next_event.days_until }} day{{ next_event.days_until|pluralize }}.{% elif counts.total %}You have no upcoming events.{% else %}Request a date to start planning.{% endif %}</p>
   </div>
   <a class="button" href="{% url 'bookings:book' %}">Request a date</a>
 </section>
