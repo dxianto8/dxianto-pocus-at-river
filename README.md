@@ -165,7 +165,8 @@ bookings/     Bookings, messages, checklist, schedule, documents, packages, venu
               settings, calendar logic, forms, admin; services.py holds emails and history
 accounts/     Customer registration, authentication URLs, the owner-scoped workspace views
 templates/    Public pages, account flows, booking pages, admin calendar
-static/       site.css (shared), workspace.css, site.js, booking.js, workspace.js, fonts, images
+static/       site.css (shared), workspace.css, motion.js (animations), site.js, booking.js,
+              workspace.js, fonts, images
 tests/        pytest tests; tests/e2e/ are the browser tests
 docs/         design specs
 ```

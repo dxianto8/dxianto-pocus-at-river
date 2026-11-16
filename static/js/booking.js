@@ -20,7 +20,10 @@
     history.pushState({}, "", url);
 
     const request = document.getElementById("request");
-    request.classList.add("request--entering");
+    window.pocusMotion?.rise(request, 120, 28);
+    window.pocusMotion?.play(document.querySelector(".day--selected .day__inner"), [
+      { transform: "scale(.82)" }, { transform: "scale(1.08)", offset: 0.6 }, { transform: "none" },
+    ], { duration: 420, fill: "none" });
     // Keyboard and screen-reader users continue from the form's heading.
     request.querySelector(".request__title")?.focus({ preventScroll: true });
     request.scrollIntoView({ behavior: reducedMotion.matches ? "auto" : "smooth", block: "start" });

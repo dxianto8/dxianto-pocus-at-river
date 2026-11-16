@@ -94,8 +94,9 @@ p { max-width: 68ch; }
   border: 1.5px solid var(--river); border-radius: var(--radius);
   background: var(--river); color: var(--white);
   font: 600 1rem/1.2 var(--sans); text-decoration: none; cursor: pointer;
-  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s, transform 0.12s;
 }
+.button:active { transform: scale(0.97); }
 .button:hover { background: var(--river-deep); border-color: var(--river-deep); }
 .button--quiet { background: transparent; color: var(--river); }
 .button--quiet:hover { background: var(--river); color: var(--white); }
@@ -110,7 +111,8 @@ p { max-width: 68ch; }
 
 /* Header --------------------------------------------------------------------------------- */
 
-.site-header { position: sticky; top: 0; z-index: 20; background: var(--white); border-bottom: 1px solid var(--line); }
+.site-header { position: sticky; top: 0; z-index: 20; background: var(--white); border-bottom: 1px solid var(--line); transition: box-shadow 0.25s; }
+.site-header--scrolled { box-shadow: 0 6px 24px -12px rgb(28 35 37 / 0.35); }
 .header-inner { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; min-height: 4.5rem; }
 .wordmark { display: inline-flex; align-items: center; gap: 0.7rem; font: 400 1.625rem/1 var(--display); text-decoration: none; white-space: nowrap; color: var(--steel); }
 .wordmark__logo { flex: none; width: 2.75rem; height: 2.75rem; border-radius: 50%; }
@@ -161,6 +163,9 @@ p { max-width: 68ch; }
 .plate--xl .plate__top, .plate--xl .plate__bottom { font-size: 0.9375rem; }
 .plate--dark { background: var(--river); border-color: var(--river); color: var(--white); }
 
+/* Photos scale as they are revealed; keep that inside their own block. */
+.hero, .page-hero, .auth, .feature { overflow: clip; }
+
 /* Home ----------------------------------------------------------------------------------- */
 
 .hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); min-height: min(78vh, 46rem); background: var(--brick); }
@@ -181,7 +186,8 @@ p { max-width: 68ch; }
   border: 1.5px solid rgb(255 255 255 / 0.55); border-radius: var(--radius);
   color: var(--white); text-decoration: none; line-height: 1;
 }
-a.date-chip:hover { background: var(--white); color: var(--river); border-color: var(--white); }
+a.date-chip { transition: background-color 0.18s, color 0.18s, transform 0.18s; }
+a.date-chip:hover { background: var(--white); color: var(--river); border-color: var(--white); transform: translateY(-3px); }
 .date-chip__month { font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.04em; }
 .date-chip__day { font: 400 2.75rem/1 var(--display); }
 .date-chip__state { font-size: 0.8125rem; font-weight: 600; margin-top: 0.3rem; }
@@ -190,7 +196,9 @@ a.date-chip:hover { background: var(--white); color: var(--river); border-color:
 
 .occasion-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(1.25rem, 2.5vw, 2.25rem); margin-top: 2.5rem; align-items: start; }
 .occasion { display: block; text-decoration: none; }
-.occasion img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; margin-bottom: 1.1rem; }
+.occasion__photo { display: block; overflow: hidden; margin-bottom: 1.1rem; }
+.occasion img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; transition: transform 0.7s cubic-bezier(.2, .7, .2, 1); }
+.occasion:hover img { transform: scale(1.04); }
 .occasion h3 { font: 400 1.875rem/1.1 var(--display); }
 .occasion p { color: var(--muted); margin-top: 0.35rem; }
 .occasion:hover h3 { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
@@ -246,7 +254,9 @@ a.date-chip:hover { background: var(--white); color: var(--river); border-color:
 .gallery-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1.25rem; }
 .gallery-grid figure { grid-column: span 2; }
 .gallery-grid .gallery-grid__wide { grid-column: span 3; }
-.gallery-grid a { display: block; }
+.gallery-grid a { display: block; overflow: hidden; }
+.gallery-grid img { transition: transform 0.7s cubic-bezier(.2, .7, .2, 1); }
+.gallery-grid a:hover img { transform: scale(1.03); }
 .gallery-grid img { width: 100%; height: clamp(14rem, 34vw, 30rem); object-fit: cover; }
 .gallery-grid figcaption { font-size: 0.9375rem; color: var(--muted); margin-top: 0.6rem; }
 .photo-credits p { color: var(--muted); font-size: 0.9375rem; }
