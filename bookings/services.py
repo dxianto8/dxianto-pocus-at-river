@@ -212,6 +212,20 @@ def can_view_booking(request, booking: Booking) -> bool:
     )
 
 
+def guest_details(request) -> dict:
+    """Name, email and phone from the latest request this browser made without an account, so
+    signing up afterwards does not ask for them again. Only this session's own requests count."""
+    ids = request.session.get(GUEST_SESSION_KEY, [])
+    booking = (
+        Booking.objects.filter(pk__in=ids, owner__isnull=True).order_by("-created_at").first()
+        if ids
+        else None
+    )
+    if booking is None:
+        return {}
+    return {"first_name": booking.name, "email": booking.email, "phone": booking.phone}
+
+
 def claim_guest_bookings(request, user) -> int:
     """Give the person who just signed in the requests they made earlier in this session."""
     from .models import CateringOrder

@@ -44,7 +44,12 @@ def signup(request):
     destination = safe_next(request) or reverse("bookings:book")
     if request.user.is_authenticated:
         return redirect(destination or "accounts:dashboard")
-    form = RegistrationForm(request.POST if request.method == "POST" else None)
+    # Someone who just made a request in this browser has already given their name and email.
+    from_request = services.guest_details(request)
+    form = RegistrationForm(
+        request.POST if request.method == "POST" else None,
+        initial={k: v for k, v in from_request.items() if k in ("first_name", "email")},
+    )
     if request.method == "POST" and form.is_valid():
         try:
             with transaction.atomic():
@@ -52,9 +57,17 @@ def signup(request):
         except IntegrityError:
             form.add_error("username", "That username is unavailable. Please choose another.")
         else:
-            login(request, user)
+            if from_request.get("phone"):
+                profile = services.profile_for(user)
+                profile.phone = from_request["phone"]
+                profile.save(update_fields=["phone"])
+            login(request, user)  # also moves this browser's requests into the new account
             return redirect(destination or "accounts:dashboard")
-    return render(request, "accounts/signup.html", {"form": form, "next": destination})
+    return render(
+        request,
+        "accounts/signup.html",
+        {"form": form, "next": destination, "from_request": bool(from_request)},
+    )
 
 
 def attention_for(user, today):

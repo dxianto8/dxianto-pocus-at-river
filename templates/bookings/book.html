@@ -12,7 +12,6 @@
 {% block content %}
   {% if not user.is_authenticated %}
   <section class="wrap page-head">
-    <p class="section-label">Plan an event</p>
     <h1 id="booking-heading">Request a date</h1>
     <p>Pick the morning (AM), the afternoon and evening (PM), or the whole day. Your request puts it on hold while the venue team reviews it; nothing is charged.</p>
     <p class="booking__account">No account needed. Already have one? <a href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}">Sign in</a> to see your own dates.</p>

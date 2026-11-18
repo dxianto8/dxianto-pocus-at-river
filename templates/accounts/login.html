@@ -3,7 +3,6 @@
 {% block content %}
 <section class="auth">
   <div class="auth__form">
-    <p class="section-label">Welcome back</p>
     <h1>Log in</h1>
     {% if next %}<p>Log in to carry on planning your event.</p>{% else %}<p>Your events, messages and documents are in your account.</p>{% endif %}
     <form method="post" class="form">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">{% include "includes/form_fields.html" %}<button class="button" type="submit">Log in</button></form>

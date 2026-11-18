@@ -6,7 +6,7 @@ Building, 100 S. River Street, Downtown Aurora IL. Built with Django and Postgre
 The public site (home, Weddings, Corporate, Gallery, Venue, Packages & pricing) and the
 signed-in workspace share one design: Playfair Display for headings and dates,
 Montserrat for everything else, forest green and walnut with bronze accents on cream
-and ivory. Small labels are tracked capitals after a bronze rule; buttons are square.
+and ivory. Headings stand on their own, without labels above them; buttons are square.
 
 - **Home page.** A full-width photograph of the venue's own hall with the welcome, the venue beside a photograph,
   and the three kinds of occasion as photos with overlapping text cards. An address bar
