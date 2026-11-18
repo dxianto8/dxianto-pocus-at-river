@@ -68,15 +68,17 @@
                 {% for d in week %}
                   {% if d.in_month %}
                     {% with own_day=mine|lookup:d.date %}
-                    <td class="day day--{{ d.state }}{% if own_day %} day--mine{% endif %}{% if d.is_today %} day--today{% endif %}{% if d.date == selected %} day--selected{% endif %}"
+                    <td class="day day--{{ d.state }}{% if own_day %} day--mine{% endif %}{% if d.is_today %} day--today{% endif %}{% if d.date == selected %} day--selected{% if selected_session == 'full' %} day--all{% endif %}{% endif %}"
                         data-date="{{ d.date|date:'Y-m-d' }}" data-state="{{ d.state }}">
                       <div class="day__inner">
                         {% if d.full_day_open %}
-                          <a class="day__number day__full{% if d.date == selected and selected_session == 'full' %} is-selected{% endif %}" data-pick
+                          <a class="day__head day__full{% if d.date == selected and selected_session == 'full' %} is-selected{% endif %}" data-pick
                              href="{% pick_url package_slug month.first d.date 'full' %}"
-                             aria-label="{{ d.date|date:'l, F j' }}, full day available"{% if d.date == selected and selected_session == 'full' %} aria-current="date"{% endif %}>{{ d.date.day }}</a>
+                             aria-label="{{ d.date|date:'l, F j' }}, full day available"{% if d.date == selected and selected_session == 'full' %} aria-current="date"{% endif %}>
+                            <span class="day__number">{{ d.date.day }}</span><span class="day__all" aria-hidden="true">All day</span>
+                          </a>
                         {% else %}
-                          <span class="day__number" aria-hidden="true">{{ d.date.day }}</span>
+                          <span class="day__head" aria-hidden="true"><span class="day__number">{{ d.date.day }}</span></span>
                           {% if not d.halves %}<span class="visually-hidden">{{ d.date|date:"l, F j" }}, not bookable</span>{% endif %}
                         {% endif %}
                         {% if d.is_today %}<span class="day__today" title="Today"><span class="visually-hidden">Today</span></span>{% endif %}
@@ -123,6 +125,11 @@
                 </li>
               {% endfor %}
             </ul>
+            {% if other_sessions %}
+              <div class="pick__switch">
+                {% for s in other_sessions %}<a class="pick__alt{% if s == 'full' %} pick__alt--all{% endif %}" data-pick href="{% pick_url package_slug month.first selected s %}">{% if s == "full" %}Book all day instead{% elif s == "am" %}Just the morning{% else %}Just the afternoon and evening{% endif %}</a>{% endfor %}
+              </div>
+            {% endif %}
             {% if form %}<a class="button pick__go" href="#request-form">Add your details</a>{% endif %}
             <p class="pick__note">Nothing is charged. The date is held for you while the team reviews your request.</p>
           </div>
@@ -132,7 +139,7 @@
             <ol class="pick__steps">
               <li><span class="half half--open half--sample" aria-hidden="true">AM</span> for the morning</li>
               <li><span class="half half--open half--sample" aria-hidden="true">PM</span> for the afternoon and evening</li>
-              <li><span class="pick__num" aria-hidden="true">12</span> the date itself for the whole day</li>
+              <li><span class="pick__num" aria-hidden="true">All day</span> the date itself, for the whole day</li>
             </ol>
           </div>
         {% endif %}
@@ -152,8 +159,7 @@
         <p class="request__when">
           {% if selected_session == "am" %}The morning, before noon.{% elif selected_session == "pm" %}The afternoon and evening, from noon.{% else %}The whole day, AM and PM.{% endif %}
           {% if selected_state == "am_open" %}The afternoon is already taken.{% elif selected_state == "pm_open" %}The morning is already taken.{% endif %}
-          {% if other_sessions %}<span class="request__switch">Switch to:
-            {% for s in other_sessions %}<a data-pick href="{% pick_url package_slug month.first selected s %}">{% if s == "am" %}AM only{% elif s == "pm" %}PM only{% else %}Full day{% endif %}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</span>{% endif %}
+
         </p>
         <p class="muted request__intro">{{ venue.booking_intro }}</p>
         <form class="form form--grid" id="request-form" method="post" action="{% url 'bookings:book' %}?month={{ month.first|date:'Y-m' }}#request">

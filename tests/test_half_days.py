@@ -255,3 +255,19 @@ class TestAdminCalendar:
             {"date": day(12).isoformat(), "session": "full"},
         )
         assert Booking.objects.count() == 1
+
+
+class TestAllDay:
+    def test_card_offers_all_day_and_single_halves(self, client):
+        html = client.get("/book/", {"date": day().isoformat(), "session": "am"}).content.decode()
+        assert "Book all day instead" in html
+        assert f"date={day():%Y-%m-%d}&amp;session=full" in html
+        html = client.get("/book/", {"date": day().isoformat(), "session": "full"}).content.decode()
+        assert "day--all" in html
+        assert "Just the morning" in html and "Just the afternoon and evening" in html
+
+    def test_all_day_is_only_offered_when_both_halves_are_free(self, client):
+        make("pm")
+        html = client.get("/book/", {"date": day().isoformat()}).content.decode()
+        assert "Book all day instead" not in html
+        assert f"{day():%A, %B %-d}, full day available" not in html
