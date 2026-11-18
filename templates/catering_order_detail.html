@@ -2,7 +2,7 @@
 {% block title %}Catering Order Received | Pocus at River{% endblock %}
 {% block content %}
 <section class="{% if user.is_authenticated %}{% else %}wrap section {% endif %}confirmation order-receipt">
-  <p class="section-label">Catering · {{ order.get_status_display }}</p>
+  <p class="muted">Catering order: {{ order.get_status_display }}</p>
   <h1>{% if order.status == "received" %}Catering order received{% else %}Your catering order{% endif %}</h1>
   <p class="lede">For {{ order.event_date|date:"l, F j, Y" }}{% if order.booking %} ({{ order.booking.get_session_display }}){% endif %}{% if order.guest_count %}, {{ order.guest_count }} guests{% endif %}.</p>
   {% if order.lines.all %}

@@ -2,7 +2,6 @@
 {% block title %}Packages &amp; Pricing | Pocus at River{% endblock %}
 {% block content %}
 <section class="{% if layout_template %}ws-head{% else %}wrap page-head{% endif %}">
-  <p class="section-label">Plan your event</p>
   <h1>Packages and pricing</h1>
   <p>{{ venue.pricing_intro }}</p>
 </section>
@@ -12,7 +11,7 @@
       <div class="package__main">
         <h2>{{ package.title }}</h2>
         <p>{{ package.description }}</p>
-        {% with offer=package.current_offer %}{% if offer %}<aside class="offer-note"><p class="section-label">Current offer · through {{ offer.ends_on|date:"M j, Y" }}</p><h3>{{ offer.title }}</h3><p>{{ offer.terms }}</p><p class="small">Best current offer shown. Offers do not stack. Final terms are confirmed in your proposal.</p></aside>{% endif %}{% endwith %}
+        {% with offer=package.current_offer %}{% if offer %}<aside class="offer-note"><p class="small muted">Current offer, through {{ offer.ends_on|date:"M j, Y" }}</p><h3>{{ offer.title }}</h3><p>{{ offer.terms }}</p><p class="small">Best current offer shown. Offers do not stack. Final terms are confirmed in your proposal.</p></aside>{% endif %}{% endwith %}
         {% if package.inclusion_list %}
           <h3>Included</h3>
           <ul class="ticks">{% for item in package.inclusion_list %}<li>{{ item }}</li>{% endfor %}</ul>
@@ -35,7 +34,7 @@
   <p class="small package-list__note">{{ venue.pricing_note }}</p><p class="small package-list__note">Stripe event payments and Toast catering payments are not available yet. No payment is collected on this website.</p>
 </section>
 <section class="{% if not layout_template %}wrap {% endif %}section faq">
-  <div><p class="section-label">Questions</p><h2 class="section-title">Before you request a date</h2></div>
+  <h2 class="section-title">Before you request a date</h2>
   <div class="faq-list">
     <details><summary>Does submitting a request confirm my event?</summary><p>No. A request puts your date on hold while the team reviews it. Your account shows the status, and the team confirms the arrangements with you directly.</p></details>
     <details><summary>Can the package be tailored to my plans?</summary><p>Yes. Describe your guest list, schedule and priorities in your request. The team confirms the final inclusions and price in your proposal.</p></details>
