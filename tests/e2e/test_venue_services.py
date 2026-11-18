@@ -74,9 +74,9 @@ def test_loyalty_and_unavailable_payments_share_account_tabs(page, customer_logi
     expect(page.locator(".loyalty-points")).to_have_text("100")
     page.get_by_role("button", name="Request reward").click()
     expect(page.locator(".loyalty-points")).to_have_text("25")
-    page.get_by_role("navigation", name="Account sections").get_by_role(
+    page.get_by_role("navigation", name="Workspace navigation").get_by_role(
         "link", name="Payments"
     ).click()
     expect(page.get_by_role("heading", name="Event payments", exact=True)).to_be_visible()
-    expect(page.get_by_text("Not available yet", exact=True)).to_have_count(2)
+    expect(page.get_by_text("By invoice", exact=True)).to_have_count(2)
     expect(page.locator('input[autocomplete="cc-number"]')).to_have_count(0)

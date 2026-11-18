@@ -1,3 +1,18 @@
 {% extends "accounts/workspace_base.html" %}
 {% block title %}Payments | Pocus at River{% endblock %}
-{% block content %}<section class="ws-head"><h1>Payments</h1><p>Your proposal sets out the final price, deposit, and payment arrangements.</p></section>{% include "includes/account_tabs.html" %}<div class="service-layout"><section class="panel"><div class="panel__head"><h2>Event payments</h2><span class="chip">Not available yet</span></div><p class="muted">Stripe event payments are planned. Online checkout and card collection are not available.</p></section><section class="panel"><div class="panel__head"><h2>Catering payments</h2><span class="chip">Not available yet</span></div><p class="muted">Toast catering payments are planned. Confirm catering and payment arrangements with the venue team.</p><a href="{% url 'catering' %}">View the catering menu</a></section></div><p class="service-note">Contact the venue to arrange payment using the method in your confirmed proposal.</p>{% endblock %}
+{% block content %}
+<section class="ws-head"><h1>Payments</h1><p>Nothing is paid on this website. The venue team sends you an invoice.</p></section>
+<div class="service-layout">
+  <section class="panel">
+    <div class="panel__head"><h2>Event payments</h2><span class="chip">By invoice</span></div>
+    <p class="muted">Your proposal sets the final price, the deposit and when each payment is due. The team invoices you once you agree the proposal.</p>
+    <p><a href="{% url 'accounts:dashboard' %}">See your events</a></p>
+  </section>
+  <section class="panel">
+    <div class="panel__head"><h2>Catering payments</h2><span class="chip">By invoice</span></div>
+    <p class="muted">The team confirms each catering order and adds it to your invoice, with the final price.</p>
+    <p><a href="{% url 'catering_order' %}">Order catering</a></p>
+  </section>
+</div>
+<p class="service-note">Questions about a payment? <a href="mailto:{{ venue.contact_email }}">Email the venue</a>{% if venue.phone %} or call {{ venue.phone }}{% endif %}.</p>
+{% endblock %}

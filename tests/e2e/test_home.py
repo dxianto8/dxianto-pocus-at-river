@@ -154,7 +154,7 @@ def test_existing_account_can_continue_plan_event_through_login(page: Page):
     page.locator(".booking__account").get_by_role("link", name="Sign in").click()
     page.get_by_label("Username", exact=True).fill("returning")
     page.get_by_label("Password", exact=True).fill("Strong-River-Password-2027!")
-    page.get_by_role("button", name="Log in", exact=True).click()
+    page.get_by_role("button", name="Sign in", exact=True).click()
     expect(page).to_have_url(re.compile(r"/book/\?package=wedding$"))
     expect(page.get_by_test_id("calendar")).to_be_visible()
 

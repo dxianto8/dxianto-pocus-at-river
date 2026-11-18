@@ -287,8 +287,9 @@ When you're ready to move `pocusatriver.com` off Wix:
   and photographs are uncovered as they come into view; the checklist bar fills. Starting
   states are set before the first paint (`templates/includes/motion_flag.html`), so nothing
   is shown and then hidden; anything already on screen is left alone; photographs only move
-  once loaded; markers are removed when an entrance ends. The workspace otherwise stays
-  still. With reduced motion, or if the script fails to load, pages are simply still.
+  once loaded; markers are removed when an entrance ends. In the workspace, each page's
+  content arrives once in a short staggered rise, and rows, tabs and buttons answer the
+  pointer with quick transitions. With reduced motion, or if the script fails to load, pages are simply still.
 - **Photography.** Full-width imagery comes from the owner-authorized Society 57
   assets and a separately verified CC0 wedding detail photograph. See
   `docs/image-sources.md` for the individual asset URLs, credits, and permissions.

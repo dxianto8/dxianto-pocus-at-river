@@ -183,6 +183,7 @@ def test_dashboard_and_detail_do_not_expose_other_or_legacy_bookings(client, cus
 @pytest.mark.parametrize("status", ["pending", "confirmed", "declined", "cancelled"])
 def test_dashboard_reflects_staff_status_changes(client, customer, status):
     booking = make_booking(customer, status=status)
+    booking.refresh_from_db()
     client.force_login(customer)
     html = client.get(reverse("accounts:dashboard")).content.decode()
     assert booking.get_status_display() in html

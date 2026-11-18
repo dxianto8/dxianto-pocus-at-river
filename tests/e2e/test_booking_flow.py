@@ -69,7 +69,7 @@ class TestVisitor:
         other.goto("/account/login/")
         other.get_by_label("Username", exact=True).fill("eventguest")
         other.get_by_label("Password", exact=True).fill("correct-horse-battery-staple")
-        other.get_by_role("button", name="Log in", exact=True).click()
+        other.get_by_role("button", name="Sign in", exact=True).click()
         request_date(other, day, name="Someone Else", email="else@example.com")
         other.close()
 

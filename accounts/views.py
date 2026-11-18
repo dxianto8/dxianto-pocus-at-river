@@ -159,6 +159,29 @@ def dashboard(request):
     next_tasks = []
     if next_event:
         next_tasks = list(next_event.checklist.filter(done_at=None)[:3])
+    # Soonest upcoming event first, then past events, most recent first.
+    upcoming = sorted((b for b in bookings if b.is_upcoming), key=lambda b: b.event_date)
+    past = sorted((b for b in bookings if not b.is_upcoming), key=lambda b: b.event_date)
+    bookings = upcoming + past[::-1]
+    # Only offer the filters that would show something.
+    mine = list(Booking.objects.filter(owner=request.user).only("status", "event_date"))
+    matches = {
+        "upcoming": lambda b: b.is_upcoming and b.status in ("pending", "confirmed"),
+        "completed": lambda b: b.is_completed,
+    }
+    filters = [("", "All")] + [
+        (value, label)
+        for value, label in [
+            ("upcoming", "Upcoming"),
+            ("completed", "Completed"),
+            ("pending", "Pending"),
+            ("confirmed", "Confirmed"),
+            ("cancelled", "Cancelled"),
+            ("declined", "Declined"),
+        ]
+        if value == selected_status
+        or any(matches.get(value, lambda b, v=value: b.status == v)(b) for b in mine)
+    ]
     return render(
         request,
         "accounts/dashboard.html",
@@ -169,15 +192,7 @@ def dashboard(request):
             "next_tasks": next_tasks,
             "selected_status": selected_status,
             "attention": attention_for(request.user, today),
-            "filters": [
-                ("", "All"),
-                ("upcoming", "Upcoming"),
-                ("completed", "Completed"),
-                ("pending", "Pending"),
-                ("confirmed", "Confirmed"),
-                ("cancelled", "Cancelled"),
-                ("declined", "Declined"),
-            ],
+            "filters": filters,
         },
     )
 

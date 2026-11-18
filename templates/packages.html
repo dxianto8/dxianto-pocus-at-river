@@ -29,9 +29,9 @@
       </div>
     </article>
   {% empty %}
-    <div class="empty"><h2>No packages are published yet</h2><p>Email the team for current packages and a proposal for your date and guest list.</p><a class="button" href="mailto:{{ venue.contact_email }}">Email the venue</a></div>
+    <div class="empty"><h2>Packages are being finalised</h2><p>Email the team for current packages and a proposal for your date and guest list.</p><a class="button" href="mailto:{{ venue.contact_email }}">Email the venue</a></div>
   {% endfor %}
-  <p class="small package-list__note">{{ venue.pricing_note }}</p><p class="small package-list__note">Stripe event payments and Toast catering payments are not available yet. No payment is collected on this website.</p>
+  <p class="small package-list__note">{{ venue.pricing_note }}</p><p class="small package-list__note">No payment is taken on this website. The venue team invoices you once you agree your proposal.</p>
 </section>
 <section class="{% if not layout_template %}wrap {% endif %}section faq">
   <h2 class="section-title">Before you request a date</h2>

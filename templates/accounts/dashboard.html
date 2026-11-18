@@ -8,7 +8,6 @@
   </div>
   <a class="button" href="{% url 'bookings:book' %}">Request a date</a>
 </section>
-{% include "includes/account_tabs.html" %}
 
 
 {% if next_event %}
@@ -44,7 +43,7 @@
 <section class="panel" aria-labelledby="events-heading">
   <div class="panel__head">
     <h2 id="events-heading">Your events</h2>
-    {% if counts.total %}
+    {% if counts.total > 1 %}
     <nav class="filters" aria-label="Filter events by status">
       {% for value, label in filters %}<a href="{% url 'accounts:dashboard' %}{% if value %}?status={{ value }}{% endif %}" {% if selected_status == value %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
     </nav>
@@ -57,7 +56,7 @@
         {% include "includes/plate.html" with day=booking.event_date size="sm" %}
         <span class="row__main"><strong>{{ booking.get_event_type_display }}, {{ booking.get_session_display }}, {{ booking.guest_count }} guests</strong><span class="muted">{{ booking.status_description }}</span></span>
         {% if booking.unread %}<span class="chip chip--message">{{ booking.unread }} new</span>{% endif %}
-        <span class="chip chip--{{ booking.status }}">{{ booking.get_status_display }}</span>
+        <span class="chip chip--{{ booking.display_status.0 }}">{{ booking.display_status.1 }}</span>
       </a></li>
     {% endfor %}
   </ul>

@@ -1,11 +1,11 @@
 {% extends "base.html" %}{% load static %}
-{% block title %}Log in | Pocus at River{% endblock %}
+{% block title %}Sign in | Pocus at River{% endblock %}
 {% block content %}
 <section class="auth">
   <div class="auth__form">
-    <h1>Log in</h1>
-    {% if next %}<p>Log in to carry on planning your event.</p>{% else %}<p>Your events, messages and documents are in your account.</p>{% endif %}
-    <form method="post" class="form">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">{% include "includes/form_fields.html" %}<button class="button" type="submit">Log in</button></form>
+    <h1>Sign in</h1>
+    {% if next %}<p>Sign in to carry on planning your event.</p>{% else %}<p>Your events, messages and documents are in your account.</p>{% endif %}
+    <form method="post" class="form">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">{% include "includes/form_fields.html" %}<button class="button" type="submit">Sign in</button></form>
     <p><a href="{% url 'accounts:password_reset' %}">Forgot your password?</a></p>
     <div class="auth-switch"><p>New here?</p><a class="button button--quiet" href="{% url 'accounts:signup' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Create an account</a></div>
   </div>

@@ -90,7 +90,8 @@
     '.section-title', '.lede', '.prose', '.intro__text > p', '.cat__text',
     '.three article', '.topics > div', '.facts > div', '.visit address', '.package',
     '.faq-list details', '.menu-category', '.event-journal__media + div', '.gallery-grid figure',
-    '.service-aside', '.service-layout > .panel', '.photo-credits p',
+    '.service-aside', '.service-layout > .panel', '.photo-credits p', '.steps li',
+    '.how__actions', '.closing__inner > *',
   ].join(', ');
   const exclude = '.hero__text, .page-hero__text, .page-head, .auth__form, .auth-simple, .site-header, .site-footer';
   const fold = window.innerHeight;

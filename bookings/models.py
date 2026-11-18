@@ -245,7 +245,21 @@ class Booking(models.Model):
         ]
 
     @property
+    def is_completed(self) -> bool:
+        """A confirmed event whose day has passed."""
+        return self.status == self.Status.CONFIRMED and not self.is_upcoming
+
+    @property
+    def display_status(self) -> tuple[str, str]:
+        """(key, label) for the status chip: past confirmed events read as Completed."""
+        if self.is_completed:
+            return "completed", "Completed"
+        return self.status, self.get_status_display()
+
+    @property
     def status_description(self):
+        if self.is_completed:
+            return "This event has taken place. Thank you for celebrating with us."
         return {
             self.Status.PENDING: "Your date is on hold while the venue team reviews your plans.",
             self.Status.CONFIRMED: "The venue team has confirmed your booking.",

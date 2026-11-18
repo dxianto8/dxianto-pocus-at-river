@@ -48,6 +48,6 @@ def customer_login(page: Page):
     page.goto("/account/login/")
     page.get_by_label("Username", exact=True).fill(user.username)
     page.get_by_label("Password", exact=True).fill(ADMIN_PASSWORD)
-    page.get_by_role("button", name="Log in", exact=True).click()
+    page.get_by_role("button", name="Sign in", exact=True).click()
     page.wait_for_url("**/account/")
     return user

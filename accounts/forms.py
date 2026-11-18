@@ -34,7 +34,12 @@ class RegistrationForm(UserCreationForm):
 class ProfileForm(forms.ModelForm):
     """Name, email and phone. Changing the email needs the current password."""
 
-    phone = forms.CharField(required=False, max_length=40, label="Phone (optional)")
+    phone = forms.CharField(
+        required=False,
+        max_length=40,
+        label="Phone",
+        help_text="Filled in for you when you request a date.",
+    )
     email_updates = forms.BooleanField(
         required=False,
         label="Email me about my events",
