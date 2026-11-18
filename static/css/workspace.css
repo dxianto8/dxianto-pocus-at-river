@@ -153,90 +153,14 @@ a.row:hover { background: var(--brick); }
 .confirmation { max-width: 40rem; padding-top: 1rem; }
 .confirmation > * + * { margin-top: 1.25rem; }
 
-/* Calendar ---------------------------------------------------------------------------------- */
+/* The booking calendar and its request form are styled in calendar.css. */
 
-.calendar { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(1rem, 3vw, 2.5rem); max-width: 60rem; }
-.calendar__nav { display: grid; grid-template-columns: 5rem 1fr 5rem; align-items: start; gap: 0.5rem; margin-bottom: 2rem; }
-.calendar__heading { display: grid; justify-items: center; gap: 1rem; }
-.calendar__title { font: 400 clamp(1.75rem, 3vw, 2.375rem)/1.1 var(--display); text-align: center; }
-.calendar__jump { display: flex; gap: 0.5rem; }
-.calendar__jump select { min-height: 2.5rem; padding: 0.3rem 0.6rem; border: 1px solid #cfc7b8; border-radius: var(--radius); background: var(--white); font: 400 0.9rem var(--sans); color: var(--char); }
-.js .calendar__jump button { display: none; }
-.calendar__step { display: inline-flex; align-items: center; gap: 0.3rem; min-height: 2.5rem; padding: 0.3rem 0.7rem; border: 1.5px solid var(--steel); border-radius: var(--radius); font-weight: 600; font-size: 0.9375rem; text-decoration: none; justify-self: start; }
-.calendar__step:hover { background: var(--steel); color: var(--white); }
-.calendar__step[rel="prev"]::before { content: "\2039"; }
-.calendar__step[rel="next"] { justify-self: end; }
-.calendar__step[rel="next"]::after { content: "\203A"; }
-
-.calendar__grid { width: 100%; border-collapse: separate; border-spacing: 4px; table-layout: fixed; }
-.calendar__grid th { padding-bottom: 0.6rem; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bronze-ink); }
-.calendar__grid abbr { text-decoration: none; }
-.day { padding: 0; vertical-align: top; }
-.day__inner { display: flex; flex-direction: column; justify-content: space-between; gap: 0.4rem; min-height: 6.5rem; padding: 0.45rem 0.35rem 0.35rem; border-radius: var(--radius); }
-.day__number { align-self: flex-start; padding: 0.15rem 0.35rem; font: 400 1.5rem/1 var(--display); text-decoration: none; color: var(--char); }
-a.day__full { transition: background-color 0.15s, color 0.15s; }
-a.day__full:hover, a.day__full.is-selected { background: var(--walnut); color: var(--white); }
-a.day__full:focus-visible { outline: 2px solid var(--bronze); outline-offset: 1px; }
-.day--today .day__number { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.2em; text-decoration-color: var(--bronze); }
-.day--unavailable .day__inner { min-height: 2.5rem; color: #9aa3a1; }
-.day--unavailable .day__number { color: #9aa3a1; text-decoration: line-through; text-decoration-thickness: 1px; }
-
-/* The two halves of a day. Green means open; gold means taken (light while on hold). */
-.day__halves { display: grid; gap: 3px; }
-.half {
-  display: flex; align-items: center; justify-content: space-between; gap: 0.3rem;
-  min-height: 1.65rem; padding: 0.15rem 0.45rem; border: 1px solid transparent;
-  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; line-height: 1.1; text-decoration: none;
-}
-.half__text { display: flex; justify-content: space-between; gap: 0.3rem; width: 100%; }
-.half__state { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.02em; }
-.half--open { background: #d7e6dc; border-color: #9fbfaa; color: #1d4a33; }
-a.half--open { transition: background-color 0.15s, color 0.15s; }
-a.half--open:hover, .half--open.is-selected { background: var(--walnut); border-color: var(--walnut); color: var(--white); }
-.half--on_hold { background: var(--brass-wash); border: 1px dashed var(--bronze); color: #6d4c12; }
-.half--booked { background: var(--bronze-deep); border-color: var(--bronze-deep); color: var(--white); }
-.half--mine { background: var(--white); border: 2px solid var(--walnut); color: var(--walnut); }
-a.half--mine:hover { background: var(--river-wash); }
-a.half:focus-visible { outline: 2px solid var(--bronze); outline-offset: 1px; }
-.half--booked .half__state, .half--on_hold .half__state { text-transform: none; }
-
-.calendar__hint { margin: -0.75rem 0 1.25rem; text-align: center; font-size: 0.9rem; color: var(--muted); }
-.hint-chip { display: inline-block; padding: 0.05rem 0.4rem; border: 1px solid #9fbfaa; background: #d7e6dc; color: #1d4a33; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; }
-
-.calendar__legend { display: flex; flex-wrap: wrap; gap: 0.6rem 1.5rem; margin-top: 1.25rem; font-size: 0.875rem; color: var(--muted); }
-.calendar__legend li { display: inline-flex; align-items: center; gap: 0.45rem; }
-.legend-chip { display: inline-flex; align-items: center; min-height: 1.4rem; padding: 0 0.4rem; border: 1px solid transparent; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; }
-.legend-swatch { display: grid; place-items: center; width: 1.1rem; height: 1.1rem; border-radius: 2px; }
-.legend-swatch--past::before { content: "12"; font: 400 0.9375rem/1 var(--display); color: #9aa3a1; text-decoration: line-through; }
-
-.request__session { display: inline-block; margin-left: 0.4rem; padding: 0.2rem 0.6rem; vertical-align: middle; background: var(--walnut); color: var(--white); font: 700 0.8rem/1.4 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; }
-.request__when { color: var(--muted); }
-.request__switch { display: block; margin-top: 0.35rem; }
-.request__switch a { font-weight: 600; }
-
-@media (max-width: 40rem) {
-  .day__inner { min-height: 5.25rem; }
-  .day__inner { padding: 0.3rem 0.15rem 0.2rem; gap: 0.25rem; }
-  .day__number { font-size: 1.15rem; padding: 0.1rem 0.25rem; }
-  /* The date picks the whole day: give it a full-width target on small screens. */
-  a.day__full { align-self: stretch; min-height: 2rem; display: grid; place-items: center; }
-  .half { justify-content: center; min-height: 1.6rem; padding: 0.1rem; font-size: 0.62rem; letter-spacing: 0.04em; }
-  .half__state { display: none; }
-  .calendar__grid { border-spacing: 2px; }
-}
-
-.request { scroll-margin-top: 96px; max-width: 60rem; }
-.request:has(form) { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(1.5rem, 3vw, 2.5rem); }
-.request > * + * { margin-top: 1.75rem; }
-.request__title { font: 400 clamp(1.5rem, 2.6vw, 2.125rem)/1.15 var(--display); }
-.request__title:focus { outline: none; }
 
 /* The booking page for visitors without an account sits in the public layout. */
 .booking--public { display: grid; gap: clamp(2rem, 3vw, 3rem); }
 .booking--public > * + * { margin-top: 0; }
 .page-head .booking__account { font-size: 0.95rem; }
 .page-head .booking__account a { color: var(--cream); }
-.booking--public .calendar, .booking--public .request { width: 100%; margin-inline: auto; }
 
 /* Packages inside the workspace sit in a white panel. */
 .workspace .package-list { background: var(--white); border: 1px solid var(--line); border-top: 1.5px solid var(--steel); padding-inline: clamp(1.5rem, 3vw, 2.5rem); }
@@ -285,14 +209,6 @@ a.half:focus-visible { outline: 2px solid var(--bronze); outline-offset: 1px; }
   .schedule li { grid-template-columns: 5.5rem 1fr; }
   .schedule time { font-size: 1.125rem; }
   .thread__item { max-width: 100%; }
-  .calendar__grid { border-spacing: 2px; }
-  .calendar__nav { grid-template-columns: 1fr 1fr; gap: 1rem; }
-  .calendar__heading { grid-column: 1 / -1; grid-row: 1; }
-  .calendar__step { grid-row: 2; min-height: 2.75rem; }
-  .calendar__step[rel="next"] { grid-column: 2; }
-  .calendar__jump select { min-height: 2.75rem; }
-  .day__inner { align-items: stretch; }
-  .day__number { align-self: center; }
   .progress__step { font-size: 0.8125rem; }
 }
 

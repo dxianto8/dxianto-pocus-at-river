@@ -1,4 +1,5 @@
-"""Picking a date loads the request form in place and slides the page down to it."""
+"""Picking a date updates the calendar and the "Your date" card in place; "Add your details"
+then slides the page down to the request form."""
 
 import re
 from datetime import timedelta
@@ -48,10 +49,12 @@ def booking_page(page: Page, day, customer_login) -> Page:
     return page
 
 
-def scroll_positions_while_picking(page: Page, day) -> tuple[int, int, list[int]]:
+def scroll_positions_while_continuing(page: Page, day) -> tuple[int, int, list[int]]:
+    date_link(page, day).click()
+    expect(page.locator(".pick__go")).to_be_visible()
     start = page.evaluate("Math.round(window.scrollY)")
     page.evaluate(RECORD_SCROLL)
-    date_link(page, day).click()
+    page.get_by_role("link", name="Add your details").click()
     page.wait_for_function(FORM_IN_VIEW)
     end = page.evaluate("Math.round(window.scrollY)")
     return start, end, page.evaluate("window.__scrollYs")
@@ -68,8 +71,18 @@ class TestPickingADate:
         )
         expect(selected).to_have_class(re.compile(r"\bday--selected\b"))
 
+    def test_picking_keeps_the_calendar_in_view_and_fills_in_the_card(
+        self, booking_page: Page, day
+    ):
+        start = booking_page.evaluate("Math.round(window.scrollY)")
+        date_link(booking_page, day).click()
+        card = booking_page.get_by_role("complementary", name="Your date")
+        expect(card.get_by_role("heading", name=f"{day:%A}")).to_be_visible()
+        expect(card.locator(".pick__half.is-chosen")).to_have_count(2)  # full day: both halves
+        assert booking_page.evaluate("Math.round(window.scrollY)") == start
+
     def test_page_slides_smoothly_down_to_the_form(self, booking_page: Page, day):
-        start, end, positions = scroll_positions_while_picking(booking_page, day)
+        start, end, positions = scroll_positions_while_continuing(booking_page, day)
         assert end > start
         in_between = {y for y in positions if start < y < end}
         assert len(in_between) >= 3, f"expected a gradual scroll, got {positions}"
@@ -78,12 +91,14 @@ class TestPickingADate:
         page.emulate_media(reduced_motion="reduce")
         page.set_viewport_size({"width": 1280, "height": 800})
         page.goto(f"/book/?month={day:%Y-%m}")
-        start, end, positions = scroll_positions_while_picking(page, day)
+        start, end, positions = scroll_positions_while_continuing(page, day)
         assert end > start
         assert len({y for y in positions if start < y < end}) <= 1
 
-    def test_keyboard_focus_moves_to_the_form_heading(self, booking_page: Page, day):
+    def test_keyboard_focus_follows_the_choice_then_the_form(self, booking_page: Page, day):
         date_link(booking_page, day).click()
+        expect(booking_page.locator(".pick__when")).to_be_focused()
+        booking_page.get_by_role("link", name="Add your details").click()
         expect(booking_page.get_by_role("heading", name=heading_for(day))).to_be_focused()
 
     def test_back_button_returns_to_the_calendar_without_a_date(self, booking_page: Page, day):
@@ -114,5 +129,6 @@ def test_date_links_still_work_without_javascript(browser, base_url, day, custom
     page.goto(f"/book/?month={day:%Y-%m}")
     date_link(page, day).click()
     expect(page.get_by_role("heading", name=heading_for(day))).to_be_visible()
-    assert page.url.endswith("#request")
+    assert page.url.endswith("#your-date")
+    expect(page.get_by_role("link", name="Add your details")).to_be_visible()
     context.close()

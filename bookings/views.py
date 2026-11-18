@@ -111,6 +111,10 @@ def book(request: HttpRequest) -> HttpResponse:
             "form": form,
             "selected": selected,
             "selected_state": selected_state,
+            "selected_day": next(
+                (d for week in month.weeks for d in week if d.in_month and d.date == selected),
+                None,
+            ),
             "selected_session": picked,
             "other_sessions": [s for s in open_sessions if s != picked],
             "mine": mine,

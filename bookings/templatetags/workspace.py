@@ -22,4 +22,4 @@ def pick_url(package, month, day, session):
     """Link that picks a date and time of day on the booking calendar."""
     params = {"package": package} if package else {}
     params.update(month=f"{month:%Y-%m}", date=day.isoformat(), session=session)
-    return f"?{urlencode(params)}#request"
+    return f"?{urlencode(params)}#your-date"

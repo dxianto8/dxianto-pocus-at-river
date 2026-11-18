@@ -14,6 +14,7 @@
   <script src="{% static 'js/motion.js' %}" defer></script>
   <script src="{% static 'js/workspace.js' %}" defer></script>
   <script src="{% static 'js/questionnaire.js' %}" defer></script>
+  {% block extra_head %}{% endblock %}
 </head>
 <body class="workspace">
   <a class="skip-link" href="#workspace-content">Skip to content</a>

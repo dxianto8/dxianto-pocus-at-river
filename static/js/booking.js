@@ -1,16 +1,18 @@
-// Booking page: picking a date and time of day (AM, PM or the full day) loads the request form in place (no page reload) and slides
-// the page down to it. Without JavaScript, or if anything goes wrong, the date links work as
-// normal page loads that jump to the form.
+// Booking page. Picking a date and time of day (AM, PM or the whole day) updates the calendar
+// and the "Your date" card in place, without a page load; "Continue to your details" then
+// slides down to the request form. Without JavaScript, or if anything goes wrong, the links
+// work as ordinary page loads.
 (() => {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const behavior = () => (reducedMotion.matches ? "auto" : "smooth");
 
-  const showForm = async (link) => {
+  const pick = async (link) => {
     const url = new URL(link.href);
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const page = new DOMParser().parseFromString(await response.text(), "text/html");
 
-    // Swap in the server's calendar (with the date highlighted) and request form.
+    // Swap in the server's calendar (with the choice marked) and the matching request form.
     for (const selector of [".calendar", "#request"]) {
       const fresh = page.querySelector(selector);
       const current = document.querySelector(selector);
@@ -20,21 +22,38 @@
     window.pocusQuestionnaire?.();
     history.pushState({}, "", url);
 
+    // The card answers the click: it rises into place and keyboard users continue from it.
+    const card = document.querySelector(".pick");
+    window.pocusMotion?.rise(card, 0, 10);
+    document.querySelector(".pick__when")?.focus({ preventScroll: true });
+    // On narrow screens the card sits under the month; scroll to it only if its top is out of
+    // sight. Beside the month on wide screens it already shows, and the page stays put.
+    const aside = document.querySelector(".calendar__aside");
+    const top = aside?.getBoundingClientRect().top ?? 0;
+    if (aside && (top < 0 || top > window.innerHeight * 0.5)) {
+      aside.scrollIntoView({ behavior: behavior(), block: "start" });
+    }
+  };
+
+  const goToForm = () => {
     const request = document.getElementById("request");
-    window.pocusMotion?.rise(request, 0, 16);
-    // Keyboard and screen-reader users continue from the form's heading.
+    if (!request) return;
+    request.scrollIntoView({ behavior: behavior(), block: "start" });
     request.querySelector(".request__title")?.focus({ preventScroll: true });
-    request.scrollIntoView({ behavior: reducedMotion.matches ? "auto" : "smooth", block: "start" });
   };
 
   document.addEventListener("click", (event) => {
-    // Picking a date and time of day: the halves and dates on the calendar, and the
-    // "switch to" links above the form.
-    const link = event.target.closest("a[data-pick]");
     const newTabClick = event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey;
-    if (!link || event.defaultPrevented || newTabClick) return;
+    if (event.defaultPrevented || newTabClick) return;
+    if (event.target.closest(".pick__go")) {
+      event.preventDefault();
+      goToForm();
+      return;
+    }
+    const link = event.target.closest("a[data-pick]");
+    if (!link) return;
     event.preventDefault();
-    showForm(link).catch(() => {
+    pick(link).catch(() => {
       window.location.href = link.href;
     });
   });

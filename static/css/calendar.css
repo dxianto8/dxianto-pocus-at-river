@@ -1,0 +1,159 @@
+/* Booking calendar ---------------------------------------------------------------------------
+   Quiet by default, clear on exceptions. Open halves are pale sage, taken halves are bronze
+   (light and striped while a request is on hold, solid once booked), and your choice is deep
+   forest. The "Your date" card beside the month repeats the choice in words. */
+
+.calendar {
+  --sage: #e6eee8;
+  --sage-hover: #d2e1d6;
+  --sage-line: #adc6b4;
+  --sage-ink: #1f4433;
+  --cell-line: #e7e0d2;
+  --hold: #f5ecdc;
+  --hold-stripe: #ecdfc4;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 20rem);
+  max-width: 78rem;
+  background: var(--white);
+  border: 1px solid var(--line);
+  box-shadow: 0 28px 56px -40px rgb(23 41 31 / 0.35);
+}
+.calendar__main { min-width: 0; padding: clamp(1.25rem, 3vw, 2.5rem); }
+
+/* Month heading and controls. */
+.calendar__nav { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 1.5rem; margin-bottom: 1.75rem; }
+.calendar__title { font: 400 clamp(2.1rem, 4vw, 2.9rem)/1 var(--display); color: var(--char); }
+.calendar__title span { font-size: 0.62em; color: var(--muted); }
+.calendar__controls { display: flex; align-items: stretch; gap: 0.5rem; }
+.calendar__step {
+  display: grid; place-items: center; width: 2.75rem; min-height: 2.75rem;
+  border: 1px solid var(--char); color: var(--char); text-decoration: none;
+  font: 400 1.6rem/1 var(--display); transition: background-color 0.15s, color 0.15s;
+}
+a.calendar__step:hover { background: var(--char); color: var(--cream); }
+.calendar__step--off { border-color: var(--cell-line); color: #c3c8c4; }
+.calendar__jump { display: flex; gap: 0.5rem; }
+.calendar__jump select {
+  min-height: 2.75rem; padding: 0.3rem 2.2rem 0.3rem 0.85rem; border: 1px solid var(--cell-line);
+  border-radius: 0; background: var(--white); font: 500 0.875rem var(--sans); color: var(--char);
+}
+.js .calendar__jump button { display: none; }
+.calendar__step:focus-visible, .calendar__jump select:focus-visible { outline: 2px solid var(--bronze); outline-offset: 2px; }
+
+/* The month grid. */
+.calendar__grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.calendar__grid th { padding: 0 0.6rem 0.7rem; text-align: left; font: 600 0.75rem/1 var(--sans); letter-spacing: 0.04em; color: var(--muted); }
+.calendar__grid th.weekend { color: var(--bronze-ink); }
+.calendar__grid abbr { text-decoration: none; }
+.day { padding: 0; vertical-align: top; border: 1px solid var(--cell-line); background: var(--white); }
+.day--outside { background: #faf8f3; }
+.day__inner { position: relative; display: flex; flex-direction: column; gap: 0.5rem; min-height: 6.4rem; padding: 0.5rem; }
+.day__number { align-self: flex-start; padding: 0.15rem 0.3rem; font: 400 1.3rem/1 var(--display); color: var(--char); text-decoration: none; }
+a.day__full { transition: background-color 0.15s, color 0.15s; }
+a.day__full:hover, a.day__full.is-selected { background: var(--walnut); color: var(--cream); }
+a.day__full:focus-visible { outline: 2px solid var(--bronze); outline-offset: 1px; }
+.day__today { position: absolute; top: 0.75rem; right: 0.7rem; width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--bronze); }
+.day--unavailable { background: #fcfbf8; }
+.day--unavailable .day__inner { min-height: 3rem; }
+.day--unavailable .day__number { color: #bcc1bd; }
+.day--selected { box-shadow: inset 0 0 0 2px var(--walnut); }
+
+/* The two halves of a day. */
+.day__halves { display: grid; gap: 4px; margin-top: auto; }
+.half {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.35rem;
+  min-height: 1.75rem; padding: 0 0.55rem; border: 1px solid transparent;
+  font: 600 0.7rem/1 var(--sans); letter-spacing: 0.06em; text-decoration: none;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+.half__text { display: flex; justify-content: space-between; gap: 0.35rem; width: 100%; }
+.half__state { font-weight: 500; letter-spacing: 0.01em; font-size: 0.68rem; }
+.half--open { background: var(--sage); color: var(--sage-ink); }
+a.half--open:hover { background: var(--sage-hover); border-color: var(--sage-line); }
+.half--open.is-selected { background: var(--walnut); border-color: var(--walnut); color: var(--cream); }
+.half--open.is-selected::after { content: "\2713"; font-size: 0.8rem; }
+.half--on_hold { background: repeating-linear-gradient(135deg, var(--hold) 0 6px, var(--hold-stripe) 6px 12px); border: 1px dashed var(--bronze); color: #6d4c12; }
+.half--booked { background: var(--bronze-deep); color: var(--white); }
+.half--mine { background: var(--white); border: 1.5px solid var(--walnut); color: var(--walnut); }
+a.half--mine:hover { background: var(--river-wash); }
+a.half:focus-visible { outline: 2px solid var(--bronze); outline-offset: 1px; }
+/* Hovering or focusing the date shows that it takes the whole day. */
+.day__inner:has(a.day__full:is(:hover, :focus-visible)) .half--open:not(.is-selected) { background: var(--sage-hover); border-color: var(--sage-line); }
+
+/* "Your date": the choice in words, beside the month. */
+.calendar__aside { scroll-margin-top: 96px; display: flex; flex-direction: column; gap: 2rem; padding: clamp(1.5rem, 3vw, 2.25rem); background: var(--walnut); color: var(--cream); }
+.pick { display: grid; gap: 1.5rem; }
+.pick__date { display: flex; align-items: center; gap: 1.1rem; }
+.pick .plate { background: var(--cream); border-color: var(--cream); color: var(--walnut); }
+.pick__when { font: 400 2rem/1.1 var(--display); color: var(--cream); }
+.pick__when:focus { outline: none; }
+.pick__halves { display: grid; gap: 0.5rem; list-style: none; padding: 0; }
+.pick__half { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.7rem 0.85rem; background: rgb(255 255 255 / 0.06); border: 1px solid rgb(248 246 241 / 0.14); font-size: 0.9rem; }
+.pick__half small { margin-left: 0.25rem; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; color: rgb(233 227 215 / 0.75); }
+.pick__state { flex: none; font-size: 0.8rem; font-weight: 600; color: rgb(233 227 215 / 0.8); }
+.pick__half.is-chosen { background: var(--cream); border-color: var(--cream); color: var(--walnut); }
+.pick__half.is-chosen small, .pick__half.is-chosen .pick__state { color: var(--walnut); }
+.pick__half.is-chosen .pick__state::before { content: "\2713\00a0"; }
+.pick__go { justify-self: stretch; text-align: center; }
+/* On the green card the site's dark hover would vanish; invert to cream instead. */
+.calendar__aside .button:hover, .calendar__aside .button:focus-visible { background: var(--cream); border-color: var(--cream); color: var(--walnut); }
+.pick__note { font-size: 0.85rem; line-height: 1.6; color: rgb(233 227 215 / 0.82); }
+.pick__title { font: 400 1.75rem/1.2 var(--display); color: var(--cream); }
+.pick__steps { display: grid; gap: 0.85rem; list-style: none; padding: 0; font-size: 0.92rem; color: var(--ivory); }
+.pick__steps li { display: flex; align-items: center; gap: 0.75rem; }
+.half--sample { flex: none; width: 3rem; justify-content: center; }
+.pick__num { flex: none; display: grid; place-items: center; width: 3rem; min-height: 1.75rem; border: 1px solid rgb(248 246 241 / 0.4); font: 400 1.1rem/1 var(--display); color: var(--cream); }
+
+.calendar__legend { display: flex; flex-wrap: wrap; gap: 0.6rem 1.1rem; margin-top: auto; padding-top: 1.25rem; border-top: 1px solid rgb(248 246 241 / 0.16); list-style: none; font-size: 0.8rem; color: rgb(233 227 215 / 0.85); }
+.calendar__legend li { display: inline-flex; align-items: center; gap: 0.45rem; }
+.key { width: 0.95rem; height: 0.95rem; border: 1px solid transparent; }
+.key--open { background: var(--sage); }
+.key--chosen { display: grid; place-items: center; background: var(--walnut); border-color: var(--cream); }
+.key--chosen::after { content: "\2713"; font-size: 0.65rem; line-height: 1; color: var(--cream); }
+.key--on_hold { background: repeating-linear-gradient(135deg, var(--hold) 0 3px, var(--hold-stripe) 3px 6px); border: 1px dashed var(--bronze); }
+.key--booked { background: var(--bronze-deep); border-color: rgb(248 246 241 / 0.35); }
+.key--mine { background: var(--white); border: 2px solid var(--sage-line); }
+
+/* The request form below the month. */
+.request { scroll-margin-top: 96px; max-width: 78rem; }
+.request:has(form) { background: var(--white); border: 1px solid var(--line); padding: clamp(1.5rem, 3vw, 2.75rem); }
+.request > * + * { margin-top: 1rem; }
+.request__title { font: 400 clamp(1.6rem, 2.8vw, 2.25rem)/1.2 var(--display); color: var(--char); }
+.request__title:focus { outline: none; }
+.request__session { display: inline-block; margin-left: 0.35rem; padding: 0.3rem 0.65rem; vertical-align: middle; background: var(--walnut); color: var(--cream); font: 600 0.8rem/1.2 var(--sans); letter-spacing: 0.04em; }
+.request__when { color: var(--muted); }
+.request__switch { display: block; margin-top: 0.35rem; }
+.request__switch a { font-weight: 600; }
+.request__intro { max-width: 46rem; }
+.request form { margin-top: 2rem; }
+.request__send { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.5rem; }
+.request__send .muted { max-width: 30rem; }
+.request__hint { padding: 1rem 0; }
+
+/* Narrower screens: the card moves under the month. */
+@media (max-width: 60rem) {
+  .calendar { grid-template-columns: minmax(0, 1fr); }
+  .calendar__legend { margin-top: 0; }
+}
+@media (max-width: 40rem) {
+  .calendar__main { padding: 1rem 0.65rem; }
+  .calendar__nav { margin-bottom: 1.25rem; }
+  .calendar__controls { width: 100%; }
+  .calendar__jump { flex: 1; }
+  .calendar__jump select { width: 100%; }
+  .calendar__grid th { padding: 0 0 0.55rem; text-align: center; font-size: 0.68rem; }
+  .day__inner { min-height: 5.1rem; gap: 0.3rem; padding: 0.3rem 0.2rem 0.25rem; }
+  .day--unavailable .day__inner { min-height: 2.4rem; }
+  .day__number { align-self: center; font-size: 1.05rem; }
+  /* The date picks the whole day: a full-width target on small screens. */
+  a.day__full { align-self: stretch; display: grid; place-items: center; min-height: 2rem; }
+  .day__today { top: 0.3rem; right: 0.3rem; width: 0.3rem; height: 0.3rem; }
+  .half { justify-content: center; min-height: 1.45rem; padding: 0; font-size: 0.6rem; letter-spacing: 0.03em; }
+  .half__state, .half--open.is-selected::after { display: none; }
+  .half__text { justify-content: center; }
+  .calendar__aside { padding: 1.5rem 1.1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar *, .calendar *::after { transition: none !important; }
+}
