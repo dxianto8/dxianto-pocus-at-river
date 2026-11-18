@@ -81,7 +81,7 @@
                           <span class="day__head" aria-hidden="true"><span class="day__number">{{ d.date.day }}</span></span>
                           {% if not d.halves %}<span class="visually-hidden">{{ d.date|date:"l, F j" }}, not bookable</span>{% endif %}
                         {% endif %}
-                        {% if d.is_today %}<span class="day__today" title="Today"><span class="visually-hidden">Today</span></span>{% endif %}
+                        {% if d.is_today %}<span class="visually-hidden">Today</span>{% endif %}
                         {% if d.halves %}
                           <div class="day__halves">
                             {% for half in d.halves %}{% with own=own_day|lookup:half.code %}
@@ -114,7 +114,7 @@
         {% if selected_day and selected_day.halves %}
           <div class="pick">
             <div class="pick__date">
-              <span aria-hidden="true">{% include "includes/plate.html" with day=selected size="lg" %}</span>
+              <span aria-hidden="true">{% include "includes/plate.html" with day=selected %}</span>
               <h3 class="pick__when" tabindex="-1">{{ selected|date:"l" }}<span class="visually-hidden">, {{ selected|date:"F j, Y" }}</span></h3>
             </div>
             <ul class="pick__halves">
