@@ -194,8 +194,13 @@ class BookingRequestForm(QuestionnaireMixin, forms.ModelForm):
             self.initial.setdefault("session", self.open_sessions[0])
         self.fields["catering_interest"] = catering_field()
         if user is not None and user.is_authenticated:
-            self.fields["email"].disabled = True
-            self.initial["email"] = user.email
+            if user.email:
+                self.fields["email"].disabled = True
+                self.initial["email"] = user.email
+            else:
+                # An account without an email (an older or staff-made one) adds it here, and
+                # it is saved to the account, so the field is never locked and empty.
+                self.fields["email"].help_text = "It is saved to your account for future requests."
             self.initial.setdefault("name", user.get_full_name() or user.username)
             profile = getattr(user, "profile", None)
             if profile is not None and profile.phone:
@@ -234,6 +239,9 @@ class BookingRequestForm(QuestionnaireMixin, forms.ModelForm):
         self.instance.status = Booking.Status.PENDING
         if self.user is not None:
             self.instance.owner = self.user
+            if not self.user.email:
+                self.user.email = self.cleaned_data["email"]
+                self.user.save(update_fields=["email"])
             self.instance.email = self.user.email
         package = self.cleaned_data.get("package")
         if package:

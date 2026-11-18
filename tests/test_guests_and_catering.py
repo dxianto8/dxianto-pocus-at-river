@@ -290,3 +290,62 @@ class TestOrderingCatering:
         html = client.get(reverse("catering")).content.decode()
         assert reverse("catering_order") in html
         assert "Do you want to order catering with us?" in html
+
+
+class TestSigningUpAfterARequest:
+    """A visitor who just requested a date should not be asked for their name and email again."""
+
+    signup = {
+        "username": "averyj",
+        "password1": PASSWORD,
+        "password2": PASSWORD,
+        "next": "/account/",
+    }
+
+    def test_signup_form_starts_with_the_requests_name_and_email(self, client):
+        guest_booking(client)
+        form = client.get(reverse("accounts:signup")).context["form"]
+        assert form["first_name"].value() == "Avery Jones"
+        assert form["email"].value() == "avery@example.com"
+
+    def test_only_username_and_password_are_needed_and_everything_carries_over(self, client):
+        booking, _ = guest_booking(client)
+        response = client.post(
+            reverse("accounts:signup"),
+            {**self.signup, "first_name": "Avery Jones", "email": "avery@example.com"},
+        )
+        assert response.status_code == 302
+        user = get_user_model().objects.get(username="averyj")
+        booking.refresh_from_db()
+        assert booking.owner == user
+        assert user.email == "avery@example.com"
+        assert user.profile.phone == "630 555 0100"
+
+    def test_another_browser_gets_a_blank_form(self, client):
+        guest_booking(client)
+        form = Client().get(reverse("accounts:signup")).context["form"]
+        assert form["first_name"].value() is None and form["email"].value() is None
+
+    def test_signup_without_a_request_says_an_account_is_optional(self, client):
+        page = client.get(reverse("accounts:signup")).content.decode()
+        assert "free and optional" in page
+        assert "You need an account to request a date" not in page
+
+
+def test_account_without_an_email_can_still_request_and_keeps_the_email(client):
+    user = get_user_model().objects.create_user("noemail", "", PASSWORD)
+    client.force_login(user)
+    form = client.get("/book/", {"date": day().isoformat()}).context["form"]
+    assert not form.fields["email"].disabled  # never a locked, empty required field
+    response = client.post("/book/", request_data(email="found@example.com"))
+    assert response.status_code == 302
+    user.refresh_from_db()
+    assert user.email == "found@example.com"
+    assert Booking.objects.get().email == "found@example.com"
+
+
+def test_account_with_an_email_cannot_change_it_from_the_request_form(client):
+    user = get_user_model().objects.create_user("hasemail", "kept@example.com", PASSWORD)
+    client.force_login(user)
+    client.post("/book/", request_data(email="other@example.com"))
+    assert Booking.objects.get().email == "kept@example.com"
