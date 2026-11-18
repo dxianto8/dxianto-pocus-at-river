@@ -5,6 +5,7 @@ description = "Website and booking system for Pocus at River, Aurora IL"
 requires-python = ">=3.13"
 # Vercel installs these. Docker installs requirements.txt; a test keeps the two lists identical.
 dependencies = [
+  "anthropic==2.10.0",
   "Django==6.1.3",
   "dj-database-url==3.1.2",
   "gunicorn==27.0.0",

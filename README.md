@@ -35,6 +35,9 @@ and ivory. Headings stand on their own, without labels above them; buttons are s
   appear in the admin under **Catering orders** and on the customer's event, and email
   the venue and the customer. No payment is taken on the site; the team confirms the
   order and arranges payment.
+- **Menus from a file.** In **Admin → Menu uploads**, upload the catering menu as a PDF or photo.
+  Claude reads it into draft menu items; staff check them and publish, which replaces the live
+  menu. Needs `ANTHROPIC_API_KEY`; see [docs/venue-services.md](docs/venue-services.md).
 - **Customer workspace (`/account/`).** Each customer sees only their own events.
   - *My events:* the next event with a countdown, a "Needs your attention" list
     (unread messages, new documents, tasks due or overdue), and every request with

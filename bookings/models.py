@@ -650,10 +650,89 @@ class PackageOffer(models.Model):
         return min(price, saving).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
+class MenuUpload(models.Model):
+    """
+    A catering menu file (PDF or photo) uploaded by staff. Claude reads it into draft catering
+    items, which staff check and then publish. Stored in the database, like documents, so no
+    file storage is needed.
+    """
+
+    class Status(models.TextChoices):
+        UPLOADED = "uploaded", "Not read yet"
+        READ = "read", "Read: check the items, then publish"
+        FAILED = "failed", "Could not be read"
+        PUBLISHED = "published", "On the catering menu"
+
+    MAX_BYTES = 4 * 1024 * 1024  # Vercel accepts request bodies up to 4.5 MB
+    ALLOWED_TYPES = {
+        ".pdf": "application/pdf",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp",
+        ".gif": "image/gif",
+    }
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(
+        max_length=120, help_text="For your reference, for example Spring 2027 menu."
+    )
+    filename = models.CharField(max_length=200, editable=False)
+    content_type = models.CharField(max_length=60, editable=False)
+    size = models.PositiveIntegerField(editable=False, default=0)
+    data = models.BinaryField(editable=False)
+    status = models.CharField(
+        max_length=10, choices=Status, default=Status.UPLOADED, editable=False
+    )
+    notes = models.TextField(
+        "check these",
+        blank=True,
+        editable=False,
+        help_text="What the reader was unsure about. Check these items before publishing.",
+    )
+    error = models.CharField(max_length=300, blank=True, editable=False)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, editable=False
+    )
+    created_at = models.DateTimeField("uploaded", auto_now_add=True)
+    read_at = models.DateTimeField("read", null=True, blank=True, editable=False)
+    published_at = models.DateTimeField("published", null=True, blank=True, editable=False)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Menu upload"
+
+    def __str__(self):
+        return self.title
+
+    @classmethod
+    def check_upload(cls, upload) -> str:
+        """Return the content type to store for an upload, or raise ValidationError."""
+        extension = os.path.splitext(upload.name)[1].lower()
+        if extension in (".heic", ".heif"):
+            raise ValidationError(
+                "Save the photo as a JPG first. On an iPhone: Settings, Camera, Formats, "
+                "Most Compatible."
+            )
+        if extension not in cls.ALLOWED_TYPES:
+            raise ValidationError("Upload the menu as a PDF, JPG, PNG, WebP or GIF.")
+        if upload.size > cls.MAX_BYTES:
+            raise ValidationError("That file is larger than 4 MB. Upload a smaller one.")
+        if upload.size == 0:
+            raise ValidationError("That file is empty.")
+        return cls.ALLOWED_TYPES[extension]
+
+    def attach(self, upload):
+        self.content_type = self.check_upload(upload)
+        self.filename = upload.name[-200:]
+        self.size = upload.size
+        self.data = upload.read()
+
+
 class CateringItem(models.Model):
     title = models.CharField(max_length=120)
     category = models.CharField(max_length=80, default="Menu")
-    description = models.TextField(max_length=1000)
+    description = models.TextField(max_length=1000, blank=True)
     dietary_notes = models.CharField(max_length=200, blank=True)
     price = models.DecimalField(
         max_digits=8, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)]
@@ -664,10 +743,21 @@ class CateringItem(models.Model):
         help_text="For example, per person. Do not include unconfirmed terms.",
     )
     is_published = models.BooleanField(default=False)
+    category_order = models.PositiveSmallIntegerField(
+        default=0, help_text="Sections are shown in this order (lowest first), then by name."
+    )
     display_order = models.PositiveSmallIntegerField(default=0)
+    source_upload = models.ForeignKey(
+        MenuUpload,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="items",
+        help_text="The uploaded menu this item was read from, if any.",
+    )
 
     class Meta:
-        ordering = ["category", "display_order", "pk"]
+        ordering = ["category_order", "category", "display_order", "pk"]
 
     def __str__(self):
         return self.title

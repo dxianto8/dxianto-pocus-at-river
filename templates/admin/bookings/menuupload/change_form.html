@@ -1,0 +1,25 @@
+{% extends "admin/change_form.html" %}
+
+{% block form_top %}
+  {% if original %}
+    {% if original.status == "published" %}
+      <p class="help">These items are on the catering menu. Edit them below and choose Save to update the menu.</p>
+    {% elif original.status == "read" %}
+      <p class="help">Claude read the menu into the items below. Check each one against the file (especially prices), fix anything that is wrong, then choose <strong>Publish to the catering menu</strong>. Publishing replaces the menu that is live now.</p>
+    {% elif original.status == "failed" %}
+      <p class="help">The file could not be read: {{ original.error }} Choose <strong>Read again with AI</strong>, upload a clearer file, or add the items by hand below.</p>
+    {% endif %}
+  {% else %}
+    <p class="help">Upload the catering menu as a PDF or a photo. Claude reads it into menu items when you save; nothing is shown to guests until you check the items and publish them.</p>
+  {% endif %}
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+  {{ block.super }}
+  {% if original %}
+    <div class="submit-row">
+      {% if original.status != "published" %}<input type="submit" name="_read_again" value="Read again with AI" formnovalidate>{% endif %}
+      <input type="submit" name="_publish" value="{% if original.status == 'published' %}Save and update the catering menu{% else %}Publish to the catering menu{% endif %}" class="default">
+    </div>
+  {% endif %}
+{% endblock %}

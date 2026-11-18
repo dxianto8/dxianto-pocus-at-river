@@ -7,6 +7,7 @@ forest-green and bronze palette, and Django admin. No new third-party package is
 | --- | --- | --- |
 | Walkthrough appointments | Publish **Walkthrough slots** (Chicago time); confirm/decline **Walkthrough appointments** | `/walkthroughs/`, `/account/walkthroughs/` |
 | Catering menu | Publish **Catering items**, grouped by category, with confirmed prices and dietary notes | `/catering/` |
+| Catering menu from a file | **Menu uploads → Add**: upload a PDF or photo; Claude reads it into draft items; check them (especially prices) and choose **Publish to the catering menu**, which replaces the live menu. Needs `ANTHROPIC_API_KEY` | `/catering/`, `/catering/order/` |
 | Catering orders | Review **Catering orders** (items, quantities and prices copied at order time); set status to Confirmed or Cancelled | `/catering/order/`, offered after "Do you want to order catering with us?" on the request form |
 | Packages and deals | **Event packages** and **Package offers** | `/packages/`, `/account/packages/` |
 | Custom event types | **Event type options**, including activation and order | Booking and edit forms |
@@ -94,3 +95,26 @@ price/title snapshots preserve the requested package even after prices or promot
 - Payment integration is intentionally not implemented or activated, per the requested scope.
 - Run `python manage.py migrate`, `python manage.py check`, and the complete pytest suite.
   Tests mock provider calls; use a controlled test recipient separately when activating providers.
+
+## Reading menus with Claude
+
+**Admin → Menu uploads → Add menu upload.** Give the menu a name and choose the file (PDF, JPG,
+PNG, WebP or GIF, up to 4 MB; iPhone HEIC photos must be saved as JPG first). On save, the file
+is sent to Claude (`claude-opus-5-5`), which returns the items in a fixed JSON shape: section,
+name, description, dietary notes, price and price note. They are saved as **unpublished** items
+on the review screen, in the menu's own section order, with a "Check these" list of anything
+Claude could not read clearly. Prices that are not numbers are left blank and listed there.
+
+Check every item against the file (the review screen links to it), fix anything, then choose
+**Publish to the catering menu**. Publishing makes these items the menu and takes items from
+earlier menus off it; catering orders already placed keep the prices they were placed at.
+**Read again with AI** replaces the drafts. A live menu is not read again: upload a new file as
+a new menu instead. Items can always be added or edited by hand under **Catering items**.
+
+Setup: create an API key at https://platform.claude.com and add it in Vercel as
+`ANTHROPIC_API_KEY` (all environments), then redeploy. Without it, uploads still save and the
+review screen says AI reading is not set up. Each reading is one request, typically a few cents.
+The upload waits for the answer (usually under a minute; the request gives up after about two
+and a half minutes and retries once, to stay inside Vercel's function time limit). The menu
+file is sent to Anthropic's API for reading; it is a public-facing document, and no customer
+data is included.

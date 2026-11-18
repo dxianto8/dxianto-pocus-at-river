@@ -20,7 +20,7 @@
             <div class="order-item{% if field.errors %} field--invalid{% endif %}">
               <div class="order-item__text">
                 <h3><label for="{{ field.id_for_label }}">{{ item.title }}</label></h3>
-                <p>{{ item.description }}</p>
+                {% if item.description %}<p>{{ item.description }}</p>{% endif %}
                 {% if item.dietary_notes %}<p class="small muted">{{ item.dietary_notes }}</p>{% endif %}
               </div>
               <p class="order-item__price">{% if item.price is not None %}${{ item.price|floatformat:2 }}{% if item.price_note %}<span>{{ item.price_note }}</span>{% endif %}{% else %}Quoted<span>priced by the team</span>{% endif %}</p>

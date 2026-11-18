@@ -5,7 +5,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, models, transaction
 from django.db.models import Case, IntegerField, Value, When
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -16,7 +16,7 @@ from django.utils.html import format_html
 from django.utils.http import urlencode
 from django.views.decorators.http import require_POST
 
-from . import services
+from . import menu_reader, services
 from .calendar import add_months, month_dates
 from .models import (
     HALVES,
@@ -34,6 +34,7 @@ from .models import (
     EventTypeOption,
     LoyaltyCredit,
     LoyaltyReward,
+    MenuUpload,
     Message,
     PackageOffer,
     RecentEvent,
@@ -614,9 +615,213 @@ class PackageOfferAdmin(admin.ModelAdmin):
 
 @admin.register(CateringItem)
 class CateringItemAdmin(admin.ModelAdmin):
-    list_display = ["title", "category", "price", "is_published", "display_order"]
-    list_filter = ["category", "is_published"]
+    list_display = ["title", "category", "price", "is_published", "category_order", "display_order"]
+    list_filter = ["is_published", "category", "source_upload"]
     search_fields = ["title", "description"]
+    readonly_fields = ["source_upload"]
+
+
+# Menu uploads: a file in, Claude reads it, staff check the items, then publish -----------------
+
+
+class MenuUploadForm(forms.ModelForm):
+    upload = forms.FileField(
+        label="Menu file",
+        required=False,
+        help_text="A PDF or a photo (JPG, PNG, WebP), up to 4 MB. It is read as soon as you save.",
+    )
+
+    class Meta:
+        model = MenuUpload
+        fields = ["title"]
+
+    def clean(self):
+        data = super().clean()
+        upload = data.get("upload")
+        if upload and self.instance.status == MenuUpload.Status.PUBLISHED:
+            self.add_error("upload", "This menu is live. Add the new file as a new menu upload.")
+        elif upload:
+            try:
+                MenuUpload.check_upload(upload)
+            except forms.ValidationError as error:
+                self.add_error("upload", error)
+        elif self.instance._state.adding:
+            self.add_error("upload", "Choose the menu file to upload.")
+        return data
+
+    def save(self, commit=True):
+        if self.cleaned_data.get("upload"):
+            self.instance.attach(self.cleaned_data["upload"])
+            self.instance.status = MenuUpload.Status.UPLOADED
+            self.instance.new_file = True
+        return super().save(commit=commit)
+
+
+class MenuItemInline(admin.TabularInline):
+    model = CateringItem
+    fk_name = "source_upload"
+    # Name and price first: prices are what most needs checking against the file.
+    fields = [
+        "title",
+        "price",
+        "price_note",
+        "category",
+        "dietary_notes",
+        "description",
+        "category_order",
+        "display_order",
+        "is_published",
+    ]
+    readonly_fields = ["is_published"]
+    extra = 0
+    verbose_name = "menu item"
+    verbose_name_plural = "Menu items read from this file (check prices before publishing)"
+    formfield_overrides = {
+        models.TextField: {"widget": forms.Textarea(attrs={"rows": 2, "cols": 28})},
+        models.CharField: {"widget": forms.TextInput(attrs={"size": 16})},
+        models.PositiveSmallIntegerField: {
+            "widget": forms.NumberInput(attrs={"style": "width:4em"})
+        },
+        models.DecimalField: {
+            "widget": forms.NumberInput(attrs={"style": "width:7em", "step": "0.01"})
+        },
+    }
+
+
+@admin.register(MenuUpload)
+class MenuUploadAdmin(admin.ModelAdmin):
+    form = MenuUploadForm
+    inlines = [MenuItemInline]
+    list_display = ["title", "status", "item_count", "created_at", "published_at"]
+    list_filter = ["status"]
+    readonly_fields = [
+        "status",
+        "file",
+        "notes",
+        "error",
+        "uploaded_by",
+        "created_at",
+        "read_at",
+        "published_at",
+    ]
+    change_form_template = "admin/bookings/menuupload/change_form.html"
+
+    def get_fieldsets(self, request, obj=None):
+        if obj is None:
+            return [(None, {"fields": ["title", "upload"]})]
+        return [
+            (None, {"fields": ["title", "status", "file", "upload"]}),
+            (
+                "Reading",
+                {
+                    "fields": [
+                        "notes",
+                        "error",
+                        "read_at",
+                        "published_at",
+                        "uploaded_by",
+                        "created_at",
+                    ]
+                },
+            ),
+        ]
+
+    def get_inlines(self, request, obj):
+        return [] if obj is None else self.inlines
+
+    @admin.display(description="Items")
+    def item_count(self, upload):
+        return upload.items.count()
+
+    @admin.display(description="Current file")
+    def file(self, upload):
+        if not upload.pk or not upload.size:
+            return "—"
+        url = reverse("admin:bookings_menuupload_file", args=[upload.pk])
+        return format_html(
+            '<a href="{}" target="_blank" rel="noopener">{}</a> ({} KB)',
+            url,
+            upload.filename,
+            max(upload.size // 1024, 1),
+        )
+
+    def get_urls(self):
+        return [
+            path(
+                "<uuid:pk>/file/",
+                self.admin_site.admin_view(self.file_view),
+                name="bookings_menuupload_file",
+            )
+        ] + super().get_urls()
+
+    def file_view(self, request: HttpRequest, pk) -> HttpResponse:
+        if not self.has_view_permission(request):
+            raise PermissionDenied
+        upload = get_object_or_404(MenuUpload, pk=pk)
+        response = HttpResponse(bytes(upload.data), content_type=upload.content_type)
+        name = "".join(c for c in upload.filename if c.isalnum() or c in "._- ") or "menu"
+        response["Content-Disposition"] = f'inline; filename="{name}"'
+        response["X-Content-Type-Options"] = "nosniff"
+        return response
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.uploaded_by = request.user
+        super().save_model(request, obj, form, change)
+        if getattr(obj, "new_file", False):
+            self._read(request, obj)
+
+    def _read(self, request, upload):
+        if upload.status == MenuUpload.Status.PUBLISHED:
+            self.message_user(
+                request,
+                "This menu is live. To read it again, upload the file as a new menu.",
+                messages.WARNING,
+            )
+            return
+        try:
+            count = menu_reader.read_upload(upload)
+        except menu_reader.MenuReadError as error:
+            self.message_user(request, str(error), messages.ERROR)
+        else:
+            check = " Check the notes at the top." if upload.notes else ""
+            self.message_user(
+                request,
+                f"Read {count} item{'s' if count != 1 else ''} from the menu. Check them below, "
+                f"especially prices, then choose Publish to the catering menu.{check}",
+                messages.SUCCESS,
+            )
+
+    def response_add(self, request, obj, post_url_continue=None):
+        # Straight to the review screen: the items need checking before they are published.
+        if "_addanother" not in request.POST:
+            return HttpResponseRedirect(reverse("admin:bookings_menuupload_change", args=[obj.pk]))
+        return super().response_add(request, obj, post_url_continue)
+
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        # Reading again replaces the drafts, so it does not need the edits on screen to be valid.
+        if request.method == "POST" and object_id and "_read_again" in request.POST:
+            upload = self.get_object(request, object_id)
+            if upload is None or not self.has_change_permission(request, upload):
+                raise PermissionDenied
+            self._read(request, upload)
+            return HttpResponseRedirect(request.path)
+        return super().changeform_view(request, object_id, form_url, extra_context)
+
+    def response_change(self, request, obj):
+        if "_publish" in request.POST:
+            if not obj.items.exists():
+                self.message_user(request, "There are no items to publish yet.", messages.ERROR)
+                return HttpResponseRedirect(request.path)
+            count = menu_reader.publish_upload(obj)
+            self.message_user(
+                request,
+                f"Published {count} item{'s' if count != 1 else ''}. They are now the catering "
+                "menu; items from earlier menus were taken off it.",
+                messages.SUCCESS,
+            )
+            return HttpResponseRedirect(request.path)
+        return super().response_change(request, obj)
 
 
 class CateringOrderLineInline(admin.TabularInline):
