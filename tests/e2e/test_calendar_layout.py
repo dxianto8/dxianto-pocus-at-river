@@ -38,5 +38,28 @@ def test_your_date_card_has_even_margins(page: Page, width):
         }"""
     )
     assert margins
-    for left, right in margins:
-        assert abs(left - right) <= 1, margins
+    # The content's outer edges sit the same distance from both sides of the card, and nothing
+    # runs closer to an edge than that (rows may sit in two columns when the card is wide).
+    padding = min(left for left, _ in margins)
+    assert abs(padding - min(right for _, right in margins)) <= 1, margins
+    assert padding >= 16 and all(min(pair) >= padding - 1 for pair in margins), margins
+
+
+@pytest.mark.parametrize("width", [1440, 1280, 1100])
+def test_signed_in_calendar_days_have_room(page: Page, customer_login, width):
+    """Beside the workspace sidebar, the card moves under the month before days get cramped."""
+    page.set_viewport_size({"width": width, "height": 1000})
+    page.goto("/book/")
+    sizes = page.evaluate(
+        """() => {
+          const cells = [...document.querySelectorAll('.day:not(.day--outside)')];
+          return {
+            narrowest: Math.min(...cells.map(c => c.getBoundingClientRect().width)),
+            spilling: cells.filter(c => {
+              const head = c.querySelector('.day__head');
+              return head && head.scrollWidth > head.clientWidth + 1;
+            }).length,
+          };
+        }"""
+    )
+    assert sizes["narrowest"] >= 95 and sizes["spilling"] == 0, sizes

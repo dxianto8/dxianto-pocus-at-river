@@ -156,6 +156,27 @@ a.day__full { transition: background-color 0.15s, color 0.15s; }
 .request__send .muted { max-width: 30rem; }
 .request__hint { padding: 1rem 0; }
 
+/* The calendar measures the space it is given, not the window: in the signed-in area the
+   sidebar takes room, so the card moves under the month before the days get cramped. Each
+   day needs about 7.5rem for its date and "All day" side by side. */
+.booking { container: booking / inline-size; }
+@container booking (max-width: 76rem) {
+  .calendar { grid-template-columns: minmax(0, 1fr); }
+  .calendar__aside { gap: 1.5rem; }
+  .calendar__legend { margin-top: 0; }
+  .pick { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-auto-flow: row dense; column-gap: clamp(1.5rem, 4vw, 3rem); align-items: start; }
+  .pick__date, .pick__halves, .pick__title { grid-column: 1; }
+  .pick__switch, .pick__go, .pick__note, .pick__steps { grid-column: 2; }
+}
+@container booking (max-width: 46rem) {
+  .pick { grid-template-columns: minmax(0, 1fr); }
+  .pick > * { grid-column: 1 !important; }
+}
+@container booking (max-width: 58rem) {
+  .day__head { justify-content: flex-start; }
+  .day__all { display: none; }
+}
+
 /* Narrower screens: the card moves under the month. */
 @media (max-width: 60rem) {
   .calendar { grid-template-columns: minmax(0, 1fr); }
