@@ -44,6 +44,16 @@ class BookingQuerySet(models.QuerySet):
             if not any(half in held for half in HALVES[session])
         ]
 
+    def public_halves(self, start: date, end: date) -> dict[date, dict[str, str]]:
+        """What visitors may see for each half of each taken date: "on_hold" or "booked"."""
+        return {
+            day: {
+                half: "on_hold" if status == Booking.Status.PENDING else "booked"
+                for half, status in held.items()
+            }
+            for day, held in self.taken_halves(start, end).items()
+        }
+
     def public_states(self, start: date, end: date) -> dict[date, DayState]:
         """What visitors may see for each taken date in a range. Never includes personal details."""
         states = {}

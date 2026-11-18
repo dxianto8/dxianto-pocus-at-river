@@ -23,9 +23,12 @@ and ivory. Small labels are tracked capitals after a bronze rule; buttons are sq
   never matched to accounts by email address. Ownership, pending status and package
   snapshots are set on the server.
 - **AM, PM or the full day.** A date can hold a morning (AM) booking and an
-  afternoon/evening (PM) booking separately; a full day holds both. The calendar marks
-  days with one half still open ("AM open" / "PM open"), and the request form offers only
-  what is free. An AM booking starts before noon and a PM booking at noon or later.
+  afternoon/evening (PM) booking separately; a full day holds both. AM and PM are picked
+  on the calendar itself: every bookable day shows an AM and a PM half, green while open
+  and gold once taken (light gold while on hold, solid gold once booked); tapping the date
+  number picks the whole day. The request form carries the choice and offers "switch to"
+  links for the other free options. An AM booking starts before noon and a PM booking at
+  noon or later.
 - **Catering orders.** The request form asks "Do you want to order catering with us?".
   Yes leads straight to `/catering/order/` for that request: pick items and quantities
   from the published menu and see an estimated total. Orders copy the menu prices,

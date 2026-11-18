@@ -14,7 +14,7 @@
   <section class="wrap page-head">
     <p class="section-label">Plan an event</p>
     <h1 id="booking-heading">Request a date</h1>
-    <p>Pick an open day, then the morning (AM), the afternoon and evening (PM), or the whole day. Your request puts it on hold while the venue team reviews it; nothing is charged.</p>
+    <p>Pick the morning (AM), the afternoon and evening (PM), or the whole day. Your request puts it on hold while the venue team reviews it; nothing is charged.</p>
     <p class="booking__account">No account needed. Already have one? <a href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}">Sign in</a> to see your own dates.</p>
   </section>
   {% endif %}
@@ -22,7 +22,7 @@
     {% if user.is_authenticated %}
     <div class="ws-head">
       <h1 id="booking-heading">Request a date</h1>
-      <p>Pick an open day, then the morning (AM), the afternoon and evening (PM), or the whole day. Your request puts it on hold while the venue team reviews it; nothing is charged.</p>
+      <p>Pick the morning (AM), the afternoon and evening (PM), or the whole day. Your request puts it on hold while the venue team reviews it; nothing is charged.</p>
     </div>
     {% endif %}
 
@@ -47,6 +47,8 @@
         {% else %}<span></span>{% endif %}
       </div>
 
+      <p class="calendar__hint">Tap <span class="hint-chip hint-chip--open">AM</span> or <span class="hint-chip hint-chip--open">PM</span> to book half a day, or tap the date to book the whole day.</p>
+
       <table class="calendar__grid" aria-labelledby="calendar-title" data-testid="calendar">
         <thead>
           <tr>
@@ -64,30 +66,34 @@
             <tr>
               {% for d in week %}
                 {% if d.in_month %}
-                  {% with own=mine|lookup:d.date %}
-                  <td class="day day--{{ d.state }}{% if own %} day--mine{% endif %}{% if d.is_today %} day--today{% endif %}{% if d.date == selected %} day--selected{% endif %}"
+                  {% with own_day=mine|lookup:d.date %}
+                  <td class="day day--{{ d.state }}{% if own_day %} day--mine{% endif %}{% if d.is_today %} day--today{% endif %}{% if d.date == selected %} day--selected{% endif %}"
                       data-date="{{ d.date|date:'Y-m-d' }}" data-state="{{ d.state }}">
-                    {% if d.state.is_bookable %}
-                      <a class="day__inner" href="?{% if request.GET.package %}package={{ request.GET.package|urlencode }}&amp;{% endif %}month={{ month.first|date:'Y-m' }}&amp;date={{ d.date|date:'Y-m-d' }}#request"
-                         {% if d.date == selected %}aria-current="date"{% endif %}>
+                    <div class="day__inner">
+                      {% if d.full_day_open %}
+                        <a class="day__number day__full{% if d.date == selected and selected_session == 'full' %} is-selected{% endif %}" data-pick
+                           href="{% pick_url package_slug month.first d.date 'full' %}"
+                           aria-label="{{ d.date|date:'l, F j' }}, full day available"{% if d.date == selected and selected_session == 'full' %} aria-current="date"{% endif %}>{{ d.date.day }}</a>
+                      {% else %}
                         <span class="day__number" aria-hidden="true">{{ d.date.day }}</span>
-                        {% if d.state == "available" %}<span class="visually-hidden">{{ d.date|date:"l, F j" }}, available</span>
-                        {% else %}<span class="visually-hidden">{{ d.date|date:"l, F j" }},</span>
-                        <span class="day__state">{{ d.state.label }}</span>{% endif %}
-                      </a>
-                    {% elif own %}
-                      <a class="day__inner day__own" href="{% url 'accounts:booking_detail' own.pk %}">
-                        <span class="day__number" aria-hidden="true">{{ d.date.day }}</span>
-                        <span class="visually-hidden">{{ d.date|date:"l, F j" }},</span>
-                        <span class="day__state">{% if own.status == "confirmed" %}Your event{% else %}Your request{% endif %}</span>
-                      </a>
-                    {% else %}
-                      <span class="day__inner">
-                        <span class="day__number" aria-hidden="true">{{ d.date.day }}</span>
-                        <span class="visually-hidden">{{ d.date|date:"l, F j" }},</span>
-                        {% if d.state != "unavailable" %}<span class="day__state">{{ d.state.label }}</span>{% else %}<span class="visually-hidden">not bookable</span>{% endif %}
-                      </span>
-                    {% endif %}
+                        {% if not d.halves %}<span class="visually-hidden">{{ d.date|date:"l, F j" }}, not bookable</span>{% endif %}
+                      {% endif %}
+                      {% if d.halves %}
+                        <div class="day__halves">
+                          {% for half in d.halves %}{% with own=own_day|lookup:half.code %}
+                            {% if own %}
+                              <a class="half half--mine" href="{% url 'accounts:booking_detail' own.pk %}" aria-label="{{ d.date|date:'l, F j' }}, {{ half.label }}, {% if own.status == 'confirmed' %}your event{% else %}your request{% endif %}">{{ half.label }}<span class="half__state" aria-hidden="true">Yours</span></a>
+                            {% elif half.is_open %}
+                              <a class="half half--open{% if d.date == selected %}{% if selected_session == half.code or selected_session == 'full' %} is-selected{% endif %}{% endif %}" data-pick
+                                 href="{% pick_url package_slug month.first d.date half.code %}"
+                                 aria-label="{{ d.date|date:'l, F j' }}, {{ half.label }} available"{% if d.date == selected and selected_session == half.code %} aria-current="date"{% endif %}>{{ half.label }}<span class="half__state" aria-hidden="true">Open</span></a>
+                            {% else %}
+                              <span class="half half--{{ half.state }}"><span class="half__text" aria-hidden="true">{{ half.label }}<span class="half__state">{% if half.state == "on_hold" %}On hold{% else %}Booked{% endif %}</span></span><span class="visually-hidden">{{ d.date|date:"l, F j" }}, {{ half.label }} {% if half.state == "on_hold" %}on hold{% else %}booked{% endif %}</span></span>
+                            {% endif %}
+                          {% endwith %}{% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
                   </td>
                   {% endwith %}
                 {% else %}
@@ -100,28 +106,32 @@
       </table>
 
       <ul class="calendar__legend" aria-label="Key">
-        <li><span class="legend-swatch legend-swatch--open" aria-hidden="true"></span> Open</li>
-        <li><span class="legend-swatch legend-swatch--half" aria-hidden="true"></span> AM or PM still open</li>
+        <li><span class="legend-chip half--open" aria-hidden="true">AM</span> Open</li>
+        <li><span class="legend-chip half--on_hold" aria-hidden="true">AM</span> On hold (someone has requested it)</li>
+        <li><span class="legend-chip half--booked" aria-hidden="true">AM</span> Booked</li>
+        {% if user.is_authenticated %}<li><span class="legend-chip half--mine" aria-hidden="true">AM</span> Yours</li>{% endif %}
         <li><span class="legend-swatch legend-swatch--past" aria-hidden="true"></span> Not bookable</li>
-        <li><span class="legend-swatch legend-swatch--on_hold" aria-hidden="true"></span> On hold (someone has requested it)</li>
-        <li><span class="legend-swatch legend-swatch--booked" aria-hidden="true"></span> Booked</li>
-        <li><span class="legend-swatch legend-swatch--mine" aria-hidden="true"></span> Yours</li>
       </ul>
     </div>
 
     <div class="request" id="request">
       {% if form %}
         <p class="muted">{{ venue.booking_intro }}</p>
-        <h2 class="request__title" tabindex="-1">Request {{ selected|date:"l, F j, Y" }}</h2>
-        {% if selected_state == "am_open" %}<p class="notice" role="status">The afternoon is taken. The morning (AM) is still open.</p>
-        {% elif selected_state == "pm_open" %}<p class="notice" role="status">The morning is taken. The afternoon and evening (PM) are still open.</p>{% endif %}
+        <h2 class="request__title" tabindex="-1">Request {{ selected|date:"l, F j, Y" }} <span class="request__session request__session--{{ selected_session }}">{% if selected_session == "am" %}AM{% elif selected_session == "pm" %}PM{% else %}Full day{% endif %}</span></h2>
+        <p class="request__when">
+          {% if selected_session == "am" %}The morning, before noon.{% elif selected_session == "pm" %}The afternoon and evening, from noon.{% else %}The whole day, AM and PM.{% endif %}
+          {% if selected_state == "am_open" %}The afternoon is already taken.{% elif selected_state == "pm_open" %}The morning is already taken.{% endif %}
+          {% if other_sessions %}<span class="request__switch">Switch to:
+            {% for s in other_sessions %}<a data-pick href="{% pick_url package_slug month.first selected s %}">{% if s == "am" %}AM only{% elif s == "pm" %}PM only{% else %}Full day{% endif %}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</span>{% endif %}
+        </p>
         <form class="form form--grid" method="post" action="{% url 'bookings:book' %}?month={{ month.first|date:'Y-m' }}#request">
           {% csrf_token %}
-          {{ form.event_date }}
-          {% if form.non_field_errors or form.event_date.errors %}
+          {{ form.event_date }}{{ form.session }}
+          {% if form.non_field_errors or form.event_date.errors or form.session.errors %}
             <div class="notice" role="alert">
               {% for error in form.non_field_errors %}{{ error }} {% endfor %}
               {% for error in form.event_date.errors %}{{ error }} {% endfor %}
+              {% for error in form.session.errors %}{{ error }} {% endfor %}
             </div>
           {% endif %}
           <p class="muted">Sending this holds the date for review. It does not confirm a booking or take a payment.</p>

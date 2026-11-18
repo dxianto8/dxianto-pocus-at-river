@@ -101,12 +101,31 @@ class TestWhatVisitorsSee:
         make("pm")
         assert Booking.objects.open_sessions(day()) == []
 
-    def test_calendar_labels_the_open_half_and_links_to_it(self, client):
+    def test_calendar_offers_each_open_half_and_the_full_day(self, client):
         make("pm")
         response = client.get("/book/", {"month": f"{day():%Y-%m}"})
         html = response.content.decode()
-        assert "AM open" in html
-        assert f"date={day():%Y-%m-%d}" in html
+        taken = day(30)
+        free = day(31) if day(31).month == taken.month else day(29)  # same month view
+        assert f"date={taken:%Y-%m-%d}&amp;session=am" in html
+        assert f"date={taken:%Y-%m-%d}&amp;session=pm" not in html
+        assert f"date={taken:%Y-%m-%d}&amp;session=full" not in html
+        assert f"{taken:%A, %B %-d}, PM on hold" in html
+        for session in ("am", "pm", "full"):
+            assert f"date={free:%Y-%m-%d}&amp;session={session}" in html
+
+    def test_picked_half_is_carried_by_the_form_and_highlighted(self, client):
+        response = client.get("/book/", {"date": day().isoformat(), "session": "am"})
+        assert response.context["form"].initial["session"] == "am"
+        assert response.context["other_sessions"] == ["full", "pm"]
+        html = response.content.decode()
+        assert 'name="session" value="am"' in html
+        assert "half--open is-selected" in html
+
+    def test_a_half_taken_meanwhile_falls_back_to_what_is_free(self, client):
+        make("am")
+        response = client.get("/book/", {"date": day().isoformat(), "session": "am"})
+        assert response.context["form"].initial["session"] == "pm"
 
     def test_request_form_offers_only_the_open_half(self, client):
         make("am")
@@ -114,7 +133,7 @@ class TestWhatVisitorsSee:
         form = response.context["form"]
         assert [value for value, _ in form.fields["session"].choices] == ["pm"]
         assert form.initial["session"] == "pm"
-        assert "The morning is taken" in response.content.decode()
+        assert "The morning is already taken" in response.content.decode()
 
 
 class TestRequestingHalfADay:

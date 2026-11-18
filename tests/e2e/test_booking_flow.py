@@ -22,7 +22,7 @@ def open_month(page: Page, day):
 
 def request_date(page: Page, day, name="Avery Jones", email="avery@example.com"):
     open_month(page, day)
-    calendar_cell(page, day).get_by_role("link").click()
+    calendar_cell(page, day).get_by_role("link", name="full day available").click()
     expect(
         page.get_by_role("heading", name=f"Request {day:%A, %B} {day.day}, {day.year}")
     ).to_be_visible()
@@ -52,15 +52,17 @@ class TestVisitor:
         open_month(page, day)
         cell = calendar_cell(page, day)
         expect(cell).to_have_attribute("data-state", "on_hold")
-        # The customer's own held date links to their event instead of offering it again.
-        expect(cell.get_by_role("link")).to_contain_text("Your request")
-        cell.get_by_role("link").click()
+        # The customer's own halves link to their event instead of offering the date again.
+        own = cell.get_by_role("link", name=re.compile("your request"))
+        expect(own).to_have_count(2)
+        expect(own.first).to_contain_text("Yours")
+        own.first.click()
         expect(page.locator(".status")).to_have_text("Pending")
 
     def test_same_date_cannot_be_requested_twice(self, page: Page, browser, base_url):
         day = future(22)
         open_month(page, day)
-        calendar_cell(page, day).get_by_role("link").click()
+        calendar_cell(page, day).get_by_role("link", name="full day available").click()
 
         # Someone else requests the same date in another browser while this form is open.
         other = browser.new_page(base_url=base_url)
@@ -169,11 +171,13 @@ def test_guest_books_the_afternoon_and_orders_catering(page: Page):
     open_month(page, day)
     cell = calendar_cell(page, day)
     expect(cell).to_have_attribute("data-state", "pm_open")
-    expect(cell).to_contain_text("PM open")
-    cell.get_by_role("link").click()
-    expect(page.get_by_text("The morning is taken.")).to_be_visible()
-    expect(page.get_by_role("radio", name="PM (afternoon and evening)")).to_be_checked()
-    expect(page.get_by_role("radio", name="Full day")).to_have_count(0)
+    expect(cell.locator(".half--on_hold")).to_contain_text("AM")
+    expect(cell.get_by_role("link", name="full day available")).to_have_count(0)
+    cell.get_by_role("link", name="PM available").click()
+    expect(page.locator(".request__title")).to_contain_text("PM")
+    expect(page.get_by_text("The morning is already taken.")).to_be_visible()
+    expect(page.locator('input[name="session"]')).to_have_value("pm")
+    expect(cell.locator(".half--open.is-selected")).to_contain_text("PM")
 
     page.get_by_label("Your name").fill("Avery Jones")
     page.get_by_label("Email", exact=True).fill("avery@example.com")

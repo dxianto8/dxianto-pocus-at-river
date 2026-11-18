@@ -189,9 +189,11 @@ class BookingRequestForm(QuestionnaireMixin, forms.ModelForm):
         self.open_sessions = (
             Booking.objects.open_sessions(day) if day else list(Booking.Session.values)
         )
+        # The time of day is picked on the calendar itself, so the form only carries it.
         self.fields["session"] = session_field(self.open_sessions or Booking.Session.values)
-        if self.open_sessions:
-            self.initial.setdefault("session", self.open_sessions[0])
+        self.fields["session"].widget = forms.HiddenInput()
+        if self.open_sessions and self.initial.get("session") not in self.open_sessions:
+            self.initial["session"] = self.open_sessions[0]
         self.fields["catering_interest"] = catering_field()
         if user is not None and user.is_authenticated:
             self.fields["email"].disabled = True

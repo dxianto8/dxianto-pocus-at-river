@@ -31,7 +31,8 @@ def heading_for(day) -> str:
 
 
 def date_link(page: Page, day):
-    return page.get_by_test_id("calendar").locator(f'td[data-date="{day:%Y-%m-%d}"] a')
+    """The date number, which picks the whole day."""
+    return page.get_by_test_id("calendar").locator(f'td[data-date="{day:%Y-%m-%d}"] a.day__full')
 
 
 @pytest.fixture

@@ -40,12 +40,35 @@ class DayState(StrEnum):
         return self in (DayState.AVAILABLE, DayState.AM_OPEN, DayState.PM_OPEN)
 
 
+# Each bookable day is shown as two halves. A half is "open", "on_hold" or "booked".
+HALF_LABELS = {"am": "AM", "pm": "PM"}
+
+
+@dataclass(frozen=True)
+class Half:
+    code: str  # "am" or "pm"
+    state: str  # "open", "on_hold" or "booked"
+
+    @property
+    def label(self) -> str:
+        return HALF_LABELS[self.code]
+
+    @property
+    def is_open(self) -> bool:
+        return self.state == "open"
+
+
 @dataclass(frozen=True)
 class Day:
     date: date
     in_month: bool
     state: DayState
     is_today: bool
+    halves: tuple[Half, ...] = ()  # empty when the day cannot be booked at all
+
+    @property
+    def full_day_open(self) -> bool:
+        return bool(self.halves) and all(half.is_open for half in self.halves)
 
 
 @dataclass(frozen=True)
@@ -96,18 +119,30 @@ def build_month(
     *,
     today: date,
     taken: Mapping[date, DayState],
+    halves: Mapping[date, Mapping[str, str]] | None = None,
     months_ahead: int | None = None,
 ) -> Month:
-    """A month as full Sunday-to-Saturday weeks, with each day's booking state."""
+    """
+    A month as full Sunday-to-Saturday weeks, with each day's booking state and, for days
+    that can be booked, the state of its AM and PM halves (`halves` maps a date to the
+    held halves, e.g. {"am": "booked"}).
+    """
     start, end = bookable_range(today, months_ahead)
+    halves = halves or {}
 
     def state_of(day: date) -> DayState:
         if not start <= day <= end:
             return DayState.UNAVAILABLE
         return taken.get(day, DayState.AVAILABLE)
 
+    def halves_of(day: date) -> tuple[Half, ...]:
+        if not start <= day <= end:
+            return ()
+        held = halves.get(day, {})
+        return tuple(Half(code, held.get(code, "open")) for code in HALF_LABELS)
+
     weeks = [
-        [Day(d, d.month == first.month, state_of(d), d == today) for d in week]
+        [Day(d, d.month == first.month, state_of(d), d == today, halves_of(d)) for d in week]
         for week in month_dates(first)
     ]
     previous = add_months(first, -1)

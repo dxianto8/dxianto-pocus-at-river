@@ -1,4 +1,4 @@
-// Booking page: picking a date loads the request form in place (no page reload) and slides
+// Booking page: picking a date and time of day (AM, PM or the full day) loads the request form in place (no page reload) and slides
 // the page down to it. Without JavaScript, or if anything goes wrong, the date links work as
 // normal page loads that jump to the form.
 (() => {
@@ -28,7 +28,9 @@
   };
 
   document.addEventListener("click", (event) => {
-    const link = event.target.closest(".calendar a.day__inner");
+    // Picking a date and time of day: the halves and dates on the calendar, and the
+    // "switch to" links above the form.
+    const link = event.target.closest("a[data-pick]");
     const newTabClick = event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey;
     if (!link || event.defaultPrevented || newTabClick) return;
     event.preventDefault();

@@ -336,7 +336,7 @@ def test_own_dates_are_marked_on_the_calendar(client, customer, stranger):
     mine = make_booking(customer, event_date=day(20))
     make_booking(stranger, event_date=day(21))
     response = client.get("/book/", {"month": f"{day(20):%Y-%m}"})
-    assert list(response.context["mine"].values()) == [mine]
+    assert list(response.context["mine"].values()) == [{"am": mine, "pm": mine}]
     assert url("booking_detail", mine).encode() in response.content
 
 

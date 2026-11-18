@@ -14,7 +14,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 from . import services
 from .calendar import DayState, Month, add_months, bookable_range, build_month, parse_month
 from .forms import BookingRequestForm
-from .models import Booking, EventPackage
+from .models import HALVES, Booking, EventPackage
 
 TAKEN_MESSAGE = "Sorry, that date was just taken by another request. Please choose another date."
 
@@ -28,10 +28,13 @@ def safe_parse_date(value: str | None) -> date | None:
 
 def public_month(month_param: str | None, today: date) -> Month:
     first = parse_month(month_param, today=today)
-    taken = Booking.objects.public_states(
-        first - timedelta(days=7), add_months(first, 1) + timedelta(days=7)
+    start, end = first - timedelta(days=7), add_months(first, 1) + timedelta(days=7)
+    return build_month(
+        first,
+        today=today,
+        taken=Booking.objects.public_states(start, end),
+        halves=Booking.objects.public_halves(start, end),
     )
-    return build_month(first, today=today, taken=taken)
 
 
 def state_of(day: date, month: Month) -> DayState | None:
@@ -67,15 +70,20 @@ def book(request: HttpRequest) -> HttpResponse:
             else:
                 return after_request(request, booking)
         selected = safe_parse_date(request.POST.get("event_date"))
+        picked = request.POST.get("session")
     else:
         selected = safe_parse_date(request.GET.get("date"))
+        picked = request.GET.get("session")
         form = None
 
     month_param = request.GET.get("month") or (f"{selected:%Y-%m}" if selected else None)
     month = public_month(month_param, today)
     selected_state = state_of(selected, month) if selected else None
+    open_sessions = Booking.objects.open_sessions(selected) if selected else []
+    if picked not in open_sessions:  # no choice yet, or that part was taken meanwhile
+        picked = open_sessions[0] if open_sessions else None
     if form is None and selected_state is not None and selected_state.is_bookable:
-        initial = {"event_date": selected}
+        initial = {"event_date": selected, "session": picked}
         package = (
             EventPackage.objects.published().filter(slug=request.GET.get("package", "")).first()
         )
@@ -84,16 +92,11 @@ def book(request: HttpRequest) -> HttpResponse:
         form = BookingRequestForm(initial=initial, user=user)
 
     grid = [week[0].date for week in month.weeks] + [month.weeks[-1][-1].date]
-    mine = (
-        {
-            b.event_date: b
-            for b in Booking.objects.active().filter(
-                owner=user, event_date__range=(grid[0], grid[-1])
-            )
-        }
-        if user
-        else {}
-    )
+    mine: dict = {}  # {date: {"am": booking, "pm": booking}} for the customer's own halves
+    if user:
+        for b in Booking.objects.active().filter(owner=user, event_date__range=(grid[0], grid[-1])):
+            for half in HALVES[b.session]:
+                mine.setdefault(b.event_date, {})[half] = b
     first_month, last_day = bookable_range(today)
     jump = []
     cursor = first_month.replace(day=1)
@@ -108,6 +111,8 @@ def book(request: HttpRequest) -> HttpResponse:
             "form": form,
             "selected": selected,
             "selected_state": selected_state,
+            "selected_session": picked,
+            "other_sessions": [s for s in open_sessions if s != picked],
             "mine": mine,
             "jump": jump,
             "package_slug": request.GET.get("package", ""),
