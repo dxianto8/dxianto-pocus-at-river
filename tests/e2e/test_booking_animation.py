@@ -97,6 +97,7 @@ class TestPickingADate:
     def test_request_can_be_sent_from_the_form_that_slid_in(self, booking_page: Page, day):
         date_link(booking_page, day).click()
         booking_page.get_by_label("Your name").fill("Avery Jones")
+        booking_page.get_by_label("Phone", exact=True).fill("630 555 0100")
         booking_page.get_by_label("Event type").select_option("wedding")
         booking_page.get_by_label("Number of guests").fill("120")
         booking_page.get_by_role("button", name="Send Request").click()

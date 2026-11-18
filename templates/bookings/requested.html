@@ -1,10 +1,28 @@
-{% extends "accounts/workspace_base.html" %}{% block title %}Request Received | Pocus at River{% endblock %}
+{% extends layout_template %}{% block title %}Request Received | Pocus at River{% endblock %}
 {% block content %}
-<section class="confirmation">
+<section class="{% if not user.is_authenticated %}wrap section {% endif %}confirmation">
   {% if day %}{% include "includes/plate.html" with day=day size="xl" tone="dark" %}{% endif %}
   <h1>Request received</h1>
-  <p class="lede">{% if day %}<strong>{{ day|date:'l, F j, Y' }}</strong> is on hold for you while the venue team reviews your request.{% else %}Your request is with the venue team.{% endif %}</p>
-  <p>It is not confirmed yet. The team will reply in your account, and you can change the details or cancel while it is pending.</p>
-  <p class="actions">{% if booking %}<a class="button" href="{% url 'accounts:booking_detail' booking.pk %}">View my request</a>{% endif %}<a class="button button--quiet" href="{% url 'accounts:dashboard' %}">My events</a></p>
+  <p class="lede">{% if booking %}<strong>{{ booking.when }}</strong> is on hold for you while the venue team reviews your request.{% else %}Your request is with the venue team.{% endif %}</p>
+  {% if user.is_authenticated %}
+    <p>It is not confirmed yet. The team will reply in your account, and you can change the details or cancel while it is pending.</p>
+    <p class="actions">{% if booking %}<a class="button" href="{% url 'accounts:booking_detail' booking.pk %}">View my request</a>{% endif %}<a class="button button--quiet" href="{% url 'accounts:dashboard' %}">My events</a></p>
+  {% else %}
+    <p>It is not confirmed yet, and nothing has been charged.{% if booking %} We sent a copy to <strong>{{ booking.email }}</strong> and will reply there or call {{ booking.phone }}.{% endif %}</p>
+  {% endif %}
+  {% if booking %}
+    {% if orders %}
+      <div class="notice notice--success"><p>Catering: {% for order in orders %}<a href="{% url 'catering_order_detail' order.pk %}">order of {{ order.created_at|date:"M j" }}, {{ order.total_display }}</a>{% if not forloop.last %}; {% endif %}{% endfor %}.</p></div>
+    {% else %}
+      <div class="catering-cta"><p><strong>Do you want to order catering with us?</strong></p><a class="button button--quiet" href="{% url 'catering_order' %}?booking={{ booking.pk }}">Order catering</a></div>
+    {% endif %}
+  {% endif %}
+  {% if booking and not user.is_authenticated %}
+    <div class="panel-note">
+      <h2>Track this request online (optional)</h2>
+      <p>Create an account to see its status, message the team, and keep a checklist and schedule for the day. This request is added to your account automatically, because you made it in this browser.</p>
+      <p class="actions"><a class="button" href="{% url 'accounts:signup' %}?next={% url 'accounts:dashboard' %}">Create an account</a><a class="button button--quiet" href="{% url 'accounts:login' %}?next={% url 'accounts:dashboard' %}">Sign in</a></p>
+    </div>
+  {% endif %}
 </section>
 {% endblock %}

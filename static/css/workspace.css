@@ -176,6 +176,11 @@ a.row:hover { background: var(--brick); }
 .day__state { font-size: 0.75rem; font-weight: 600; line-height: 1.2; }
 .day--available a.day__inner { transition: background-color 0.15s, color 0.15s; }
 .day--available a.day__inner:hover { background: var(--river); color: var(--white); }
+/* Half a day taken: the taken half is shaded on the diagonal (top-left is the morning). */
+.day--pm_open .day__inner { background: linear-gradient(135deg, #e4e7e3 50%, transparent 50%); color: var(--char); }
+.day--am_open .day__inner { background: linear-gradient(135deg, transparent 50%, #e4e7e3 50%); color: var(--char); }
+:is(.day--am_open, .day--pm_open) a.day__inner { transition: background-color 0.15s, color 0.15s; }
+:is(.day--am_open, .day--pm_open) a.day__inner:hover { background: var(--river); color: var(--white); }
 .day--selected .day__inner { background: var(--river); color: var(--white); }
 .day--today .day__number { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.2em; text-decoration-color: var(--bronze); }
 .day--unavailable .day__inner { color: #9aa3a1; }
@@ -190,6 +195,7 @@ a.row:hover { background: var(--brick); }
 .legend-swatch { display: grid; place-items: center; width: 1.1rem; height: 1.1rem; border-radius: 2px; }
 .legend-swatch--open::before { content: "12"; font: 400 0.9375rem/1 var(--display); color: var(--steel); }
 .legend-swatch--past::before { content: "12"; font: 400 0.9375rem/1 var(--display); color: #9aa3a1; text-decoration: line-through; }
+.legend-swatch--half { background: linear-gradient(135deg, #e4e7e3 50%, transparent 50%); box-shadow: inset 0 0 0 1px #e4e7e3; }
 .legend-swatch--on_hold { background: var(--brass-wash); }
 .legend-swatch--booked { background: #e4e7e3; }
 .legend-swatch--mine { background: var(--river-wash); }
@@ -199,6 +205,13 @@ a.row:hover { background: var(--brick); }
 .request > * + * { margin-top: 1.75rem; }
 .request__title { font: 400 clamp(1.5rem, 2.6vw, 2.125rem)/1.15 var(--display); }
 .request__title:focus { outline: none; }
+
+/* The booking page for visitors without an account sits in the public layout. */
+.booking--public { display: grid; gap: clamp(2rem, 3vw, 3rem); }
+.booking--public > * + * { margin-top: 0; }
+.page-head .booking__account { font-size: 0.95rem; }
+.page-head .booking__account a { color: var(--cream); }
+.booking--public .calendar, .booking--public .request { width: 100%; margin-inline: auto; }
 
 /* Packages inside the workspace sit in a white panel. */
 .workspace .package-list { background: var(--white); border: 1px solid var(--line); border-top: 1.5px solid var(--steel); padding-inline: clamp(1.5rem, 3vw, 2.5rem); }

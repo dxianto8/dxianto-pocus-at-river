@@ -7,6 +7,7 @@ forest-green and bronze palette, and Django admin. No new third-party package is
 | --- | --- | --- |
 | Walkthrough appointments | Publish **Walkthrough slots** (Chicago time); confirm/decline **Walkthrough appointments** | `/walkthroughs/`, `/account/walkthroughs/` |
 | Catering menu | Publish **Catering items**, grouped by category, with confirmed prices and dietary notes | `/catering/` |
+| Catering orders | Review **Catering orders** (items, quantities and prices copied at order time); set status to Confirmed or Cancelled | `/catering/order/`, offered after "Do you want to order catering with us?" on the request form |
 | Packages and deals | **Event packages** and **Package offers** | `/packages/`, `/account/packages/` |
 | Custom event types | **Event type options**, including activation and order | Booking and edit forms |
 | Extra questions | **Booking questions**; optional/required, type, choices, applicable event types, and order | Booking and edit forms |
@@ -14,7 +15,7 @@ forest-green and bronze palette, and Django admin. No new third-party package is
 | Recent events | Manually publish **Recent events**, using approved photography and copy | `/recent-events/` and the homepage |
 | Loyalty | **Venue settings → Loyalty**, **Loyalty rewards**, **Loyalty credits**, **Reward redemptions** | `/account/loyalty/` |
 | Feedback and reviews | **Event feedback** (private), optional **Venue settings → Review URL** | Owner-only feedback on completed events |
-| Stripe and Toast | Deliberately unavailable; no checkout, card fields, credentials, or payment requests | `/account/payments/`; notices on packages/catering |
+| Stripe and Toast | Deliberately unavailable; no checkout, card fields, credentials, or payment requests. Catering orders are requests the team confirms and invoices | `/account/payments/`; notices on packages/catering |
 
 No menu prices, promotions, testimonials, recent-event stories, or rewards were fabricated or
 published by migrations. Staff must publish the actual business content. The migration adds

@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import urlencode
 
 from bookings.models import Booking, EventPackage, VenueSettings
 
@@ -37,6 +38,7 @@ def booking_data(**overrides):
         "event_date": (timezone.localdate() + timedelta(days=20)).isoformat(),
         "name": "Avery",
         "email": "attacker@example.com",
+        "phone": "630 555 0100",
         "event_type": "wedding",
         "guest_count": "80",
         "message": "Ceremony and reception.",
@@ -89,13 +91,28 @@ def test_login_and_post_only_logout(client, customer):
     assert "_auth_user_id" not in client.session
 
 
-@pytest.mark.parametrize("method", ["get", "post"])
-def test_anonymous_visitors_cannot_book_even_with_forged_owner(client, customer, method):
-    response = getattr(client, method)(
-        "/book/", booking_data(owner=customer.pk, status="confirmed")
-    )
-    assert response.status_code == 302
-    assert response.url.startswith("/account/signup/?next=")
+def test_visitors_without_an_account_can_book_but_not_forge_owner_or_status(client, customer):
+    assert client.get("/book/").status_code == 200
+    response = client.post("/book/", booking_data(owner=customer.pk, status="confirmed"))
+    booking = Booking.objects.get()
+    assert booking.owner is None
+    assert booking.status == Booking.Status.PENDING
+    assert booking.email == "attacker@example.com"  # what the visitor typed, not an account's
+    assert response.url.endswith(f"?booking={booking.pk}")
+
+
+@pytest.mark.parametrize("missing", ["email", "phone"])
+def test_email_and_phone_are_required_without_an_account(client, missing):
+    response = client.post("/book/", booking_data(**{missing: ""}))
+    assert response.status_code == 200
+    assert missing in response.context["form"].errors
+    assert not Booking.objects.exists()
+
+
+def test_phone_is_required_with_an_account_too(client, customer):
+    client.force_login(customer)
+    response = client.post("/book/", booking_data(phone=""))
+    assert "phone" in response.context["form"].errors
     assert not Booking.objects.exists()
 
 
@@ -263,11 +280,13 @@ def test_admin_settings_and_packages_update_public_page(admin_client, client):
 
 @pytest.mark.parametrize("destination", ["/book/", "/book/?package=wedding&month=2027-02"])
 def test_plan_signup_returns_to_calendar_with_package_intact(client, destination):
-    gate = client.get(destination)
-    assert gate.url.startswith("/account/signup/?next=")
-    page = client.get(gate.url)
+    public = client.get(destination)
+    assert public.status_code == 200
+    assert b'class="site-header"' in public.content  # the public site, no account needed
+    signup = f"{reverse('accounts:signup')}?{urlencode({'next': destination})}"
+    page = client.get(signup)
     assert page.context["next"] == destination
-    response = client.post(gate.url, signup_data(next=page.context["next"]))
+    response = client.post(signup, signup_data(next=page.context["next"]))
     assert response.url == destination
     calendar = client.get(response.url)
     assert calendar.status_code == 200
@@ -313,7 +332,6 @@ def test_workspace_counts_filters_and_next_event_are_owner_scoped(client, custom
         "/account/",
         "/account/settings/",
         "/account/packages/",
-        "/book/",
         "/account/password-change/",
         "/account/password-change/done/",
     ],

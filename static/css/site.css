@@ -491,6 +491,18 @@ body.modal-open { overflow: hidden; }
 .field--check input { width: 1.25rem; height: 1.25rem; min-height: 0; margin: 0.2rem 0 0; accent-color: var(--river); }
 .field--check label { margin: 0; font-size: 0.9rem; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--char); }
 .field--check .help-text, .field--check .errorlist { grid-column: 2; }
+.field--choices { min-width: 0; margin: 0; padding: 0; border: 0; }
+.field--choices legend { display: block; margin-bottom: 0.55rem; padding: 0; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--walnut); }
+.choices { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.field .choice {
+  display: inline-flex; align-items: center; gap: 0.6rem; margin: 0; min-height: 3rem; padding: 0.6rem 1rem;
+  border: 1px solid #cfc7b8; background: var(--white); cursor: pointer;
+  font-size: 0.9rem; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--char);
+}
+.field .choice input { width: 1.1rem; height: 1.1rem; min-height: 0; margin: 0; accent-color: var(--river); }
+.field .choice:has(input:checked) { border-color: var(--walnut); background: var(--river-wash); }
+.field .choice:has(input:focus-visible) { outline: 2px solid var(--bronze); outline-offset: 1px; }
+.field--invalid .choice { border-color: var(--rust); }
 
 .notice { max-width: none; margin-block: 1rem; padding: 0.9rem 1.1rem; border-left: 3px solid var(--bronze); background: var(--brass-wash); font-size: 0.95rem; }
 .notice--success { border-color: var(--river); background: var(--river-wash); }
@@ -637,3 +649,59 @@ body.modal-open { overflow: hidden; }
 
 .ws-head .section-label, .page-hero__text .section-label { font-size:.75rem; }
 .page-hero__text .text-link { align-self:flex-start; }
+
+/* Catering order ---------------------------------------------------------------------------- */
+.order { display: grid; grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem); gap: 3rem clamp(2rem, 4vw, 4rem); align-items: start; }
+.order__errors, .order__menu, .order__details { grid-column: 1; }
+.order-page.section { padding-top: 0; }
+.order-page > .notice { margin-top: 0; margin-bottom: 2.5rem; }
+.order__summary {
+  grid-column: 2; grid-row: 1 / span 3; position: sticky; top: 7rem; display: grid; gap: 0.9rem;
+  padding: 1.75rem; background: var(--white); border: 1px solid var(--line); border-top: 2px solid var(--bronze);
+}
+.order__summary h2, .order__details h2 { font: 400 1.75rem/1.2 var(--display); color: var(--walnut); }
+.order__total { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding-top: 0.9rem; border-top: 1px solid var(--line); }
+.order__total strong { font: 500 1.75rem/1 var(--display); color: var(--walnut); }
+.order__category + .order__category { margin-top: 2.5rem; }
+.order__category > h2 { padding-bottom: 0.75rem; border-bottom: 1px solid var(--line); font: 500 1.75rem/1.2 var(--display); color: var(--walnut); }
+.order-item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 0.5rem 1.5rem; align-items: center; padding-block: 1.25rem; border-bottom: 1px solid var(--line); }
+.order-item h3 { font: 500 1.3rem/1.25 var(--display); color: var(--walnut); }
+.order-item h3 label { cursor: pointer; }
+.order-item__text p { margin-top: 0.3rem; color: var(--muted); }
+.order-item__price { text-align: right; font-weight: 600; white-space: nowrap; }
+.order-item__price span { display: block; font-size: 0.8rem; font-weight: 500; color: var(--muted); }
+.qty { display: flex; align-items: center; }
+.qty .errorlist { flex-basis: 100%; }
+.qty__input { width: 4.25rem; min-height: 2.75rem; padding: 0.4rem; border: 1px solid #cfc7b8; background: var(--white); text-align: center; font: 600 1rem var(--sans); color: var(--char); -moz-appearance: textfield; }
+.qty__input::-webkit-inner-spin-button, .qty__input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.qty__input:focus { outline: 2px solid var(--bronze); outline-offset: 1px; }
+.qty__step { width: 2.75rem; height: 2.75rem; border: 1px solid #cfc7b8; background: var(--cream); color: var(--walnut); font: 600 1.2rem/1 var(--sans); cursor: pointer; }
+.qty__step:hover { background: var(--walnut); border-color: var(--walnut); color: var(--white); }
+.qty__step:focus-visible { outline: 2px solid var(--bronze); outline-offset: 1px; }
+.order-item.field--invalid .qty__input { border-color: var(--rust); }
+.order__details { display: grid; gap: 1.5rem; }
+.order__details .form--grid { max-width: none; }
+.order__details .field:has(textarea), .order__details .field:has(select) { grid-column: 1 / -1; }
+.receipt { width: 100%; max-width: 40rem; border-collapse: collapse; }
+.receipt th, .receipt td { padding: 0.7rem 0.5rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.receipt thead th { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--bronze-ink); }
+.receipt tfoot th, .receipt tfoot td { font-weight: 700; border-bottom: 0; }
+.order-receipt { max-width: 44rem; }
+.order-receipt > * + * { margin-top: 1.25rem; }
+.catering-cta { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+@media (max-width: 60rem) {
+  .order { grid-template-columns: minmax(0, 1fr); row-gap: 2rem; }
+  .order__summary { grid-column: 1; grid-row: auto; position: sticky; top: auto; bottom: 0; z-index: 5; gap: 0.5rem; padding: 1rem 1.25rem; box-shadow: 0 -8px 24px rgb(23 41 31 / 0.12); }
+  .order__summary h2, .order__summary > .small { display: none; }
+  .order__total { padding-top: 0; border-top: 0; }
+}
+@media (max-width: 36rem) {
+  .order-item { grid-template-columns: minmax(0, 1fr) auto; }
+  .order-item__text { grid-column: 1 / -1; }
+  .order-item__price { text-align: left; }
+}
+.catering-cta { margin-top: 2rem; }
+.confirmation .catering-cta { margin-top: 1.5rem; }
+.panel-note { padding: 1.5rem 1.75rem; background: var(--white); border: 1px solid var(--line); border-left: 3px solid var(--bronze); }
+.panel-note > * + * { margin-top: 0.9rem; }
+.panel-note h2 { font: 400 1.5rem/1.2 var(--display); color: var(--walnut); }

@@ -252,7 +252,7 @@ def booking_edit(request, booking):
             request, "This event can no longer be changed here. Message the venue team instead."
         )
         return back_to("accounts:booking_messages", booking)
-    old_date = booking.event_date
+    old_date, old_when = booking.event_date, booking.when
     form = BookingEditForm(request.POST or None, instance=booking)
     if request.method == "POST" and form.is_valid():
         changed = form.changed_data
@@ -260,20 +260,19 @@ def booking_edit(request, booking):
             with transaction.atomic():
                 booking = form.save()
         except IntegrityError:
-            form.add_error("event_date", "That date was just taken. Choose another one.")
+            form.add_error("session", "That date or time of day was just taken. Choose another.")
         else:
             if changed:
                 if "event_date" in changed:
                     services.shift_checklist(booking, old_date)
+                if "event_date" in changed or "session" in changed:
                     services.log(
-                        booking,
-                        f"You moved the request from {old_date:%B %-d, %Y} "
-                        f"to {booking.event_date:%B %-d, %Y}.",
+                        booking, f"You moved the request from {old_when} to {booking.when}."
                     )
                 others = [
                     form.fields[name].label.replace(" (optional)", "").lower()
                     for name in changed
-                    if name != "event_date"
+                    if name not in ("event_date", "session")
                 ]
                 if others:
                     services.log(booking, f"You updated {', '.join(others)}.")

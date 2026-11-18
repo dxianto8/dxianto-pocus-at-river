@@ -13,8 +13,9 @@
     </div>
     <dl class="details">
       <div><dt>Date</dt><dd>{{ booking.event_date|date:"l, F j, Y" }}</dd></div>
+      <div><dt>Time of day</dt><dd>{{ booking.get_session_display }}</dd></div>
       {% if booking.start_time %}<div><dt>Time</dt><dd>{{ booking.start_time|time:"g:i A" }}–{{ booking.end_time|time:"g:i A" }} · Chicago time</dd></div>{% endif %}
-      <div><dt>Catering</dt><dd>{% if booking.catering_interest %}Interested in catering{% else %}Not requested{% endif %}{% if booking.dietary_notes %}<br>{{ booking.dietary_notes|linebreaksbr }}{% endif %}</dd></div>
+      <div><dt>Catering</dt><dd>{% for order in booking.catering_orders.all %}<a href="{% url 'catering_order_detail' order.pk %}">Order of {{ order.created_at|date:"M j" }}</a>: {{ order.total_display }}, {{ order.get_status_display|lower }}<br>{% empty %}{% if booking.catering_interest %}You want to order catering{% else %}Not requested{% endif %}<br>{% endfor %}{% if booking.is_active and booking.is_upcoming %}<a href="{% url 'catering_order' %}?booking={{ booking.pk }}">Order catering</a>{% endif %}{% if booking.dietary_notes %}<br>{{ booking.dietary_notes|linebreaksbr }}{% endif %}</dd></div>
       {% for answer in booking.questionnaire_answers %}<div><dt>{{ answer.question }}</dt><dd>{% if answer.answer == True %}Yes{% elif answer.answer == False %}No{% else %}{{ answer.answer|default:"—" }}{% endif %}</dd></div>{% endfor %}
       <div><dt>Guests</dt><dd>{{ booking.guest_count }}</dd></div>
       <div><dt>Contact</dt><dd>{{ booking.name }}<br>{{ booking.email }}{% if booking.phone %}<br>{{ booking.phone }}{% endif %}</dd></div>

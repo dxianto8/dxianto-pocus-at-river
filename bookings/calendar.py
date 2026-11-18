@@ -17,6 +17,8 @@ _weeks = calendar.Calendar(firstweekday=calendar.SUNDAY)
 
 class DayState(StrEnum):
     AVAILABLE = "available"
+    AM_OPEN = "am_open"  # the afternoon is taken; the morning can still be requested
+    PM_OPEN = "pm_open"  # the morning is taken; the afternoon can still be requested
     ON_HOLD = "on_hold"  # a request is waiting for the venue to confirm it
     BOOKED = "booked"  # confirmed, or blocked by the venue
     UNAVAILABLE = "unavailable"  # in the past, or too far ahead to book
@@ -25,10 +27,17 @@ class DayState(StrEnum):
     def label(self) -> str:
         return {
             DayState.AVAILABLE: "Available",
+            DayState.AM_OPEN: "AM open",
+            DayState.PM_OPEN: "PM open",
             DayState.ON_HOLD: "On hold",
             DayState.BOOKED: "Booked",
             DayState.UNAVAILABLE: "Not bookable",
         }[self]
+
+    @property
+    def is_bookable(self) -> bool:
+        """Whether at least part of the day can still be requested."""
+        return self in (DayState.AVAILABLE, DayState.AM_OPEN, DayState.PM_OPEN)
 
 
 @dataclass(frozen=True)

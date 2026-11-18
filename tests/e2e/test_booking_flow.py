@@ -27,6 +27,7 @@ def request_date(page: Page, day, name="Avery Jones", email="avery@example.com")
         page.get_by_role("heading", name=f"Request {day:%A, %B} {day.day}, {day.year}")
     ).to_be_visible()
     page.get_by_label("Your name").fill(name)
+    page.get_by_label("Phone", exact=True).fill("630 555 0100")
     page.get_by_label("Event type").select_option("wedding")
     page.get_by_label("Number of guests").fill("150")
     page.get_by_role("button", name="Send Request").click()
@@ -71,6 +72,7 @@ class TestVisitor:
         other.close()
 
         page.get_by_label("Your name").fill("Avery Jones")
+        page.get_by_label("Phone", exact=True).fill("630 555 0100")
         page.get_by_label("Event type").select_option("corporate")
         page.get_by_label("Number of guests").fill("60")
         page.get_by_role("button", name="Send Request").click()
@@ -130,7 +132,7 @@ class TestAdmin:
         label = f"{day:%B} {day.day}, {day.year}"
         admin_page.goto(f"/admin/bookings/booking/calendar/?month={day:%Y-%m}")
         admin_page.get_by_role("button", name=f"Block {label}").click()
-        expect(admin_page.get_by_text(f"Blocked {day:%a %d %b %Y}.")).to_be_visible()
+        expect(admin_page.get_by_text(f"Blocked {day:%a %d %b %Y} (Full day).")).to_be_visible()
 
         open_month(admin_page, day)
         expect(calendar_cell(admin_page, day)).to_have_attribute("data-state", "booked")
@@ -139,3 +141,65 @@ class TestAdmin:
         admin_page.get_by_role("button", name=f"Unblock {label}").click()
         open_month(admin_page, day)
         expect(calendar_cell(admin_page, day)).to_have_attribute("data-state", "available")
+
+
+def test_guest_books_the_afternoon_and_orders_catering(page: Page):
+    """No account: the morning is taken, so the afternoon is offered; then order catering."""
+    from decimal import Decimal
+
+    from bookings.models import CateringItem, CateringOrder
+
+    day = future(26)
+    Booking.objects.create(
+        event_date=day,
+        session="am",
+        name="Morning Party",
+        email="m@example.com",
+        event_type="other",
+        guest_count=20,
+    )
+    board = CateringItem.objects.create(
+        title="Grazing board",
+        category="Starters",
+        description="Cheese, fruit and bread",
+        price=Decimal("12.50"),
+        price_note="per person",
+        is_published=True,
+    )
+    open_month(page, day)
+    cell = calendar_cell(page, day)
+    expect(cell).to_have_attribute("data-state", "pm_open")
+    expect(cell).to_contain_text("PM open")
+    cell.get_by_role("link").click()
+    expect(page.get_by_text("The morning is taken.")).to_be_visible()
+    expect(page.get_by_role("radio", name="PM (afternoon and evening)")).to_be_checked()
+    expect(page.get_by_role("radio", name="Full day")).to_have_count(0)
+
+    page.get_by_label("Your name").fill("Avery Jones")
+    page.get_by_label("Email", exact=True).fill("avery@example.com")
+    page.get_by_label("Phone", exact=True).fill("630 555 0100")
+    page.get_by_label("Event type").select_option("wedding")
+    page.get_by_label("Number of guests").fill("40")
+    page.get_by_role("radio", name="Yes, show me the menu next").check()
+    page.get_by_role("button", name="Send Request").click()
+
+    expect(page.get_by_role("heading", level=1, name="Order catering")).to_be_visible()
+    booking = Booking.objects.get(session="pm")
+    assert booking.owner is None and booking.catering_interest
+    for _ in range(3):
+        page.get_by_role("button", name="One more Grazing board").click()
+    page.get_by_role("button", name="One fewer Grazing board").click()
+    expect(page.get_by_label("Grazing board", exact=True)).to_have_value("2")
+    expect(page.locator("[data-order-total]")).to_have_text("$25.00")
+    page.get_by_label("Grazing board", exact=True).fill("40")
+    expect(page.locator("[data-order-total]")).to_have_text("$500.00")
+    page.locator(".order__summary").get_by_role("button", name="Place catering order").click()
+
+    expect(page.get_by_role("heading", name="Catering order received")).to_be_visible()
+    expect(page.get_by_text("Estimated total")).to_be_visible()
+    order = CateringOrder.objects.get()
+    assert order.booking == booking and order.total == Decimal("500.00")
+    assert order.lines.get().item == board
+    page.get_by_role("link", name="Back to my request").click()
+    expect(page.get_by_role("heading", name="Request received")).to_be_visible()
+    expect(page.get_by_text("Create an account to see its status")).to_be_visible()

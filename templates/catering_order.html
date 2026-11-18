@@ -1,0 +1,59 @@
+{% extends layout_template %}{% load static %}
+{% block title %}Order Catering | Pocus at River{% endblock %}
+{% block description %}Order catering for your event at Pocus at River: choose from the menu, see an estimated total, and the team confirms the rest.{% endblock %}
+{% block content %}
+<section class="{% if user.is_authenticated %}ws-head{% else %}wrap page-head{% endif %}">
+  <p class="section-label">Around the table</p>
+  <h1>Order catering</h1>
+  <p>Choose what you would like for your guests and how many. You will see an estimated total as you go.</p>
+</section>
+<div class="{% if not user.is_authenticated %}wrap section {% endif %}order-page">
+  {% if booking %}<p class="notice notice--success" role="status">Your request for <strong>{{ booking.when }}</strong> is on hold. Add catering below, or <a href="{% url 'bookings:requested' %}?booking={{ booking.pk }}">skip this for now</a>.</p>{% endif %}
+  <form method="post" class="order" data-catering-order novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="notice notice--error order__errors" role="alert">{% for error in form.non_field_errors %}{{ error }} {% endfor %}</div>{% endif %}
+    <div class="order__menu">
+      {% regroup menu by item.category as categories %}
+      {% for category in categories %}
+        <section class="order__category" aria-labelledby="cat-{{ forloop.counter }}">
+          <h2 id="cat-{{ forloop.counter }}">{{ category.grouper }}</h2>
+          {% for row in category.list %}{% with item=row.item field=row.field %}
+            <div class="order-item{% if field.errors %} field--invalid{% endif %}">
+              <div class="order-item__text">
+                <h3><label for="{{ field.id_for_label }}">{{ item.title }}</label></h3>
+                <p>{{ item.description }}</p>
+                {% if item.dietary_notes %}<p class="small muted">{{ item.dietary_notes }}</p>{% endif %}
+              </div>
+              <p class="order-item__price">{% if item.price is not None %}${{ item.price|floatformat:2 }}{% if item.price_note %}<span>{{ item.price_note }}</span>{% endif %}{% else %}Quoted<span>priced by the team</span>{% endif %}</p>
+              <div class="qty">{{ field }}{{ field.errors }}</div>
+            </div>
+          {% endwith %}{% endfor %}
+        </section>
+      {% empty %}
+        <div class="empty">
+          <h2>The online menu is being prepared</h2>
+          <p>Tell us what you would like in the notes below and the team will put together a quote.</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <aside class="order__summary" aria-labelledby="summary-heading">
+      <h2 id="summary-heading">Your order</h2>
+      <p class="order__count" data-order-count aria-live="polite">No items yet</p>
+      <p class="order__total"><span>Estimated total</span> <strong data-order-total>$0.00</strong></p>
+      <p class="small muted" data-order-quoted hidden>Plus items the team will quote.</p>
+      <p class="small muted">Nothing is charged now. The team confirms your order, the final price and how to pay.</p>
+      <button class="button order__submit" type="submit">Place catering order</button>
+    </aside>
+
+    <section class="order__details" aria-labelledby="details-heading">
+      <h2 id="details-heading">Your event and contact details</h2>
+      <div class="form form--grid">
+        {% for field in detail_fields %}{% include "includes/field.html" %}{% endfor %}
+      </div>
+      <p class="actions"><button class="button" type="submit">Place catering order</button>{% if booking %}<a class="button button--quiet" href="{% url 'bookings:requested' %}?booking={{ booking.pk }}">Skip for now</a>{% endif %}</p>
+    </section>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/catering.js' %}" defer></script>{% endblock %}

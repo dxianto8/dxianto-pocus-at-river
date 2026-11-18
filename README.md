@@ -8,16 +8,30 @@ signed-in workspace share one design: Playfair Display for headings and dates,
 Montserrat for everything else, forest green and walnut with bronze accents on cream
 and ivory. Small labels are tracked capitals after a bronze rule; buttons are square.
 
-- **Home page.** A full-width photograph with the welcome, the venue beside a photograph,
+- **Home page.** A full-width photograph of the venue's own hall with the welcome, the venue beside a photograph,
   and the three kinds of occasion as photos with overlapping text cards. An address bar
   sits above the header.
 - **Navigation.** Three groups (Events, The venue, Pricing) that drop down on hover, with
   a bronze rule drawn under whatever the pointer is on. They also open on click, and from
   the keyboard (Arrow Down to enter, Escape to close). Without JavaScript they open on hover
   and focus.
-- **Booking requires an account.** Both GET and POST requests to `/book/` require
-  login. Signup preserves the selected date/package destination. Booking ownership,
-  contact email, pending status, and package snapshots are set on the server.
+- **Booking needs no account.** Anyone can request a date at `/book/`. Email and phone
+  are required on every request (signed-in customers' email comes from their account,
+  and their phone is remembered). A visitor without an account gets an email receipt
+  and can see their confirmation in the same browser; if they then sign up or sign in
+  in that browser, the request (and any catering order) becomes theirs. Requests are
+  never matched to accounts by email address. Ownership, pending status and package
+  snapshots are set on the server.
+- **AM, PM or the full day.** A date can hold a morning (AM) booking and an
+  afternoon/evening (PM) booking separately; a full day holds both. The calendar marks
+  days with one half still open ("AM open" / "PM open"), and the request form offers only
+  what is free. An AM booking starts before noon and a PM booking at noon or later.
+- **Catering orders.** The request form asks "Do you want to order catering with us?".
+  Yes leads straight to `/catering/order/` for that request: pick items and quantities
+  from the published menu and see an estimated total. Orders copy the menu prices,
+  appear in the admin under **Catering orders** and on the customer's event, and email
+  the venue and the customer. No payment is taken on the site; the team confirms the
+  order and arranges payment.
 - **Customer workspace (`/account/`).** Each customer sees only their own events.
   - *My events:* the next event with a countdown, a "Needs your attention" list
     (unread messages, new documents, tasks due or overdue), and every request with
@@ -89,7 +103,12 @@ docker compose run --rm web ruff check .
 - **Form checks** and the spam trap.
 - **Double-booking protection.**
 - **Vercel deploy settings,** the migration build step, and creating the first admin login.
-- **Admin actions:** confirm, decline, cancel, block and unblock.
+- **Admin actions:** confirm, decline, cancel, block and unblock (full day or one half).
+- **Half days:** AM and PM sharing a date, every overlap refused by the database,
+  calendar states, times fitting the half, and moving a request between halves.
+- **Guests and catering:** booking without an account, required email and phone,
+  claiming a request on sign-up or sign-in in the same browser only, catering orders
+  with price snapshots and totals, and that nobody else can open them.
 - **Browser tests** (Playwright, Chromium), covering:
   - the booking flow and the admin;
   - all public pages from 360px to desktop;
@@ -107,14 +126,16 @@ docker compose run --rm web ruff check .
 
 | Status    | Set by                     | Holds the date? | Visitors see |
 | --------- | -------------------------- | --------------- | ------------ |
-| Pending   | A visitor's request        | Yes             | On hold      |
+| Pending   | A visitor's request        | Yes             | On hold (or "AM/PM open" if only one half is held) |
 | Confirmed | Admin: "Confirm" action    | Yes             | Booked       |
 | Blocked   | Admin: calendar "Block"    | Yes             | Booked       |
 | Declined  | Admin: "Decline" action    | No              | Available    |
 | Cancelled | Admin "Cancel", or the customer | No         | Available    |
 
-- Each date can have only one booking that holds it. The database enforces this,
-  so two visitors submitting at the same moment can't both get the date.
+- Each half of a date (AM, PM) can have only one booking that holds it, and a full-day
+  booking holds both halves. The database enforces this with one unique index per half,
+  so two visitors submitting at the same moment can't both get the same half. The admin
+  calendar shows both halves of each day and can block a full day, the AM or the PM.
 - Requests are accepted from today up to 24 months ahead. "Today" is based on
   Chicago time.
 - The public calendar only ever shows a date's status. Names and contact

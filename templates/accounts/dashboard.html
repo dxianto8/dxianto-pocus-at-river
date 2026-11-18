@@ -15,7 +15,7 @@
 <section class="next" aria-labelledby="next-heading">
   <a class="next__plate" href="{% url 'accounts:booking_detail' next_event.pk %}" aria-hidden="true" tabindex="-1">{% include "includes/plate.html" with day=next_event.event_date size="xl" tone="dark" %}</a>
   <div class="next__body">
-    <h2 id="next-heading"><a href="{% url 'accounts:booking_detail' next_event.pk %}">{{ next_event.get_event_type_display }}, {{ next_event.event_date|date:"l, F j, Y" }}</a></h2>
+    <h2 id="next-heading"><a href="{% url 'accounts:booking_detail' next_event.pk %}">{{ next_event.get_event_type_display }}, {{ next_event.event_date|date:"l, F j, Y" }} · {{ next_event.get_session_display }}</a></h2>
     <p><span class="chip chip--{{ next_event.status }}">{{ next_event.get_status_display }}</span> {{ next_event.guest_count }} guests{% if next_event.package_snapshot %}, {{ next_event.package_snapshot }}{% endif %}</p>
     <p class="muted">{{ next_event.status_description }}</p>
     {% if next_tasks %}
@@ -55,7 +55,7 @@
     {% for booking in bookings %}
       <li><a class="row" href="{% url 'accounts:booking_detail' booking.pk %}" data-booking="{{ booking.pk }}">
         {% include "includes/plate.html" with day=booking.event_date size="sm" %}
-        <span class="row__main"><strong>{{ booking.get_event_type_display }}, {{ booking.guest_count }} guests</strong><span class="muted">{{ booking.status_description }}</span></span>
+        <span class="row__main"><strong>{{ booking.get_event_type_display }}, {{ booking.get_session_display }}, {{ booking.guest_count }} guests</strong><span class="muted">{{ booking.status_description }}</span></span>
         {% if booking.unread %}<span class="chip chip--message">{{ booking.unread }} new</span>{% endif %}
         <span class="chip chip--{{ booking.status }}">{{ booking.get_status_display }}</span>
       </a></li>

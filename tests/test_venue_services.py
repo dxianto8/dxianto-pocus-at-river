@@ -71,6 +71,7 @@ def payload(**kwargs):
         "event_date": day(20),
         "name": "Guest",
         "email": "guest@example.com",
+        "phone": "630 555 0100",
         "event_type": "wedding",
         "guest_count": 70,
         **kwargs,

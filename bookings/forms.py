@@ -1,3 +1,5 @@
+from datetime import date
+
 from django import forms
 from django.db.models import Q
 from django.utils import timezone
@@ -5,6 +7,45 @@ from django.utils.html import escape
 
 from .calendar import bookable_range
 from .models import Booking, Document, EventPackage
+
+SESSION_LABELS = {
+    Booking.Session.FULL: "Full day",
+    Booking.Session.AM: "AM (morning)",
+    Booking.Session.PM: "PM (afternoon and evening)",
+}
+CATERING_QUESTION = "Do you want to order catering with us?"
+CATERING_CHOICES = [(True, "Yes, show me the menu next"), (False, "No, not now")]
+
+
+def session_field(sessions) -> forms.ChoiceField:
+    return forms.ChoiceField(
+        label="Time of day",
+        choices=[(value, SESSION_LABELS[value]) for value in sessions],
+        widget=forms.RadioSelect,
+        required=False,  # a missing choice means the whole day, checked against what is free
+        help_text="AM and PM can be booked separately. A full day holds both.",
+    )
+
+
+def catering_field() -> forms.TypedChoiceField:
+    return forms.TypedChoiceField(
+        label=CATERING_QUESTION,
+        choices=CATERING_CHOICES,
+        coerce=lambda value: value in (True, "True"),
+        empty_value=False,
+        required=False,
+        widget=forms.RadioSelect,
+        help_text="You can order from the catering menu now or later. Nothing is charged.",
+    )
+
+
+def parse_day(value):
+    if isinstance(value, date):
+        return value
+    try:
+        return date.fromisoformat(value or "")
+    except ValueError:
+        return None
 
 
 class QuestionnaireMixin:
@@ -97,7 +138,11 @@ class QuestionnaireMixin:
 
 
 class BookingRequestForm(QuestionnaireMixin, forms.ModelForm):
-    """The public request form. Every request starts as pending; visitors cannot set a status."""
+    """
+    The public request form, for visitors with or without an account. Every request starts as
+    pending; visitors cannot set a status. Email and phone are always required so the venue
+    can reach the person who holds the date.
+    """
 
     # Honeypot: hidden from people, but bots that fill in every field will fill this too.
     website = forms.CharField(required=False, label="Leave this field empty")
@@ -106,6 +151,7 @@ class BookingRequestForm(QuestionnaireMixin, forms.ModelForm):
         model = Booking
         fields = [
             "event_date",
+            "session",
             "name",
             "email",
             "phone",
@@ -120,10 +166,10 @@ class BookingRequestForm(QuestionnaireMixin, forms.ModelForm):
         ]
         labels = {
             "name": "Your name",
+            "email": "Email",
             "guest_count": "Number of guests",
-            "phone": "Phone (optional)",
+            "phone": "Phone",
             "message": "Tell us about your event (optional)",
-            "catering_interest": "I would like to discuss catering",
             "dietary_notes": "Dietary or catering notes (optional)",
             "package": "Preferred package (optional)",
         }
@@ -139,11 +185,25 @@ class BookingRequestForm(QuestionnaireMixin, forms.ModelForm):
         self.user = user
         self.fields["package"].queryset = EventPackage.objects.published()
         self.fields["package"].empty_label = "Help me choose"
-        if user is not None:
+        day = parse_day(self.data.get("event_date") or self.initial.get("event_date"))
+        self.open_sessions = (
+            Booking.objects.open_sessions(day) if day else list(Booking.Session.values)
+        )
+        self.fields["session"] = session_field(self.open_sessions or Booking.Session.values)
+        if self.open_sessions:
+            self.initial.setdefault("session", self.open_sessions[0])
+        self.fields["catering_interest"] = catering_field()
+        if user is not None and user.is_authenticated:
             self.fields["email"].disabled = True
             self.initial["email"] = user.email
             self.initial.setdefault("name", user.get_full_name() or user.username)
-        for name in ("name", "email", "event_type", "guest_count"):
+            profile = getattr(user, "profile", None)
+            if profile is not None and profile.phone:
+                self.initial.setdefault("phone", profile.phone)
+        else:
+            self.user = None
+            self.fields["email"].help_text = "We send updates about your request here."
+        for name in ("name", "email", "phone", "event_type", "guest_count"):
             self.fields[name].required = True
         self.fields["event_type"].choices = [("", "Choose one")] + self.event_choices
         self.fields["name"].widget.attrs["autocomplete"] = "name"
@@ -156,6 +216,9 @@ class BookingRequestForm(QuestionnaireMixin, forms.ModelForm):
     def is_spam(self) -> bool:
         return bool(self.cleaned_data.get("website"))
 
+    def clean_session(self):
+        return self.cleaned_data.get("session") or Booking.Session.FULL
+
     def clean_event_date(self):
         day = self.cleaned_data["event_date"]
         first, last = bookable_range(timezone.localdate())
@@ -163,7 +226,7 @@ class BookingRequestForm(QuestionnaireMixin, forms.ModelForm):
             raise forms.ValidationError("That date has already passed.")
         if day > last:
             raise forms.ValidationError("We take requests up to 24 months ahead.")
-        if Booking.objects.active().filter(event_date=day).exists():
+        if not Booking.objects.open_sessions(day):
             raise forms.ValidationError("Sorry, that date is no longer available.")
         return day
 
@@ -185,6 +248,9 @@ class BookingRequestForm(QuestionnaireMixin, forms.ModelForm):
             self.add_error(
                 "package", "Choose a package that matches your event type, or Help me choose."
             )
+        day, session = data.get("event_date"), data.get("session")
+        if day and session and session not in Booking.objects.open_sessions(day):
+            self.add_error("session", "That part of the day was just taken. Choose another.")
         return data
 
 
@@ -195,6 +261,7 @@ class BookingEditForm(QuestionnaireMixin, forms.ModelForm):
         model = Booking
         fields = [
             "event_date",
+            "session",
             "name",
             "phone",
             "event_type",
@@ -210,9 +277,9 @@ class BookingEditForm(QuestionnaireMixin, forms.ModelForm):
             "event_date": "Event date",
             "name": "Contact name",
             "guest_count": "Number of guests",
-            "phone": "Phone (optional)",
+            "phone": "Phone",
             "message": "About your event (optional)",
-            "catering_interest": "I would like to discuss catering",
+            "catering_interest": "I want to order catering with you",
             "dietary_notes": "Dietary or catering notes (optional)",
             "package": "Preferred package (optional)",
         }
@@ -235,10 +302,15 @@ class BookingEditForm(QuestionnaireMixin, forms.ModelForm):
             Q(pk=self.instance.package_id) | Q(pk__in=EventPackage.objects.published().values("pk"))
         )
         self.fields["package"].empty_label = "Help me choose"
-        for name in ("name", "event_type", "guest_count"):
+        self.old_session = self.instance.session
+        self.fields["session"] = session_field(Booking.Session.values)
+        for name in ("name", "phone", "event_type", "guest_count"):
             self.fields[name].required = True
         self.fields["event_type"].choices = self.event_choices
         self.fields["guest_count"].widget.attrs.update(min=1, max=200)
+
+    def clean_session(self):
+        return self.cleaned_data.get("session") or self.old_session
 
     def clean_event_date(self):
         day = self.cleaned_data["event_date"]
@@ -249,7 +321,7 @@ class BookingEditForm(QuestionnaireMixin, forms.ModelForm):
             raise forms.ValidationError("That date has already passed.")
         if day > last:
             raise forms.ValidationError("We take requests up to 24 months ahead.")
-        if Booking.objects.active().filter(event_date=day).exclude(pk=self.instance.pk).exists():
+        if not Booking.objects.open_sessions(day, exclude_pk=self.instance.pk):
             raise forms.ValidationError("That date is taken. Choose another one.")
         return day
 
@@ -260,6 +332,20 @@ class BookingEditForm(QuestionnaireMixin, forms.ModelForm):
             self.add_error(
                 "package", "Choose a package that matches your event type, or Help me choose."
             )
+        day, session = data.get("event_date"), data.get("session")
+        if (
+            day
+            and session
+            and (day, session) != (self.old_date, self.old_session)
+            and session not in Booking.objects.open_sessions(day, exclude_pk=self.instance.pk)
+        ):
+            open_now = Booking.objects.open_sessions(day, exclude_pk=self.instance.pk)
+            hint = (
+                f" Still open: {', '.join(SESSION_LABELS[s] for s in open_now)}."
+                if open_now
+                else ""
+            )
+            self.add_error("session", f"That part of the day is taken.{hint}")
         return data
 
     def save(self, commit=True):

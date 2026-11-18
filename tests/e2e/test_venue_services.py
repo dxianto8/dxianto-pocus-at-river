@@ -30,6 +30,7 @@ def test_configured_questionnaire_and_event_times(page, customer_login):
     page.get_by_label("Event type", exact=True).select_option("wedding")
     expect(page.get_by_label(question.label, exact=True)).to_be_visible()
     page.get_by_label("Number of guests", exact=True).fill("80")
+    page.get_by_label("Phone", exact=True).fill("630 555 0100")
     page.get_by_label("Start time", exact=True).fill("16:00")
     page.get_by_label("End time", exact=True).fill("22:00")
     page.get_by_label(question.label, exact=True).fill("Dinner with our families")

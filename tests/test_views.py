@@ -32,6 +32,7 @@ def post_data(event_date, **overrides):
         "event_date": event_date.isoformat(),
         "name": "Avery Jones",
         "email": "avery@example.com",
+        "phone": "630 555 0100",
         "event_type": "wedding",
         "guest_count": "120",
         "website": "",

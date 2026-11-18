@@ -23,6 +23,14 @@ Files were downloaded using Squarespace's 2500w / 2000w image variants. No seman
 edits were made. `event-hall.jpg` was scaled down to 1800px wide and `celebration.jpg`
 recompressed to keep pages light. Display cropping is done by CSS.
 
+## Pocus at River's own photograph
+
+- File: `static/images/gallery-hall.jpg` (1600 x 1067)
+- Shows the venue's own hall set for a wedding dinner: steel columns, string lights and the
+  glass overhead door of the Historic Pocus Motors Building.
+- Source: the venue's existing website (pocusatriver.com), imported with the original site's
+  text and photos in commit `947bf87`. Used as the home page photograph and in the gallery.
+
 ## Creative Commons photograph
 
 - File: `static/images/wedding-rings.jpg`

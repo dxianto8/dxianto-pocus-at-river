@@ -2,7 +2,7 @@
 {% block event %}
 <section class="panel panel--narrow">
   <h2>Cancel this event?</h2>
-  <p>{{ booking.event_date|date:"l, F j, Y" }} will stop being held for you and becomes available to others. This cannot be undone here; you would need to request the date again.</p>
+  <p>{{ booking.when }} will stop being held for you and becomes available to others. This cannot be undone here; you would need to request the date again.</p>
   {% if booking.status == "confirmed" %}<p class="notice">This booking is confirmed. Check the cancellation terms in your agreement with the venue before you cancel.</p>{% endif %}
   <form method="post">{% csrf_token %}
     <p class="actions"><button class="button button--danger" type="submit">Cancel event</button><a class="button button--quiet" href="{% url 'accounts:booking_detail' booking.pk %}">Keep event</a></p>

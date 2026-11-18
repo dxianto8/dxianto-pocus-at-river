@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
 
-from bookings import notifications, offering_views, site_views
+from bookings import catering_views, notifications, offering_views, site_views
 
 admin.site.site_header = "Pocus at River admin"
 admin.site.site_title = "Pocus at River admin"
@@ -13,6 +13,12 @@ urlpatterns = [
     path("notifications/sms/", notifications.sms_opt_out, name="sms_opt_out"),
     path("walkthroughs/", offering_views.walkthroughs, name="walkthroughs"),
     path("catering/", offering_views.catering, name="catering"),
+    path("catering/order/", catering_views.catering_order, name="catering_order"),
+    path(
+        "catering/order/<uuid:pk>/",
+        catering_views.catering_order_detail,
+        name="catering_order_detail",
+    ),
     path("recent-events/", offering_views.recent_events, name="recent_events"),
     path("", site_views.home, name="home"),
     path("explore/", site_views.home, name="explore"),

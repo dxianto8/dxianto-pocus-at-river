@@ -1,15 +1,30 @@
-{% extends "accounts/workspace_base.html" %}
+{% extends layout_template %}
 {% load static workspace %}
 
 {% block title %}Book Your Date | Pocus At River{% endblock %}
 {% block description %}See which dates are free and request your event date at Pocus at River, Downtown Aurora IL.{% endblock %}
 
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/workspace.css' %}">
+  <script src="{% static 'js/questionnaire.js' %}" defer></script>
+{% endblock %}
+
 {% block content %}
-  <section class="booking" aria-labelledby="booking-heading">
+  {% if not user.is_authenticated %}
+  <section class="wrap page-head">
+    <p class="section-label">Plan an event</p>
+    <h1 id="booking-heading">Request a date</h1>
+    <p>Pick an open day, then the morning (AM), the afternoon and evening (PM), or the whole day. Your request puts it on hold while the venue team reviews it; nothing is charged.</p>
+    <p class="booking__account">No account needed. Already have one? <a href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}">Sign in</a> to see your own dates.</p>
+  </section>
+  {% endif %}
+  <section class="booking{% if not user.is_authenticated %} wrap section booking--public{% endif %}" aria-labelledby="booking-heading">
+    {% if user.is_authenticated %}
     <div class="ws-head">
       <h1 id="booking-heading">Request a date</h1>
-      <p>Pick an open day. Your request puts it on hold while the venue team reviews it; nothing is charged.</p>
+      <p>Pick an open day, then the morning (AM), the afternoon and evening (PM), or the whole day. Your request puts it on hold while the venue team reviews it; nothing is charged.</p>
     </div>
+    {% endif %}
 
     <div class="calendar">
       <div class="calendar__nav">
@@ -52,11 +67,13 @@
                   {% with own=mine|lookup:d.date %}
                   <td class="day day--{{ d.state }}{% if own %} day--mine{% endif %}{% if d.is_today %} day--today{% endif %}{% if d.date == selected %} day--selected{% endif %}"
                       data-date="{{ d.date|date:'Y-m-d' }}" data-state="{{ d.state }}">
-                    {% if d.state == "available" %}
+                    {% if d.state.is_bookable %}
                       <a class="day__inner" href="?{% if request.GET.package %}package={{ request.GET.package|urlencode }}&amp;{% endif %}month={{ month.first|date:'Y-m' }}&amp;date={{ d.date|date:'Y-m-d' }}#request"
                          {% if d.date == selected %}aria-current="date"{% endif %}>
                         <span class="day__number" aria-hidden="true">{{ d.date.day }}</span>
-                        <span class="visually-hidden">{{ d.date|date:"l, F j" }}, available</span>
+                        {% if d.state == "available" %}<span class="visually-hidden">{{ d.date|date:"l, F j" }}, available</span>
+                        {% else %}<span class="visually-hidden">{{ d.date|date:"l, F j" }},</span>
+                        <span class="day__state">{{ d.state.label }}</span>{% endif %}
                       </a>
                     {% elif own %}
                       <a class="day__inner day__own" href="{% url 'accounts:booking_detail' own.pk %}">
@@ -84,6 +101,7 @@
 
       <ul class="calendar__legend" aria-label="Key">
         <li><span class="legend-swatch legend-swatch--open" aria-hidden="true"></span> Open</li>
+        <li><span class="legend-swatch legend-swatch--half" aria-hidden="true"></span> AM or PM still open</li>
         <li><span class="legend-swatch legend-swatch--past" aria-hidden="true"></span> Not bookable</li>
         <li><span class="legend-swatch legend-swatch--on_hold" aria-hidden="true"></span> On hold (someone has requested it)</li>
         <li><span class="legend-swatch legend-swatch--booked" aria-hidden="true"></span> Booked</li>
@@ -95,6 +113,8 @@
       {% if form %}
         <p class="muted">{{ venue.booking_intro }}</p>
         <h2 class="request__title" tabindex="-1">Request {{ selected|date:"l, F j, Y" }}</h2>
+        {% if selected_state == "am_open" %}<p class="notice" role="status">The afternoon is taken. The morning (AM) is still open.</p>
+        {% elif selected_state == "pm_open" %}<p class="notice" role="status">The morning is taken. The afternoon and evening (PM) are still open.</p>{% endif %}
         <form class="form form--grid" method="post" action="{% url 'bookings:book' %}?month={{ month.first|date:'Y-m' }}#request">
           {% csrf_token %}
           {{ form.event_date }}
@@ -107,8 +127,9 @@
           <p class="muted">Sending this holds the date for review. It does not confirm a booking or take a payment.</p>
           {% for field in form.visible_fields %}
             {% if field.name == "website" %}<div class="visually-hidden" aria-hidden="true">{{ field.label_tag }} {{ field }}</div>
+            {% elif field.widget_type == 'radioselect' %}{% include "includes/choice_field.html" with wide=True %}
             {% elif field.widget_type == 'checkbox' %}<div class="field field--check field--wide{% if field.errors %} field--invalid{% endif %}">{{ field }}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{% if field.help_text %}<div class="help-text">{{ field.help_text }}</div>{% endif %}{{ field.errors }}</div>
-            {% else %}<div class="field{% if field.errors %} field--invalid{% endif %}{% if field.name == 'message' or field.name == 'package' or field.name == 'dietary_notes' or field.widget_type == 'textarea' %} field--wide{% endif %}">{{ field.label_tag }}{{ field }}{% if field.name == 'email' %}<div class="help-text">From your account. Change it under Account.</div>{% elif field.help_text %}<div class="help-text">{{ field.help_text }}</div>{% endif %}{{ field.errors }}</div>{% endif %}
+            {% else %}<div class="field{% if field.errors %} field--invalid{% endif %}{% if field.name == 'message' or field.name == 'package' or field.name == 'dietary_notes' or field.widget_type == 'textarea' %} field--wide{% endif %}">{{ field.label_tag }}{{ field }}{% if field.name == 'email' and field.field.disabled %}<div class="help-text">From your account. Change it under Account.</div>{% elif field.help_text %}<div class="help-text">{{ field.help_text }}</div>{% endif %}{{ field.errors }}</div>{% endif %}
           {% endfor %}
           <p class="actions field--wide"><button class="button" type="submit">Send request</button></p>
         </form>

@@ -17,6 +17,7 @@
     .cal .pill--pending { background: #b26a00; }
     .cal .pill--confirmed { background: #263822; }
     .cal .pill--blocked { background: #363636; }
+    .cal .meta + .pill, .cal .cal-tools + .pill { margin-top: 6px; }
     .cal .meta { margin-top: 3px; font-size: 11px; color: var(--body-quiet-color); }
     .cal form { display: inline; margin: 0; }
     .cal .cal-tools { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
@@ -58,32 +59,38 @@
               <td class="{% if not d.in_month %}out{% endif %}{% if d.is_past %} past{% endif %}{% if d.is_today %} today{% endif %}"
                   data-date="{{ d.date|date:'Y-m-d' }}">
                 <div class="num">{{ d.date.day }}</div>
-                {% if d.booking %}
-                  {% with b=d.booking %}
-                    <a class="pill pill--{{ b.status }}" href="{% url 'admin:bookings_booking_change' b.pk %}"
-                       title="{{ b.get_status_display }}">
-                      {% if b.status == "blocked" %}Blocked{% else %}{{ b.name }}{% endif %}
-                    </a>
-                    <div class="meta">
-                      {{ b.get_status_display }}{% if b.guest_count %} · {{ b.guest_count }} guests{% endif %}{% if b.event_type %} · {{ b.get_event_type_display }}{% endif %}
+                {% for b in d.bookings %}
+                  <a class="pill pill--{{ b.status }}" href="{% url 'admin:bookings_booking_change' b.pk %}"
+                     title="{{ b.get_status_display }}">
+                    {{ b.get_session_display }} · {% if b.status == "blocked" %}Blocked{% else %}{{ b.name }}{% endif %}
+                  </a>
+                  <div class="meta">
+                    {{ b.get_status_display }}{% if b.guest_count %} · {{ b.guest_count }} guests{% endif %}{% if b.event_type %} · {{ b.get_event_type_display }}{% endif %}
+                  </div>
+                  {% if b.status == "blocked" and can_delete %}
+                    <div class="cal-tools">
+                      <form method="post" action="{% url 'admin:bookings_booking_unblock' b.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="cal-btn" aria-label="Unblock {{ d.date|date:'F j, Y' }} {{ b.get_session_display }}">Unblock</button>
+                      </form>
                     </div>
-                    {% if b.status == "blocked" and can_delete %}
-                      <div class="cal-tools">
-                        <form method="post" action="{% url 'admin:bookings_booking_unblock' b.pk %}">
-                          {% csrf_token %}
-                          <button type="submit" class="cal-btn" aria-label="Unblock {{ d.date|date:'F j, Y' }}">Unblock</button>
-                        </form>
-                      </div>
-                    {% endif %}
-                  {% endwith %}
-                {% elif d.in_month and not d.is_past and can_add %}
+                  {% endif %}
+                {% endfor %}
+                {% if d.in_month and not d.is_past and can_add and d.open_sessions %}
                   <div class="cal-tools">
                     <form method="post" action="{% url 'admin:bookings_booking_block' %}">
                       {% csrf_token %}
                       <input type="hidden" name="date" value="{{ d.date|date:'Y-m-d' }}">
-                      <button type="submit" class="cal-btn" aria-label="Block {{ d.date|date:'F j, Y' }}">Block</button>
+                      {% if d.open_sessions|length > 1 %}
+                        <select name="session" class="cal-btn" aria-label="Part of {{ d.date|date:'F j, Y' }} to block">
+                          {% for s in d.open_sessions %}<option value="{{ s }}">{% if s == "full" %}Full day{% else %}{{ s|upper }}{% endif %}</option>{% endfor %}
+                        </select>
+                      {% else %}
+                        <input type="hidden" name="session" value="{{ d.open_sessions.0 }}">
+                      {% endif %}
+                      <button type="submit" class="cal-btn" aria-label="Block {{ d.date|date:'F j, Y' }}">Block{% if d.open_sessions|length == 1 %} {{ d.open_sessions.0|upper }}{% endif %}</button>
                     </form>
-                    <a class="cal-btn" href="{{ add_url }}?event_date={{ d.date|date:'Y-m-d' }}&amp;status=confirmed"
+                    <a class="cal-btn" href="{{ add_url }}?event_date={{ d.date|date:'Y-m-d' }}&amp;session={{ d.open_sessions.0 }}&amp;status=confirmed"
                        aria-label="Add booking on {{ d.date|date:'F j, Y' }}">Add</a>
                   </div>
                 {% endif %}

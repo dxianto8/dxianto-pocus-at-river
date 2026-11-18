@@ -63,13 +63,15 @@ def test_gallery_keyboard_controls(page: Page):
     expect(photos.first).to_be_focused()
 
 
-def test_mobile_menu_and_account_gate(page: Page):
+def test_mobile_menu_plan_event_opens_the_calendar_without_an_account(page: Page):
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto("/")
     page.get_by_role("button", name="Menu").click()
     page.get_by_role("navigation").get_by_role("link", name="Plan an event").click()
-    expect(page).to_have_url(re.compile(r"/account/signup/\?next="))
-    expect(page.get_by_role("heading", name="Create your account")).to_be_visible()
+    expect(page).to_have_url(re.compile(r"/book/$"))
+    expect(page.get_by_role("heading", level=1, name="Request a date")).to_be_visible()
+    expect(page.get_by_test_id("calendar")).to_be_visible()
+    expect(page.get_by_text("No account needed.")).to_be_visible()
 
 
 def test_signup_to_booking_to_status_dashboard(page: Page):
@@ -81,10 +83,7 @@ def test_signup_to_booking_to_status_dashboard(page: Page):
 
     day = timezone.localdate() + timedelta(days=12)
     page.goto("/")
-    menu = page.get_by_role("button", name="Menu", exact=True)
-    if menu.is_visible():
-        menu.click()
-    page.get_by_role("navigation").get_by_role("link", name="Plan an event").click()
+    page.locator(".header-account").get_by_role("link", name="Sign up").click()
     expect(page).to_have_url(re.compile(r"/account/signup/\?next="))
     page.get_by_label("Your name", exact=True).fill("New Guest")
     page.get_by_label("Email", exact=True).fill("new@example.com")
@@ -97,6 +96,7 @@ def test_signup_to_booking_to_status_dashboard(page: Page):
     expect(page.get_by_role("navigation", name="Workspace navigation")).to_be_visible()
     page.goto(f"/book/?date={day:%Y-%m-%d}")
     expect(page.get_by_label("Email", exact=True)).to_be_disabled()
+    page.get_by_label("Phone", exact=True).fill("630 555 0100")
     page.get_by_label("Event type").select_option("wedding")
     page.get_by_label("Number of guests").fill("60")
     page.get_by_role("button", name="Send Request").click()
@@ -151,7 +151,7 @@ def test_existing_account_can_continue_plan_event_through_login(page: Page):
         "returning", "returning@example.com", "Strong-River-Password-2027!"
     )
     page.goto("/book/?package=wedding")
-    page.locator(".auth-switch").get_by_role("link", name="Log in").click()
+    page.locator(".booking__account").get_by_role("link", name="Sign in").click()
     page.get_by_label("Username", exact=True).fill("returning")
     page.get_by_label("Password", exact=True).fill("Strong-River-Password-2027!")
     page.get_by_role("button", name="Log in", exact=True).click()

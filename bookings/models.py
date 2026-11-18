@@ -1,6 +1,6 @@
 import os
 import uuid
-from datetime import date
+from datetime import date, time
 from decimal import ROUND_HALF_UP, Decimal
 
 from django.conf import settings
@@ -12,21 +12,51 @@ from django.utils import timezone
 
 from .calendar import DayState
 
+NOON = time(12)
+
+
+# Which halves of the day each session holds. A full day holds both, so it collides with either.
+HALVES = {"full": ("am", "pm"), "am": ("am",), "pm": ("pm",)}
+
 
 class BookingQuerySet(models.QuerySet):
     def active(self):
         """Bookings that hold their date: pending requests, confirmed bookings and blocks."""
         return self.filter(status__in=Booking.ACTIVE_STATUSES)
 
+    def taken_halves(self, start: date, end: date, exclude_pk=None) -> dict[date, dict[str, str]]:
+        """For each date with an active booking: {half: status} for the halves it holds."""
+        rows = self.active().filter(event_date__range=(start, end))
+        if exclude_pk is not None:
+            rows = rows.exclude(pk=exclude_pk)
+        taken: dict[date, dict[str, str]] = {}
+        for day, session, status in rows.values_list("event_date", "session", "status"):
+            for half in HALVES.get(session, HALVES["full"]):
+                taken.setdefault(day, {})[half] = status
+        return taken
+
+    def open_sessions(self, day: date, exclude_pk=None) -> list[str]:
+        """The sessions that can still be requested on a date, in display order."""
+        held = self.taken_halves(day, day, exclude_pk).get(day, {})
+        return [
+            session
+            for session in Booking.Session.values
+            if not any(half in held for half in HALVES[session])
+        ]
+
     def public_states(self, start: date, end: date) -> dict[date, DayState]:
         """What visitors may see for each taken date in a range. Never includes personal details."""
-        rows = (
-            self.active().filter(event_date__range=(start, end)).values_list("event_date", "status")
-        )
-        return {
-            day: DayState.ON_HOLD if status == Booking.Status.PENDING else DayState.BOOKED
-            for day, status in rows
-        }
+        states = {}
+        for day, held in self.taken_halves(start, end).items():
+            if "am" not in held:
+                states[day] = DayState.AM_OPEN
+            elif "pm" not in held:
+                states[day] = DayState.PM_OPEN
+            elif Booking.Status.PENDING in held.values():
+                states[day] = DayState.ON_HOLD
+            else:
+                states[day] = DayState.BOOKED
+        return states
 
 
 class Booking(models.Model):
@@ -42,10 +72,22 @@ class Booking(models.Model):
         CORPORATE = "corporate", "Corporate event"
         OTHER = "other", "Other"
 
+    class Session(models.TextChoices):
+        FULL = "full", "Full day"
+        AM = "am", "AM"
+        PM = "pm", "PM"
+
     ACTIVE_STATUSES = (Status.PENDING, Status.CONFIRMED, Status.BLOCKED)
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     event_date = models.DateField("event date")
+    session = models.CharField(
+        "time of day",
+        max_length=4,
+        choices=Session,
+        default=Session.FULL,
+        help_text="AM and PM bookings can share a date; a full day holds both.",
+    )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -85,18 +127,36 @@ class Booking(models.Model):
 
     class Meta:
         ordering = ["event_date"]
+        # One index per half of the day: a full day sits in both, AM and PM in one each.
         constraints = [
             models.UniqueConstraint(
                 fields=["event_date"],
-                condition=Q(status__in=["pending", "confirmed", "blocked"]),
-                name="one_active_booking_per_date",
-                violation_error_message="That date already has an active booking.",
-            )
+                condition=Q(
+                    status__in=["pending", "confirmed", "blocked"], session__in=["full", "am"]
+                ),
+                name="one_active_am_booking_per_date",
+                violation_error_message="The morning of that date already has an active booking.",
+            ),
+            models.UniqueConstraint(
+                fields=["event_date"],
+                condition=Q(
+                    status__in=["pending", "confirmed", "blocked"], session__in=["full", "pm"]
+                ),
+                name="one_active_pm_booking_per_date",
+                violation_error_message=(
+                    "The afternoon of that date already has an active booking."
+                ),
+            ),
         ]
 
     def __str__(self) -> str:
         who = self.name or self.get_status_display()
-        return f"{self.event_date:%a %d %b %Y}: {who}"
+        return f"{self.event_date:%a %d %b %Y} ({self.get_session_display()}): {who}"
+
+    @property
+    def when(self) -> str:
+        """The date and time of day, for headings and emails: "Saturday, June 5, 2027 · PM"."""
+        return f"{self.event_date:%A, %B %-d, %Y} · {self.get_session_display()}"
 
     def get_event_type_display(self):
         option = EventTypeOption.objects.filter(code=self.event_type).first()
@@ -118,6 +178,10 @@ class Booking(models.Model):
             raise ValidationError(
                 {"end_time": "End time must be after start time on the same day."}
             )
+        if self.start_time and self.session == self.Session.AM and self.start_time >= NOON:
+            raise ValidationError({"start_time": "An AM booking starts before noon."})
+        if self.start_time and self.session == self.Session.PM and self.start_time < NOON:
+            raise ValidationError({"start_time": "A PM booking starts at noon or later."})
         required = {
             "name": self.name,
             "email": self.email,
@@ -583,6 +647,84 @@ class CateringItem(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class CateringOrder(models.Model):
+    """
+    A catering order placed from the menu. Prices are copied from the menu when the order is
+    placed, so later menu changes never alter it. No payment is taken on the site: the venue
+    confirms the order and arranges payment.
+    """
+
+    class Status(models.TextChoices):
+        RECEIVED = "received", "Received"
+        CONFIRMED = "confirmed", "Confirmed"
+        CANCELLED = "cancelled", "Cancelled"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    booking = models.ForeignKey(
+        Booking,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="catering_orders",
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL
+    )
+    status = models.CharField(max_length=10, choices=Status, default=Status.RECEIVED)
+    name = models.CharField(max_length=120)
+    email = models.EmailField()
+    phone = models.CharField(max_length=40)
+    event_date = models.DateField("event date")
+    guest_count = models.PositiveSmallIntegerField(
+        "guests",
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(settings.BOOKING_MAX_GUESTS)],
+    )
+    notes = models.TextField("notes and dietary needs", max_length=2000, blank=True)
+    total = models.DecimalField(
+        "estimated total",
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        help_text="Sum of the priced items when ordered. Items without a price are quoted.",
+    )
+    has_unpriced_items = models.BooleanField(default=False)
+    created_at = models.DateTimeField("ordered", auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Catering for {self.name}, {self.event_date:%b %-d, %Y}"
+
+    @property
+    def total_display(self):
+        amount = f"${self.total:,.2f}"
+        return f"{amount} + quoted items" if self.has_unpriced_items else amount
+
+
+class CateringOrderLine(models.Model):
+    order = models.ForeignKey(CateringOrder, on_delete=models.CASCADE, related_name="lines")
+    item = models.ForeignKey(CateringItem, null=True, blank=True, on_delete=models.SET_NULL)
+    title = models.CharField(max_length=120)
+    unit_price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    price_note = models.CharField(max_length=120, blank=True)
+    quantity = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(1000)]
+    )
+
+    class Meta:
+        ordering = ["pk"]
+
+    def __str__(self):
+        return f"{self.quantity} × {self.title}"
+
+    @property
+    def line_total(self):
+        return None if self.unit_price is None else self.unit_price * self.quantity
 
 
 class WalkthroughSlot(models.Model):

@@ -54,7 +54,7 @@ def edit_data(booking, **overrides):
     return {
         "event_date": booking.event_date.isoformat(),
         "name": booking.name,
-        "phone": "",
+        "phone": "630 555 0100",
         "event_type": booking.event_type,
         "package": "",
         "guest_count": booking.guest_count,
@@ -72,6 +72,7 @@ class TestNewRequest:
             {
                 "event_date": day(200).isoformat(),
                 "name": "Avery",
+                "phone": "630 555 0100",
                 "event_type": "wedding",
                 "guest_count": "80",
             },

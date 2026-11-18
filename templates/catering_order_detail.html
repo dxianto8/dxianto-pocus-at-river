@@ -1,0 +1,26 @@
+{% extends layout_template %}
+{% block title %}Catering Order Received | Pocus at River{% endblock %}
+{% block content %}
+<section class="{% if user.is_authenticated %}{% else %}wrap section {% endif %}confirmation order-receipt">
+  <p class="section-label">Catering · {{ order.get_status_display }}</p>
+  <h1>{% if order.status == "received" %}Catering order received{% else %}Your catering order{% endif %}</h1>
+  <p class="lede">For {{ order.event_date|date:"l, F j, Y" }}{% if order.booking %} ({{ order.booking.get_session_display }}){% endif %}{% if order.guest_count %}, {{ order.guest_count }} guests{% endif %}.</p>
+  {% if order.lines.all %}
+  <table class="receipt">
+    <caption class="visually-hidden">Items ordered</caption>
+    <thead><tr><th scope="col">Item</th><th scope="col">Qty</th><th scope="col">Price</th></tr></thead>
+    <tbody>
+      {% for line in order.lines.all %}<tr><td>{{ line.title }}</td><td>{{ line.quantity }}</td><td>{% if line.unit_price is not None %}${{ line.line_total|floatformat:2 }}{% if line.price_note %}<span class="small muted"> (${{ line.unit_price|floatformat:2 }} {{ line.price_note }})</span>{% endif %}{% else %}Quoted{% endif %}</td></tr>{% endfor %}
+    </tbody>
+    <tfoot><tr><th scope="row" colspan="2">Estimated total</th><td>{{ order.total_display }}</td></tr></tfoot>
+  </table>
+  {% endif %}
+  {% if order.notes %}<p><strong>Your notes:</strong> {{ order.notes|linebreaksbr }}</p>{% endif %}
+  <p>Nothing has been charged. The venue team will confirm the order, the final price and how to pay, by email at {{ order.email }} or by phone.</p>
+  <p class="actions">
+    {% if order.booking and user.is_authenticated and order.booking.owner_id == user.pk %}<a class="button" href="{% url 'accounts:booking_detail' order.booking.pk %}">Back to my event</a>
+    {% elif order.booking %}<a class="button" href="{% url 'bookings:requested' %}?booking={{ order.booking.pk }}">Back to my request</a>{% endif %}
+    <a class="button button--quiet" href="{% url 'catering' %}">See the menu</a>
+  </p>
+</section>
+{% endblock %}

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
-{% block image_preload %}<link rel="preload" as="image" href="{% static 'images/wedding-couple.jpg' %}" fetchpriority="high">{% endblock %}
+{% block image_preload %}<link rel="preload" as="image" href="{% static 'images/gallery-hall.jpg' %}" fetchpriority="high">{% endblock %}
 {% block content %}
 <section class="hero" data-testid="hero">
-  <div class="hero__media photo-frame"><img decoding="async" class="hero__photo" src="{% static 'images/wedding-couple.jpg' %}" alt="A couple sharing a laugh in leather chairs against white painted brick" width="1667" height="1667" fetchpriority="high"></div>
+  <div class="hero__media photo-frame"><img decoding="async" class="hero__photo" src="{% static 'images/gallery-hall.jpg' %}" alt="The hall set for a wedding dinner: a long candlelit table, steel columns and a glass overhead door" width="1600" height="1067" fetchpriority="high"></div>
   <div class="hero__text on-dark">
     <p class="section-label section-label--light">Downtown Aurora, Illinois</p>
     <h1>{{ venue.hero_heading }}</h1>

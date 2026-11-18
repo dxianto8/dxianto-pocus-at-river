@@ -19,10 +19,13 @@ from django.views.decorators.http import require_POST
 from . import services
 from .calendar import add_months, month_dates
 from .models import (
+    HALVES,
     Activity,
     Booking,
     BookingQuestion,
     CateringItem,
+    CateringOrder,
+    CateringOrderLine,
     ChecklistItem,
     CustomerProfile,
     Document,
@@ -58,7 +61,8 @@ class AdminDay:
     in_month: bool
     is_past: bool
     is_today: bool
-    booking: Booking | None
+    bookings: list[Booking]
+    open_sessions: list[str]  # what can still be blocked or added on this date
 
 
 class MessageInline(admin.TabularInline):
@@ -169,13 +173,34 @@ class EventTypeAdminForm(forms.ModelForm):
         self.fields["event_type"] = forms.ChoiceField(choices=choices or Booking.EventType.choices)
 
 
+class CateringOrderInline(admin.TabularInline):
+    model = CateringOrder
+    fields = ["created_at", "status", "total", "has_unpriced_items"]
+    readonly_fields = ["created_at", "total", "has_unpriced_items"]
+    extra = 0
+    show_change_link = True
+    can_delete = False
+    verbose_name_plural = "catering orders"
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
     form = EventTypeAdminForm
-    inlines = [MessageInline, DocumentInline, ChecklistInline, ScheduleInline, ActivityInline]
+    inlines = [
+        MessageInline,
+        DocumentInline,
+        ChecklistInline,
+        ScheduleInline,
+        CateringOrderInline,
+        ActivityInline,
+    ]
     autocomplete_fields = ["owner", "package"]
     list_display = [
         "event_date",
+        "session",
         "status_badge",
         "name",
         "event_type",
@@ -186,12 +211,12 @@ class BookingAdmin(admin.ModelAdmin):
         "created_at",
     ]
     list_display_links = ["event_date", "name"]
-    list_filter = ["status", "event_type"]
+    list_filter = ["status", "session", "event_type"]
     date_hierarchy = "event_date"
     search_fields = ["name", "email", "phone", "message", "admin_note", "owner__username"]
     actions = ["confirm", "decline", "cancel"]
     fieldsets = [
-        (None, {"fields": ["event_date", "status"]}),
+        (None, {"fields": ["event_date", "session", "status"]}),
         ("Contact", {"fields": ["owner", "name", "email", "phone"]}),
         (
             "Event",
@@ -258,8 +283,8 @@ class BookingAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
         if change and "status" in form.changed_data:
             services.status_changed(obj, by_staff=True, request=request)
-        if change and "event_date" in form.changed_data:
-            services.log(obj, f"The venue moved the event to {obj.event_date:%B %-d, %Y}.")
+        if change and ("event_date" in form.changed_data or "session" in form.changed_data):
+            services.log(obj, f"The venue moved the event to {obj.when}.")
 
     def save_formset(self, request, form, formset, change):
         booking = form.instance
@@ -374,10 +399,18 @@ class BookingAdmin(admin.ModelAdmin):
         today = timezone.localdate()
         first = self._parse_month(request.GET.get("month"), today)
         weeks = month_dates(first)
-        bookings = {
-            b.event_date: b
-            for b in Booking.objects.active().filter(event_date__range=(weeks[0][0], weeks[-1][-1]))
-        }
+        bookings: dict[date, list[Booking]] = {}
+        for b in (
+            Booking.objects.active()
+            .filter(event_date__range=(weeks[0][0], weeks[-1][-1]))
+            .order_by("event_date", "session")
+        ):
+            bookings.setdefault(b.event_date, []).append(b)
+
+        def open_sessions(day):
+            held = {h for b in bookings.get(day, []) for h in HALVES[b.session]}
+            return [s for s in Booking.Session.values if not held & set(HALVES[s])]
+
         context = {
             **self.admin_site.each_context(request),
             "opts": self.opts,
@@ -389,7 +422,14 @@ class BookingAdmin(admin.ModelAdmin):
             "weekdays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
             "weeks": [
                 [
-                    AdminDay(d, d.month == first.month, d < today, d == today, bookings.get(d))
+                    AdminDay(
+                        d,
+                        d.month == first.month,
+                        d < today,
+                        d == today,
+                        bookings.get(d, []),
+                        open_sessions(d),
+                    )
                     for d in week
                 ]
                 for week in weeks
@@ -407,13 +447,19 @@ class BookingAdmin(admin.ModelAdmin):
         if day is None or day < timezone.localdate():
             self.message_user(request, "Choose a date that hasn't passed.", messages.ERROR)
             return self._back_to_calendar(day)
+        session = request.POST.get("session", Booking.Session.FULL)
+        if session not in Booking.Session.values:
+            session = Booking.Session.FULL
+        label = f"{day:%a %d %b %Y} ({Booking.Session(session).label})"
         try:
             with transaction.atomic():
-                Booking.objects.create(event_date=day, status=Booking.Status.BLOCKED)
+                Booking.objects.create(
+                    event_date=day, session=session, status=Booking.Status.BLOCKED
+                )
         except IntegrityError:
-            self.message_user(request, f"{day:%a %d %b %Y} already has a booking.", messages.ERROR)
+            self.message_user(request, f"{label} already has a booking.", messages.ERROR)
         else:
-            self.message_user(request, f"Blocked {day:%a %d %b %Y}.", messages.SUCCESS)
+            self.message_user(request, f"Blocked {label}.", messages.SUCCESS)
         return self._back_to_calendar(day)
 
     def unblock_view(self, request: HttpRequest, pk) -> HttpResponse:
@@ -571,6 +617,37 @@ class CateringItemAdmin(admin.ModelAdmin):
     list_display = ["title", "category", "price", "is_published", "display_order"]
     list_filter = ["category", "is_published"]
     search_fields = ["title", "description"]
+
+
+class CateringOrderLineInline(admin.TabularInline):
+    model = CateringOrderLine
+    fields = ["title", "quantity", "unit_price", "price_note"]
+    readonly_fields = ["title", "unit_price", "price_note"]
+    extra = 0
+
+
+@admin.register(CateringOrder)
+class CateringOrderAdmin(admin.ModelAdmin):
+    list_display = ["created_at", "name", "event_date", "status", "total", "booking", "owner"]
+    list_filter = ["status"]
+    search_fields = ["name", "email", "phone", "notes"]
+    date_hierarchy = "event_date"
+    autocomplete_fields = ["booking", "owner"]
+    inlines = [CateringOrderLineInline]
+    readonly_fields = ["created_at", "total", "has_unpriced_items"]
+    fieldsets = [
+        (None, {"fields": ["status", "booking", "owner", "created_at"]}),
+        ("Contact", {"fields": ["name", "email", "phone"]}),
+        ("Event", {"fields": ["event_date", "guest_count", "notes"]}),
+        (
+            "Price",
+            {
+                "fields": ["total", "has_unpriced_items"],
+                "description": "Prices were copied from the menu when the order was placed. "
+                "No payment is taken on the site.",
+            },
+        ),
+    ]
 
 
 @admin.register(WalkthroughSlot)

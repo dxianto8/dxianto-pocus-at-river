@@ -21,7 +21,7 @@ def request_data(**overrides):
         "event_date": (today() + timedelta(days=30)).isoformat(),
         "name": "Avery Jones",
         "email": "avery@example.com",
-        "phone": "",
+        "phone": "630 555 0100",
         "event_type": "wedding",
         "guest_count": "120",
         "message": "Saturday evening reception",
