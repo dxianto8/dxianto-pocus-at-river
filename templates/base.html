@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script>document.documentElement.classList.add('js');</script>
+  {% include "includes/motion_flag.html" %}
   <title>{% block title %}Pocus at River | Weddings &amp; Events in Aurora{% endblock %}</title>
   <meta name="description" content="{% block description %}An event venue in the Historic Pocus Motors Building in downtown Aurora, Illinois. See open dates, compare packages, and plan your wedding, company event or celebration.{% endblock %}">
   <link rel="icon" href="{% static 'images/badge.png' %}" type="image/png">
@@ -20,41 +20,44 @@
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="wordmark" href="{% if user.is_authenticated %}{% url 'explore' %}{% else %}{% url 'home' %}{% endif %}" aria-label="Pocus at River home"><img class="wordmark__logo" src="{% static 'images/badge.png' %}" alt="" width="50" height="50"><span class="wordmark__text">Pocus at River<small>Weddings &amp; Events</small></span></a>
+      {% with current=request.resolver_match.url_name %}
+      <nav class="site-nav" id="site-nav" aria-label="Main navigation">
+        <ul class="nav-list">
+          <li class="nav-group{% if current == 'weddings' or current == 'corporate' or current == 'recent_events' %} nav-group--current{% endif %}">
+            <button class="nav-group__toggle" type="button" aria-expanded="false" aria-controls="nav-events">Events</button>
+            <ul class="nav-group__menu" id="nav-events">
+              <li><a href="{% url 'weddings' %}" {% if current == 'weddings' %}aria-current="page"{% endif %}>Weddings</a></li>
+              <li><a href="{% url 'corporate' %}" {% if current == 'corporate' %}aria-current="page"{% endif %}>Corporate</a></li>
+              <li><a href="{% url 'recent_events' %}" {% if current == 'recent_events' %}aria-current="page"{% endif %}>Recent events</a></li>
+            </ul>
+          </li>
+          <li class="nav-group{% if current == 'venue' or current == 'gallery' or current == 'walkthroughs' %} nav-group--current{% endif %}">
+            <button class="nav-group__toggle" type="button" aria-expanded="false" aria-controls="nav-venue">The venue</button>
+            <ul class="nav-group__menu" id="nav-venue">
+              <li><a href="{% url 'venue' %}" {% if current == 'venue' %}aria-current="page"{% endif %}>About &amp; directions</a></li>
+              <li><a href="{% url 'gallery' %}" {% if current == 'gallery' %}aria-current="page"{% endif %}>Gallery</a></li>
+              <li><a href="{% url 'walkthroughs' %}" {% if current == 'walkthroughs' %}aria-current="page"{% endif %}>Walkthroughs</a></li>
+            </ul>
+          </li>
+          <li class="nav-group{% if current == 'packages' or current == 'catering' %} nav-group--current{% endif %}">
+            <button class="nav-group__toggle" type="button" aria-expanded="false" aria-controls="nav-pricing">Pricing</button>
+            <ul class="nav-group__menu" id="nav-pricing">
+              <li><a href="{% url 'packages' %}" {% if current == 'packages' %}aria-current="page"{% endif %}>Packages &amp; pricing</a></li>
+              <li><a href="{% url 'catering' %}" {% if current == 'catering' %}aria-current="page"{% endif %}>Catering</a></li>
+            </ul>
+          </li>
+        </ul>
+        <a class="button button--small site-nav__cta" href="{% url 'bookings:book' %}">Plan an event</a>
+      </nav>
+      {% endwith %}
       <div class="header-controls">
         <span class="header-account">{% if user.is_authenticated %}<a href="{% url 'accounts:dashboard' %}">My events</a>{% else %}<a href="{% url 'accounts:signup' %}?next={% if next %}{{ next|urlencode }}{% else %}{% url 'bookings:book' %}{% endif %}">Sign up</a><a href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in</a>{% endif %}</span>
         <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
       </div>
-      {% with current=request.resolver_match.url_name %}
-      <nav class="site-nav" id="site-nav" aria-label="Main navigation">
-        <a href="{% url 'weddings' %}" {% if current == 'weddings' %}aria-current="page"{% endif %}>Weddings</a>
-        <a href="{% url 'corporate' %}" {% if current == 'corporate' %}aria-current="page"{% endif %}>Corporate</a>
-        <a href="{% url 'gallery' %}" {% if current == 'gallery' %}aria-current="page"{% endif %}>Gallery</a>
-        <a href="{% url 'venue' %}" {% if current == 'venue' %}aria-current="page"{% endif %}>The venue</a>
-        <a href="{% url 'packages' %}" {% if current == 'packages' %}aria-current="page"{% endif %}>Packages &amp; pricing</a>
-        <a href="{% url 'catering' %}" {% if current == 'catering' %}aria-current="page"{% endif %}>Catering</a>
-        <a href="{% url 'walkthroughs' %}" {% if current == 'walkthroughs' %}aria-current="page"{% endif %}>Walkthroughs</a>
-        <span class="site-nav__account">
-          <a class="button button--small" href="{% url 'bookings:book' %}">Plan an event</a>
-        </span>
-      </nav>
-      {% endwith %}
     </div>
   </header>
   {% if messages %}<div class="wrap" role="status">{% for message in messages %}<p class="notice">{{ message }}</p>{% endfor %}</div>{% endif %}
   <main id="main">{% block content %}{% endblock %}</main>
-  {% block cta %}
-  <section class="cta-band on-dark" aria-labelledby="cta-heading">
-    <div class="wrap">
-      <p class="section-label section-label--center">River Street, Aurora</p>
-      <h2 id="cta-heading" class="section-title">Walk the room. Picture the day.</h2>
-      <p>A floor plan only tells you so much. Come by with a guest count, a few possible dates, and the questions on your mind.</p>
-      <div class="actions">
-        <a class="button" href="{% url 'walkthroughs' %}">Book a walkthrough</a>
-        <a class="button button--quiet" href="{% url 'bookings:book' %}">Check open dates</a>
-      </div>
-    </div>
-  </section>
-  {% endblock %}
   <footer class="site-footer">
     <div class="wrap footer-grid">
       <div>

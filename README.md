@@ -8,10 +8,13 @@ signed-in workspace share one design: Playfair Display for headings and dates,
 Montserrat for everything else, forest green and walnut with bronze accents on cream
 and ivory. Small labels are tracked capitals after a bronze rule; buttons are square.
 
-- **Home page.** A full-width photograph with the welcome, the venue with an offset
-  bronze frame, the three kinds of occasion as overlapping photo cards, the planning
-  steps on dark green, and a closing band (shown on every public page) that leads to a
-  walkthrough or the calendar. An address bar sits above the header.
+- **Home page.** A full-width photograph with the welcome, the venue beside a photograph,
+  and the three kinds of occasion as photos with overlapping text cards. An address bar
+  sits above the header.
+- **Navigation.** Three groups (Events, The venue, Pricing) that drop down on hover, with
+  a bronze rule drawn under whatever the pointer is on. They also open on click, and from
+  the keyboard (Arrow Down to enter, Escape to close). Without JavaScript they open on hover
+  and focus.
 - **Booking requires an account.** Both GET and POST requests to `/book/` require
   login. Signup preserves the selected date/package destination. Booking ownership,
   contact email, pending status, and package snapshots are set on the server.
@@ -255,10 +258,13 @@ When you're ready to move `pocusatriver.com` off Wix:
   is contacted at runtime.
 - **Colour.** White text never sits on the light bronze (#b49a6c, 2.7:1): buttons use
   #8a6d3b (4.8:1) and small labels on cream use #7d6233 (5.3:1).
-- **Motion.** Restored the animation timelines from `81c143e`: staggered heading entrances,
-  photo wipes, one-time scroll reveals, gallery/menu effects, smooth booking-form scrolling,
-  and the checklist progress bar. The workspace otherwise stays still. Reduced-motion
-  preferences disable the effects; pages still work without JavaScript.
+- **Motion.** The opening block of each page rises in order once fonts are ready; the home
+  photograph settles into place and side photographs wipe in; further down, text rises
+  and photographs are uncovered as they come into view; the checklist bar fills. Starting
+  states are set before the first paint (`templates/includes/motion_flag.html`), so nothing
+  is shown and then hidden; anything already on screen is left alone; photographs only move
+  once loaded; markers are removed when an entrance ends. The workspace otherwise stays
+  still. With reduced motion, or if the script fails to load, pages are simply still.
 - **Photography.** Full-width imagery comes from the owner-authorized Society 57
   assets and a separately verified CC0 wedding detail photograph. See
   `docs/image-sources.md` for the individual asset URLs, credits, and permissions.

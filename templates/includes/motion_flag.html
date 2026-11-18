@@ -1,0 +1,4 @@
+{% comment %}Runs before first paint. "motion" lets CSS hold elements at the start of their entrance, so
+   nothing is shown and then hidden again. If motion.js never arrives, the flag comes off and
+   every page is simply still. Reduced-motion preferences never get the flag.{% endcomment %}
+<script>(function(){var r=document.documentElement;r.classList.add('js');if(window.matchMedia&&matchMedia('(prefers-reduced-motion: no-preference)').matches&&'IntersectionObserver' in window&&'animate' in r){r.classList.add('motion');setTimeout(function(){if(!window.pocusMotion)r.classList.remove('motion');},3000);}})();</script>

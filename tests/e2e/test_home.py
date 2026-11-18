@@ -13,12 +13,13 @@ def test_home_has_full_width_photography_and_new_navigation(page: Page):
     hero = page.get_by_test_id("hero").bounding_box()
     assert hero["x"] == 0 and hero["width"] == page.locator("body").bounding_box()["width"]
     nav = page.get_by_role("navigation")
-    for label, path in [
-        ("Weddings", "/weddings/"),
-        ("Corporate", "/corporate/"),
-        ("Gallery", "/gallery/"),
-        ("Packages & pricing", "/packages/"),
+    for group, label, path in [
+        ("Events", "Weddings", "/weddings/"),
+        ("Events", "Corporate", "/corporate/"),
+        ("The venue", "Gallery", "/gallery/"),
+        ("Pricing", "Packages & pricing", "/packages/"),
     ]:
+        nav.get_by_role("button", name=group).hover()
         expect(nav.get_by_role("link", name=label, exact=True)).to_have_attribute("href", path)
     assert (
         page.get_by_role("heading", level=1).evaluate("el=>getComputedStyle(el).fontStyle")
@@ -156,3 +157,63 @@ def test_existing_account_can_continue_plan_event_through_login(page: Page):
     page.get_by_role("button", name="Log in", exact=True).click()
     expect(page).to_have_url(re.compile(r"/book/\?package=wedding$"))
     expect(page.get_by_test_id("calendar")).to_be_visible()
+
+
+def test_navigation_groups_open_on_hover_and_keyboard(page: Page):
+    page.set_viewport_size({"width": 1440, "height": 900})
+    page.goto("/weddings/")
+    toggle = page.get_by_role("button", name="The venue")
+    menu = page.locator("#nav-venue")
+    expect(menu).to_be_hidden()
+    toggle.hover()
+    expect(toggle).to_have_attribute("aria-expanded", "true")
+    expect(menu).to_be_visible()
+    # Moving down into the panel keeps it open; clicking right after hovering does too.
+    menu.get_by_role("link", name="Gallery").hover()
+    expect(menu).to_be_visible()
+    toggle.click()
+    expect(toggle).to_have_attribute("aria-expanded", "true")
+    page.mouse.move(700, 700)
+    expect(menu).to_be_hidden()
+    # Keyboard: ArrowDown opens and moves in, Escape closes and returns focus.
+    toggle.focus()
+    page.keyboard.press("ArrowDown")
+    expect(menu.get_by_role("link", name="About & directions")).to_be_focused()
+    page.keyboard.press("Escape")
+    expect(menu).to_be_hidden()
+    expect(toggle).to_be_focused()
+
+
+HIDDEN = """() => [...document.querySelectorAll('main *')].filter(el => {
+  const style = getComputedStyle(el);
+  const box = el.getBoundingClientRect();
+  return box.width > 0 && el.tagName !== 'FIGCAPTION' && (
+    style.opacity === '0' ||
+    /inset\\((?!0px\\))/.test(style.clipPath) && !el.matches('.page-head'));
+}).map(el => el.className || el.tagName)"""
+
+
+@pytest.mark.parametrize("url", ["/", "/weddings/", "/gallery/", "/packages/"])
+def test_entrances_leave_nothing_hidden(page: Page, url):
+    page.set_viewport_size({"width": 1440, "height": 900})
+    page.goto(url)
+    page.evaluate(
+        """async () => {
+          for (let y = 0; y < document.body.scrollHeight; y += 300) {
+            window.scrollTo(0, y); await new Promise(r => setTimeout(r, 100));
+          }
+        }"""
+    )
+    # Photos wait to load before they are uncovered, so allow for a slow test server.
+    page.wait_for_function("document.querySelectorAll('[data-reveal]').length === 0", timeout=10000)
+    page.wait_for_timeout(300)
+    assert page.evaluate(HIDDEN) == []
+
+
+def test_reduced_motion_never_holds_anything_back(browser, base_url):
+    context = browser.new_context(reduced_motion="reduce", base_url=base_url)
+    page = context.new_page()
+    page.goto("/")
+    assert "motion" not in page.evaluate("document.documentElement.className")
+    assert page.evaluate(HIDDEN) == []
+    context.close()

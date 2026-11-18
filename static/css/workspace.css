@@ -113,6 +113,8 @@ a.row:hover { background: var(--brick); }
 .details dd { overflow-wrap: anywhere; }
 .meter { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
 .meter span { display: block; height: 100%; background: var(--river); }
+.motion .meter span { transform-origin: left; animation: meter-fill 0.8s var(--ease) 0.15s backwards; }
+@keyframes meter-fill { from { transform: scaleX(0); } }
 .quote { padding-left: 0.9rem; border-left: 3px solid var(--line); }
 
 .history li { display: grid; grid-template-columns: 11.5rem 1fr; gap: 1rem; padding-block: 1rem; border-top: 1px solid var(--line); }
