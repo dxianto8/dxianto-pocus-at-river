@@ -4,12 +4,14 @@ The website for **Pocus at River**, the event venue in the Historic Pocus Motors
 Building, 100 S. River Street, Downtown Aurora IL. Built with Django and Postgres.
 
 The public site (home, Weddings, Corporate, Gallery, Venue, Packages & pricing) and the
-signed-in workspace share one design: Libre Caslon Display for headings and dates,
-Instrument Sans for everything else, and a palette taken from the building (painted
-brick, dark steel, river green, brass). Dates are set as "plates" throughout.
+signed-in workspace share one design: Playfair Display for headings and dates,
+Montserrat for everything else, forest green and walnut with bronze accents on cream
+and ivory. Small labels are tracked capitals after a bronze rule; buttons are square.
 
-- **Home page.** Shows the next eight Saturdays and whether each is open, on hold or
-  booked, straight from the bookings table. Only states are shown, never names.
+- **Home page.** A full-width photograph with the welcome, the venue with an offset
+  bronze frame, the three kinds of occasion as overlapping photo cards, the planning
+  steps on dark green, and a closing band (shown on every public page) that leads to a
+  walkthrough or the calendar. An address bar sits above the header.
 - **Booking requires an account.** Both GET and POST requests to `/book/` require
   login. Signup preserves the selected date/package destination. Booking ownership,
   contact email, pending status, and package snapshots are set on the server.
@@ -248,9 +250,11 @@ When you're ready to move `pocusatriver.com` off Wix:
 
 ## Notes
 
-- **Typography.** Upright Libre Caslon Display is self-hosted under the SIL Open
-  Font License (`static/fonts/OFL.txt`). Body copy and controls use system sans-serif
-  fonts. No external font service is contacted at runtime.
+- **Typography.** Playfair Display and Montserrat are self-hosted (variable, Latin)
+  under the SIL Open Font License (`static/fonts/*-OFL.txt`). No external font service
+  is contacted at runtime.
+- **Colour.** White text never sits on the light bronze (#b49a6c, 2.7:1): buttons use
+  #8a6d3b (4.8:1) and small labels on cream use #7d6233 (5.3:1).
 - **Motion.** Restored the animation timelines from `81c143e`: staggered heading entrances,
   photo wipes, one-time scroll reveals, gallery/menu effects, smooth booking-form scrolling,
   and the checklist progress bar. The workspace otherwise stays still. Reduced-motion

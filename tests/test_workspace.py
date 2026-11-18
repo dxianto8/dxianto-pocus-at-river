@@ -339,15 +339,6 @@ def test_own_dates_are_marked_on_the_calendar(client, customer, stranger):
     assert url("booking_detail", mine).encode() in response.content
 
 
-def test_home_page_shows_upcoming_saturdays_without_personal_details(client, stranger):
-    saturday = day((5 - timezone.localdate().weekday()) % 7 + 7)
-    make_booking(stranger, event_date=saturday, name="Secret Name", status="confirmed")
-    response = client.get("/")
-    states = {item["date"]: item["state"] for item in response.context["saturdays"]}
-    assert states[saturday] == "booked" and len(states) == 8
-    assert b"Secret Name" not in response.content
-
-
 class TestProfile:
     def data(self, **overrides):
         return {

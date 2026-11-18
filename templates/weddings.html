@@ -4,6 +4,7 @@
 {% block content %}
 <section class="page-hero">
   <div class="page-hero__text">
+    <p class="section-label">Ceremonies &amp; receptions</p>
     <h1>Weddings</h1>
     <p>Hold the ceremony, the reception, or the whole day in a historic motor building in downtown Aurora.</p>
     <div class="actions">
@@ -15,7 +16,7 @@
 </section>
 
 <section class="wrap section split">
-  <h2 class="section-title">A room that already has character</h2>
+  <div><p class="section-label">The setting</p><h2 class="section-title">A room that already has character</h2></div>
   <div class="prose">
     <p>White painted brick and dark steel give you a backdrop that needs very little dressing. Bring your own flowers, tables and music, or keep it spare.</p>
     <p>Tell us your date, guest count and how you picture the day. The team will talk through the layout with you and put the details in a written proposal.</p>
@@ -25,6 +26,7 @@
 <section class="wrap section feature">
   <div class="feature__media photo-frame"><img decoding="async" src="{% static 'images/celebration.jpg' %}" alt="A wedding table styled with flowers and candles" width="1667" height="1667" loading="lazy"></div>
   <div>
+    <p class="section-label">The details</p>
     <h2 class="section-title">What to settle with us</h2>
     <dl class="topics">
       <div><dt>Your guests</dt><dd>Arrivals, seating, accessibility, and how the day moves from one part to the next.</dd></div>
@@ -37,6 +39,7 @@
 <section class="wrap section feature feature--flip">
   <div class="feature__media photo-frame"><img decoding="async" src="{% static 'images/wedding-rings.jpg' %}" alt="Wedding rings on an open book" width="1800" height="1200" loading="lazy"></div>
   <div>
+    <p class="section-label">See it in person</p>
     <h2 class="section-title">Walk the space first</h2>
     <p class="lede">A visit turns an idea into a plan. Bring your guest count, a few possible dates, and your questions.</p>
     <p><a class="button button--quiet" href="{% url 'walkthroughs' %}">Arrange a walk-through</a></p>

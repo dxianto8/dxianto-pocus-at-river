@@ -1,12 +1,9 @@
-from datetime import timedelta
-
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from .calendar import DayState
-from .models import Booking, EventPackage, RecentEvent
+from .models import EventPackage, RecentEvent
 
 
 @never_cache
@@ -18,21 +15,11 @@ def home(request):
         request,
         "home.html",
         {
-            "saturdays": upcoming_saturdays(),
             "recent_events": RecentEvent.objects.filter(
                 is_published=True, event_date__lte=timezone.localdate()
             )[:2],
         },
     )
-
-
-def upcoming_saturdays(count: int = 8):
-    """The next few Saturdays and whether each is free. Only states, never names."""
-    today = timezone.localdate()
-    first = today + timedelta(days=(5 - today.weekday()) % 7)
-    days = [first + timedelta(weeks=n) for n in range(count)]
-    taken = Booking.objects.public_states(days[0], days[-1])
-    return [{"date": day, "state": taken.get(day, DayState.AVAILABLE)} for day in days]
 
 
 @require_GET

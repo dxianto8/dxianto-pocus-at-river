@@ -1,7 +1,7 @@
 # Venue services and activation
 
-All features use the existing account gate, owner-scoped workspace, upright serif headings,
-river/steel palette, and Django admin. No new third-party package is needed.
+All features use the existing account gate, owner-scoped workspace, serif headings,
+forest-green and bronze palette, and Django admin. No new third-party package is needed.
 
 | Feature | Where to configure it | Customer route |
 | --- | --- | --- |

@@ -1,5 +1,6 @@
 {% extends layout_template %}
 {% block title %}Walkthrough Appointments | Pocus at River{% endblock %}
+{% block cta %}{% endblock %}
 {% block content %}
 <section class="{% if user.is_authenticated %}ws-head{% else %}wrap page-head{% endif %}"><p class="section-label">See it in person</p><h1>Walkthroughs</h1><p>{{ venue.walkthrough_intro }}</p></section>
 {% if user.is_authenticated %}{% include "includes/account_tabs.html" %}{% endif %}

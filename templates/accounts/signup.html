@@ -1,8 +1,10 @@
 {% extends "base.html" %}{% load static %}
 {% block title %}Create an Account | Pocus at River{% endblock %}
+{% block cta %}{% endblock %}
 {% block content %}
 <section class="auth">
   <div class="auth__form">
+    <p class="section-label">Start planning</p>
     <h1>Create your account</h1>
     <p>You need an account to request a date. It is free, and it is where you follow your request, message the venue and keep your plans.</p>
     <form method="post" class="form">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">{% include "includes/form_fields.html" %}<button class="button" type="submit">Create account</button></form>

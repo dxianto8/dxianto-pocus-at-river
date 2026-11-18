@@ -7,8 +7,8 @@
   <meta name="robots" content="noindex, nofollow">
   <title>{% block title %}My Events | Pocus at River{% endblock %}</title>
   <link rel="icon" href="{% static 'images/badge.png' %}" type="image/png">
-  <link rel="preload" href="{% static 'fonts/instrument-sans.woff2' %}" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="{% static 'fonts/libre-caslon-display.ttf' %}" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="{% static 'fonts/montserrat.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{% static 'fonts/playfair-display.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'css/site.css' %}">
   <link rel="stylesheet" href="{% static 'css/workspace.css' %}">
   <script src="{% static 'js/motion.js' %}" defer></script>
@@ -18,11 +18,11 @@
 <body class="workspace">
   <a class="skip-link" href="#workspace-content">Skip to content</a>
   <header class="ws-bar">
-    <a class="wordmark wordmark--light" href="{% url 'accounts:dashboard' %}"><img class="wordmark__logo" src="{% static 'images/badge.png' %}" alt="" width="44" height="44">Pocus at River</a>
+    <a class="wordmark wordmark--light" href="{% url 'accounts:dashboard' %}"><img class="wordmark__logo" src="{% static 'images/badge.png' %}" alt="" width="44" height="44"><span class="wordmark__text">Pocus at River<small>Weddings &amp; Events</small></span></a>
     <button class="ws-toggle" type="button" data-workspace-menu aria-controls="workspace-sidebar" aria-expanded="false" aria-label="Open workspace navigation">Menu</button>
   </header>
   <aside class="ws-side" id="workspace-sidebar" aria-label="Workspace sidebar">
-    <a class="wordmark wordmark--light ws-side__brand" href="{% url 'accounts:dashboard' %}"><img class="wordmark__logo" src="{% static 'images/badge.png' %}" alt="" width="44" height="44">Pocus at River</a>
+    <a class="wordmark wordmark--light ws-side__brand" href="{% url 'accounts:dashboard' %}"><img class="wordmark__logo" src="{% static 'images/badge.png' %}" alt="" width="44" height="44"><span class="wordmark__text">Pocus at River<small>Weddings &amp; Events</small></span></a>
     {% with current=request.resolver_match.url_name namespace=request.resolver_match.namespace %}
     <nav class="ws-nav" aria-label="Workspace navigation">
       <a href="{% url 'accounts:dashboard' %}" {% if current == 'dashboard' or 'booking' in current or current == 'checklist_item' or current == 'document' %}aria-current="page"{% endif %}>My events</a>

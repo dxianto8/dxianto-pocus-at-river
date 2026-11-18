@@ -1,120 +1,91 @@
 {% extends "base.html" %}
 {% load static %}
-{% block image_preload %}<link rel="preload" as="image" href="{% static 'images/event-hall.jpg' %}" fetchpriority="high">{% endblock %}
+{% block image_preload %}<link rel="preload" as="image" href="{% static 'images/wedding-couple.jpg' %}" fetchpriority="high">{% endblock %}
 {% block content %}
 <section class="hero" data-testid="hero">
-  <div class="hero__text">
+  <div class="hero__media photo-frame"><img decoding="async" class="hero__photo" src="{% static 'images/wedding-couple.jpg' %}" alt="A couple sharing a laugh in leather chairs against white painted brick" width="1667" height="1667" fetchpriority="high"></div>
+  <div class="hero__text on-dark">
+    <p class="section-label section-label--light">Downtown Aurora, Illinois</p>
     <h1>{{ venue.hero_heading }}</h1>
-    <p>An event venue in the Historic Pocus Motors Building in downtown Aurora. White brick, dark steel, and room for up to 200 guests.</p>
+    <p>Soaring windows, exposed brick and original details inside Aurora's Historic Pocus Motors Building, with room for up to 200 guests.</p>
     <div class="actions">
       <a class="button" href="{% url 'bookings:book' %}">Start planning</a>
+      <a class="button button--quiet" href="{% url 'walkthroughs' %}">Book a walkthrough</a>
       <a class="button button--quiet" href="{% url 'gallery' %}">See the space</a>
     </div>
   </div>
-  <div class="hero__media photo-frame"><img decoding="async" class="hero__photo" src="{% static 'images/event-hall.jpg' %}" alt="A ceremony aisle lined with dark steel chairs, leading to a floral installation" width="1800" height="1200" fetchpriority="high"></div>
+  <p class="hero__address" aria-hidden="true">{{ venue.address }}</p>
 </section>
 
-<section class="dates-band" aria-labelledby="dates-heading">
+<section class="wrap section intro" aria-labelledby="venue-heading">
+  <div class="intro__text">
+    <p class="section-label">The venue</p>
+    <h2 id="venue-heading" class="section-title">A little history.<br>A lot of possibility.</h2>
+    <p>White painted brick. Dark steel. The character of the Historic Pocus Motors Building, right here on River Street.</p>
+    <p>Let the architecture lead, or bring a different point of view. A long dinner, a room full of flowers, a dance floor after dark. Start with the people you want here.</p>
+    <dl class="intro__facts">
+      <div><dt>Guests</dt><dd>Up to 200</dd></div>
+      <div><dt>Visits</dt><dd>By appointment</dd></div>
+      <div><dt>Plan ahead</dt><dd>Up to 24 months</dd></div>
+    </dl>
+    <p><a class="text-link" href="{% url 'venue' %}">Get to know the building {% include "includes/arrow.html" %}</a></p>
+  </div>
+  <figure class="intro__photo">
+    <div class="photo-frame"><img decoding="async" src="{% static 'images/event-hall.jpg' %}" alt="A ceremony aisle of dark steel chairs leading to a dried-flower installation" width="1800" height="1200" loading="lazy"></div>
+    <figcaption>Photography from Society 57.</figcaption>
+  </figure>
+</section>
+
+<section class="section occasions" aria-labelledby="occasions-heading">
   <div class="wrap">
-    <div class="dates-band__head">
-      <h2 id="dates-heading">Upcoming Saturdays</h2>
-      <a href="{% url 'bookings:book' %}">See every date</a>
+    <div class="occasions__head">
+      <p class="section-label">The occasion</p>
+      <h2 id="occasions-heading" class="section-title">Good company.<br>Your kind of occasion.</h2>
     </div>
-    <ul class="date-strip">
-      {% for item in saturdays %}
-        <li>
-          {% if item.state == "available" %}
-            <a class="date-chip" href="{% url 'bookings:book' %}?date={{ item.date|date:'Y-m-d' }}">
-              <span class="date-chip__month">{{ item.date|date:"M" }}</span>
-              <span class="date-chip__day">{{ item.date|date:"j" }}</span>
-              <span class="date-chip__state">Open</span>
-            </a>
-          {% else %}
-            <span class="date-chip date-chip--taken">
-              <span class="date-chip__month">{{ item.date|date:"M" }}</span>
-              <span class="date-chip__day">{{ item.date|date:"j" }}</span>
-              <span class="date-chip__state">{{ item.state.label }}</span>
-            </span>
-          {% endif %}
-        </li>
-      {% endfor %}
-    </ul>
+    <article class="cat">
+      <div class="cat__photo photo-frame"><img decoding="async" src="{% static 'images/wedding-rings.jpg' %}" alt="Two wedding rings resting on an open book" width="1800" height="1200" loading="lazy"></div>
+      <div class="cat__text">
+        <h3>Weddings</h3>
+        <p>From the first arrival to the last dance. A ceremony, a reception, or the whole day under one roof.</p>
+        <a class="text-link" href="{% url 'weddings' %}">Explore weddings {% include "includes/arrow.html" %}</a>
+      </div>
+    </article>
+    <article class="cat cat--right cat--dark">
+      <div class="cat__photo photo-frame"><img decoding="async" src="{% static 'images/meeting-room.jpg' %}" alt="A lounge of leather chairs beside a glass overhead door" width="1365" height="1365" loading="lazy"></div>
+      <div class="cat__text on-dark">
+        <h3>Company gatherings</h3>
+        <p>A change of scene for the team. Client dinners, product launches, team celebrations and holiday parties.</p>
+        <a class="text-link" href="{% url 'corporate' %}">Explore company events {% include "includes/arrow.html" %}</a>
+      </div>
+    </article>
+    <article class="cat">
+      <div class="cat__photo photo-frame"><img decoding="async" src="{% static 'images/celebration.jpg' %}" alt="A long table set with candles and flowers under hanging greenery" width="1667" height="1667" loading="lazy"></div>
+      <div class="cat__text">
+        <h3>Private celebrations</h3>
+        <p>A milestone birthday. An anniversary dinner. Everyone back around one table.</p>
+        <a class="text-link" href="{% url 'packages' %}">See packages {% include "includes/arrow.html" %}</a>
+      </div>
+    </article>
   </div>
 </section>
 
-<section class="wrap section setting" aria-labelledby="setting-heading">
-  <div class="setting__intro">
-    <div>
-      <p class="section-label">The setting</p>
-      <h2 id="setting-heading" class="section-title">A little history.<br>A lot of possibility.</h2>
+<section class="section on-dark process" aria-labelledby="planning-heading">
+  <div class="wrap">
+    <div class="process__head">
+      <div>
+        <p class="section-label">The planning</p>
+        <h2 id="planning-heading" class="section-title">First, a date.<br>Then, the details.</h2>
+      </div>
+      <p>You bring the occasion. We'll talk through what it takes to make the space work for it.</p>
     </div>
-    <div class="setting__copy">
-      <p>White painted brick. Dark steel. The character of the Historic Pocus Motors Building, right here on River Street.</p>
-      <p>Let the architecture lead, or bring a different point of view. A long dinner, a room full of flowers, a dance floor after dark. Start with the people you want here.</p>
-      <a class="text-link" href="{% url 'venue' %}">Get to know the building <span aria-hidden="true">{% include "includes/arrow.html" %}</span></a>
-    </div>
-  </div>
-  <div class="setting__study">
-    <figure class="setting__image">
-      <div class="photo-frame"><img decoding="async" src="{% static 'images/meeting-room.jpg' %}" alt="Dark steel, leather seating, and daylight through a glass overhead door" width="1365" height="1365" loading="lazy"></div>
-      <figcaption>A different perspective on gathering. Photography from Society 57.</figcaption>
-    </figure>
-    <div class="setting__aside">
-      <p class="capacity">Up to<span>200</span>guests, with room for your ideas</p>
-      <p>Talk through your guest count and layout with the venue team. The right arrangement starts with how you want the day to feel.</p>
-      <a class="text-link" href="{% url 'gallery' %}">Explore the photography <span aria-hidden="true">{% include "includes/arrow.html" %}</span></a>
-    </div>
-  </div>
-</section>
-
-<section class="wrap section section--flush gatherings" aria-labelledby="gatherings-heading">
-  <div class="gatherings__photo">
-    <div class="photo-frame"><img decoding="async" src="{% static 'images/wedding-couple.jpg' %}" alt="A couple sharing a laugh beside a white brick wall" width="1667" height="1667" loading="lazy"></div>
-    <p class="caption">The moments between the plans. Society 57 photography.</p>
-  </div>
-  <div class="gatherings__body">
-    <p class="section-label">The occasion</p>
-    <h2 id="gatherings-heading" class="section-title">Good company.<br>Your kind of occasion.</h2>
-    <div class="occasion-index">
-      <a href="{% url 'weddings' %}"><span><strong>Weddings</strong><span>From the first arrival to the last dance. A ceremony, a reception, or the whole day.</span></span><span class="occasion-index__arrow" aria-hidden="true">{% include "includes/arrow.html" %}</span></a>
-      <a href="{% url 'corporate' %}"><span><strong>Company gatherings</strong><span>A change of scene for the team. Offsites, client dinners, and a reason to get together.</span></span><span class="occasion-index__arrow" aria-hidden="true">{% include "includes/arrow.html" %}</span></a>
-      <a href="{% url 'packages' %}"><span><strong>Private celebrations</strong><span>A milestone birthday. An anniversary dinner. Everyone back around one table.</span></span><span class="occasion-index__arrow" aria-hidden="true">{% include "includes/arrow.html" %}</span></a>
-    </div>
-  </div>
-</section>
-
-<section class="planning-story" aria-labelledby="planning-heading">
-  <div class="wrap section planning-story__layout">
-    <div class="planning-story__intro">
-      <p class="section-label">The planning</p>
-      <h2 id="planning-heading" class="section-title">First, a date.<br>Then, the details.</h2>
-      <p>You bring the occasion. We’ll talk through what it takes to make the space work for it.</p>
-      <a class="text-link" href="{% url 'bookings:book' %}">Find your date <span aria-hidden="true">{% include "includes/arrow.html" %}</span></a>
-    </div>
-    <ol class="planning-ledger">
-      <li><span class="planning-ledger__number" aria-hidden="true">01</span><div><h3>Make room on the calendar</h3><p>See open dates, create your account, and tell us about your event. Your request puts the date on hold while the team reviews it.</p></div></li>
-      <li><span class="planning-ledger__number" aria-hidden="true">02</span><div><h3>Put the plans in writing</h3><p>Work through your layout, package, and questions with the venue. The team shares a proposal and confirms the booking with you. Nothing is charged on this site.</p></div></li>
-      <li><span class="planning-ledger__number" aria-hidden="true">03</span><div><h3>Keep the day in view</h3><p>Return to your private workspace for booking updates, messages, your checklist, the day’s schedule, and documents. All with your event.</p></div></li>
+    <ol class="process__steps">
+      <li><h3>Walk the room</h3><p>Book a walkthrough and see the space with your guest count and a few possible dates in mind.</p></li>
+      <li><h3>Make room on the calendar</h3><p>See open dates, create your account, and tell us about your event. Your request puts the date on hold while the team reviews it.</p></li>
+      <li><h3>Put the plans in writing</h3><p>Work through your layout, package and questions with the venue. The team shares a proposal and confirms the booking. Nothing is charged on this site.</p></li>
+      <li><h3>Keep the day in view</h3><p>Your private workspace holds booking updates, messages, your checklist, the day's schedule and documents.</p></li>
     </ol>
   </div>
 </section>
 
-<section class="wrap section visit-note" aria-labelledby="visit-heading">
-  <div class="visit-note__intro">
-    <p class="section-label">River Street, Aurora</p>
-    <h2 id="visit-heading" class="section-title">Walk the room.<br>Picture the day.</h2>
-    <p>A floor plan only tells you so much. Come by with a guest count, a few possible dates, and the questions on your mind.</p>
-    <a class="text-link" href="{% url 'walkthroughs' %}">Arrange a walk-through <span aria-hidden="true">{% include "includes/arrow.html" %}</span></a>
-  </div>
-  <div class="visit-note__details">
-    <p class="section-label">Find us here</p>
-    <address>{{ venue.name }}<br>{{ venue.address }}</address>
-    <dl>
-      <div><dt>Visits</dt><dd>By appointment</dd></div>
-      <div><dt>Plan ahead</dt><dd>Dates up to 24 months ahead</dd></div>
-      <div><dt>Talk to us</dt><dd><a href="mailto:{{ venue.contact_email }}">{{ venue.contact_email }}</a></dd></div>
-    </dl>
-  </div>
-</section>
-{% if recent_events %}<section class="wrap section section--flush"><div class="section-heading"><h2 class="section-title">Recently, at River</h2><a class="text-link" href="{% url 'recent_events' %}">All recent events {% include "includes/arrow.html" %}</a></div>{% include "includes/recent_events.html" with events=recent_events %}</section>{% endif %}
+{% if recent_events %}<section class="wrap section"><div class="section-heading"><div><p class="section-label">From the room</p><h2 class="section-title">Recently, at River</h2></div><a class="text-link" href="{% url 'recent_events' %}">All recent events {% include "includes/arrow.html" %}</a></div>{% include "includes/recent_events.html" with events=recent_events %}</section>{% endif %}
 {% endblock %}

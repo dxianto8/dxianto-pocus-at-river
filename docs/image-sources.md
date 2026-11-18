@@ -38,6 +38,7 @@ recompressed to keep pages light. Display cropping is done by CSS.
 
 ## Fonts
 
-- `static/fonts/libre-caslon-display.ttf`: Libre Caslon Display, SIL Open Font License (`OFL.txt`).
-- `static/fonts/instrument-sans.woff2`: Instrument Sans (variable, Latin), SIL Open Font
-  License (`instrument-sans-OFL.txt`), from the `@fontsource-variable/instrument-sans` package.
+- `static/fonts/playfair-display.woff2`: Playfair Display (variable, Latin), SIL Open Font
+  License (`playfair-display-OFL.txt`), from the `@fontsource-variable/playfair-display` package.
+- `static/fonts/montserrat.woff2`: Montserrat (variable, Latin), SIL Open Font License
+  (`montserrat-OFL.txt`), from the `@fontsource-variable/montserrat` package.

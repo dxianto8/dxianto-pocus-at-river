@@ -44,14 +44,15 @@
   // Scrolling: sections arrive as they come into view; siblings follow one another.
   const onScroll = all(
     '.section-title, .occasion, .steps li, .three article, .package, .feature img, ' +
-    '.gallery-grid figure, .date-chip'
-  ).filter(element => !element.closest('.workspace'));
+    '.gallery-grid figure, .cat__photo img, .cat__text, .intro__photo img, ' +
+    '.intro__facts, .process__steps li, .topics > div, .menu-category, .event-journal article'
+  ).filter(element => !element.closest('.workspace, .hero__text, .page-hero__text, .page-head'));
   if ('IntersectionObserver' in window && !reduced.matches && onScroll.length) {
     const observer = new IntersectionObserver(entries => {
       entries.filter(entry => entry.isIntersecting).forEach((entry, index) => {
         const element = entry.target;
         observer.unobserve(element);
-        if (element.matches('.feature img')) {
+        if (element.matches('.feature img, .cat__photo img, .intro__photo img')) {
           play(element, [
             {clipPath: 'inset(0 0 100% 0)', transform: 'scale(1.06)'},
             {clipPath: 'inset(0 0 0 0)', transform: 'none'},
